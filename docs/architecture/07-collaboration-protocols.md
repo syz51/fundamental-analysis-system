@@ -119,10 +119,17 @@ The debate protocol uses a tiered escalation approach with timeouts and fallback
 
 **Auto-Resolution Criteria**:
 
-- Credibility gap threshold: 0.25
-- Based on agent historical accuracy in similar contexts
-- Requires minimum 5 historical data points per agent
-- Falls back to escalation if insufficient data
+- Credibility gap threshold: 0.25 (or sum of confidence intervals, whichever is larger)
+- Based on comprehensive multi-factor credibility calculation:
+  - **Recency weighting** (50%): Exponential decay with configurable half-life (default 2 years)
+  - **Regime-specific accuracy** (30%): Performance in current market regime (bull/bear, rates, volatility)
+  - **Historical accuracy** (20%): Overall domain-specific track record
+  - **Context adjustment** (30% weight if sufficient data): Multi-dimensional context matching (sector, metric, horizon, size, stage)
+  - **Performance trend**: Extrapolate agent improvement/degradation trajectory (if R² > 0.3)
+  - **Override penalty**: Credibility reduction if high human override rate (>20%)
+- Requires minimum 5 historical data points per agent for basic credibility
+- Requires minimum 50 data points for regime-specific scoring
+- Falls back to escalation if insufficient data or credibility differential below threshold
 
 #### Level 3: Human Arbitration - Gate 4 (6hr timeout)
 
@@ -291,10 +298,13 @@ The debate protocol uses a tiered escalation approach with timeouts and fallback
 
 **Agent Credibility**:
 
-- Track record in similar contexts
-- Historical accuracy scores
-- Domain expertise relevance
-- Learning trajectory
+- **Temporal decay**: Recent performance weighted heavily (exponential with 2-year half-life)
+- **Market regime specificity**: Performance in current regime vs historical average
+- **Context matching**: Accuracy in similar sector/metric/horizon/size/stage contexts
+- **Performance trajectory**: Trend analysis showing improvement or degradation
+- **Human override tracking**: Penalty applied if frequently overridden (>20% rate)
+- **Confidence intervals**: Statistical significance based on sample size
+- **Domain expertise weighting**: Relevance of agent specialization to current pattern
 
 ---
 
@@ -358,10 +368,13 @@ A complete decision package includes:
 
 **Agent Credibility**:
 
-- Track record summaries
-- Accuracy in similar situations
-- Domain expertise weights
-- Learning improvements
+- **Comprehensive credibility scores**: Multi-factor calculation including recency, regime, context, trends, overrides
+- **Track record summaries**: Overall and domain-specific accuracy with confidence intervals
+- **Regime-specific performance**: Accuracy in current vs historical market regimes
+- **Performance trends**: Improvement/degradation trajectories with statistical significance
+- **Human override analysis**: Override rates and outcome validation
+- **Context match quality**: Similarity of current analysis to agent's historical experience
+- **Learning improvements**: Agent evolution and capability development over time
 
 **Pattern Matches**:
 

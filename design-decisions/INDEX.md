@@ -24,6 +24,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-005 | [Memory Scalability Optimization](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md)        | Implemented | 2025-11-17 | Memory Architecture         | [Memory System](../docs/architecture/02-memory-system.md), [Flaw #7](../docs/design-flaws/resolved/07-memory-scalability.md)                                                                                   |
 | DD-006 | [Negative Feedback System](DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)                      | Approved    | 2025-11-17 | Learning, Quality Assurance | [Learning Systems](../docs/learning/01-learning-systems.md), [Memory System](../docs/architecture/02-memory-system.md), [Flaw #9](../docs/design-flaws/resolved/09-negative-feedback.md)                      |
 | DD-007 | [Pattern Validation Architecture](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)        | Implemented | 2025-11-17 | Learning, Quality Assurance | [Learning Systems](../docs/learning/01-learning-systems.md), [Memory System](../docs/architecture/02-memory-system.md), [Flaw #3](../docs/design-flaws/resolved/03-pattern-validation.md)                        |
+| DD-008 | [Agent Credibility System](DD-008_AGENT_CREDIBILITY_SYSTEM.md)                      | Implemented | 2025-11-17 | Learning, Collaboration     | [Feedback Loops](../docs/learning/02-feedback-loops.md), [Memory System](../docs/architecture/02-memory-system.md), [Credibility Implementation](../docs/implementation/05-credibility-system.md), [Flaw #4](../docs/design-flaws/resolved/04-credibility-scoring.md) |
 
 ---
 
@@ -37,6 +38,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-004**: Gate 6 Parameter Optimization for Scale
 - **DD-005**: Memory Scalability Optimization (tiered cache, query optimization)
 - **DD-007**: Pattern Validation Architecture (3-tier statistical validation)
+- **DD-008**: Agent Credibility System (multi-factor temporal decay, regime-specific, trend detection)
 
 ### 🟢 Approved (Pending Implementation)
 
@@ -71,6 +73,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **Human Integration & Learning Validation**: DD-001, DD-004
 - **Pattern Validation & Quality Assurance**: DD-007
 - **Negative Feedback & Failure Analysis**: DD-006
+- **Agent Credibility & Performance Tracking**: DD-008
 
 ### Implementation
 
@@ -138,4 +141,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-17 (added DD-005, DD-006, DD-007; resolved Flaws #3, #7, #9)
+**Last Updated**: 2025-11-17 (added DD-005, DD-006, DD-007, DD-008; resolved Flaws #3, #4, #7, #9)

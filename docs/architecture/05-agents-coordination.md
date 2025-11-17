@@ -132,11 +132,15 @@ Structure collaborative analysis, manage knowledge conflicts, and provide fallba
 
 **Credibility Weighting**:
 
-- Weight arguments by agent track record
-- Consider historical accuracy in similar contexts
-- Apply domain expertise relevance
-- Factor in evidence quality
-- Calculate credibility differential for auto-resolution
+Sophisticated multi-factor credibility assessment incorporating:
+
+- **Temporal decay**: Exponential weighting with configurable half-life (default 2 years)
+- **Market regime specificity**: Regime-aware credibility (bull/bear, high/low rates, volatility)
+- **Performance trends**: Linear regression on rolling accuracy, extrapolate 6 months forward
+- **Human override tracking**: Penalty for high override rates (>20%)
+- **Multi-dimensional context matching**: Sector, metric type, time horizon, company size, growth stage
+- **Evidence quality**: Current debate evidence strength assessment
+- **Credibility differential calculation**: Compare agents for auto-resolution threshold (>0.25)
 
 ### Fallback Resolution Authority (Level 2 & Level 4)
 
@@ -152,29 +156,82 @@ The Debate Facilitator has authority to resolve debates automatically when human
 
 **Process**:
 
-1. Calculate agent credibility scores in relevant context:
+1. Calculate comprehensive agent credibility scores in relevant context:
 
-   - Historical accuracy on similar patterns
-   - Domain expertise relevance
-   - Recent performance trajectory
-   - Evidence quality in current debate
+   ```python
+   # Base accuracy with multi-dimensional context matching
+   base_accuracy = (
+       context_specific_accuracy * context_weight +
+       overall_accuracy * (1 - context_weight)
+   )
 
-2. Compute credibility differential:
+   # Temporal decay (exponential with agent-specific half-life)
+   temporal_weight = 0.5^(age_years / decay_halflife_years)
 
-   ```text
-   differential = abs(agent_A_credibility - agent_B_credibility)
+   # Market regime adjustment (current regime vs historical regime)
+   current_regime = detect_market_regime()  # BULL_LOW_RATES, BEAR_HIGH_RATES, etc.
+   if regime_sample_size[current_regime] >= 50:
+       regime_adjustment = regime_accuracy[current_regime] * 0.70 + overall_accuracy * 0.30
+   else:
+       regime_adjustment = regime_accuracy[current_regime] * 0.30 + overall_accuracy * 0.70
+
+   # Performance trend extrapolation (if statistically significant)
+   if trend_strength > 0.3:  # R² > 0.3
+       extrapolated = current_accuracy + (trend_slope * 0.5_years)
+       trend_adjusted = current_accuracy * 0.70 + extrapolated * 0.30
+   else:
+       trend_adjusted = current_accuracy
+
+   # Human override penalty
+   if override_rate > 0.40:
+       override_penalty = 0.70
+   elif override_rate > 0.20:
+       override_penalty = 0.85
+   else:
+       override_penalty = 1.00
+
+   # Confidence interval (based on sample size)
+   confidence_interval = 1.96 * sqrt((credibility * (1-credibility)) / sample_size)
+
+   # Final credibility score
+   credibility_score = (
+       base_accuracy *
+       temporal_weight *
+       regime_adjustment *
+       trend_adjusted *
+       override_penalty
+   )
    ```
 
-3. If differential >0.25:
+2. Compute credibility differential with confidence intervals:
+
+   ```python
+   differential = abs(agent_A_credibility - agent_B_credibility)
+
+   # Ensure differential exceeds confidence intervals (statistically significant)
+   min_differential_required = max(
+       0.25,
+       agent_A_confidence_interval + agent_B_confidence_interval
+   )
+   ```
+
+3. If differential > min_differential_required:
 
    - Auto-resolve to higher credibility agent's position
    - Mark as "facilitator-resolved" (binding, not provisional)
-   - Document reasoning and credibility scores
+   - Document reasoning including:
+     - Credibility scores (with confidence intervals)
+     - Regime-specific performance
+     - Performance trends
+     - Override rates
+     - Context match quality
    - Notify both agents of resolution
+   - Track outcome for credibility system validation
 
-4. If differential <0.25:
+4. If differential < min_differential_required:
    - Escalate to Level 3 (human arbitration)
-   - Include credibility analysis in escalation package
+   - Include comprehensive credibility analysis in escalation package
+   - Provide regime-specific context and trend information
 
 **Requirements for Auto-Resolution**:
 

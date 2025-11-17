@@ -97,14 +97,216 @@ Performance in specific contexts:
 
 ### Time-Weighted Scoring
 
-Recent performance weighted more heavily than distant past:
+Sophisticated temporal decay system that adapts credibility to changing market conditions and agent improvement trajectories.
 
-- Last 3 months: 50% weight
-- 3-12 months ago: 30% weight
-- 1-2 years ago: 15% weight
-- 2+ years ago: 5% weight
+#### Exponential Decay with Configurable Half-Life
 
-This enables agents to adapt to changing market dynamics while retaining institutional knowledge.
+Performance data decays exponentially to emphasize recent results:
+
+```python
+weight = 0.5^(age_years / decay_halflife_years)
+```
+
+**Default Parameters**:
+- **Half-life**: 2 years (recent performance 2x weight of 2-year-old data)
+- **Configurable per agent type**: Faster decay for volatile domains (6 months for News Monitor), slower for stable domains (3 years for Financial Analyst)
+
+**Example**:
+- 3-month-old prediction: weight = 0.93 (93% of max weight)
+- 1-year-old prediction: weight = 0.71 (71% of max weight)
+- 2-year-old prediction: weight = 0.50 (50% of max weight)
+- 4-year-old prediction: weight = 0.25 (25% of max weight)
+
+Benefits over fixed time buckets:
+- Smooth continuous decay (no artificial cliff effects at bucket boundaries)
+- Mathematically principled (half-life has clear interpretation)
+- Tunable per agent based on domain stability
+
+#### Market Regime-Specific Credibility
+
+Agent credibility tracked separately for different market regimes to capture environment-dependent performance:
+
+**Regime Classification**:
+
+1. **BULL_LOW_RATES**: S&P +10%+ YoY, Fed Funds <3%, VIX <20
+2. **BULL_HIGH_RATES**: S&P +10%+ YoY, Fed Funds ≥3%
+3. **BEAR_HIGH_RATES**: S&P negative YoY, Fed Funds ≥3%, VIX >25
+4. **BEAR_LOW_RATES**: S&P negative YoY, Fed Funds <3%
+5. **HIGH_VOLATILITY**: VIX >30 (regardless of returns)
+6. **NORMAL**: Default classification when no other regime applies
+
+**Regime Detection Logic**:
+- Daily market data monitoring
+- Trailing 12-month performance assessment
+- Current interest rate levels (FRED API)
+- Volatility indices (VIX, VVIX)
+
+**Credibility Calculation**:
+
+```python
+# If current regime matches historical regime of prediction
+credibility = regime_specific_accuracy * temporal_weight
+
+# If sufficient regime-specific data (50+ decisions)
+final_credibility = regime_accuracy * 0.70 + overall_accuracy * 0.30
+
+# If insufficient regime-specific data (<50 decisions)
+final_credibility = regime_accuracy * 0.30 + overall_accuracy * 0.70
+```
+
+**Example**:
+- Financial Analyst: 92% accuracy in BULL_LOW_RATES (2019-2021), 68% accuracy in BEAR_HIGH_RATES (2022-2023)
+- If analyzing in 2025 BEAR_HIGH_RATES environment → credibility weighted toward 68%, not 80% overall average
+- Prevents overestimation of capability based on stale favorable regime performance
+
+#### Agent Performance Trend Detection
+
+Linear regression on rolling accuracy identifies improving/degrading agents:
+
+**Trend Calculation**:
+```python
+# Last 12 months of weekly accuracy measurements (52 data points)
+slope, intercept, r_value = linear_regression(timestamps, accuracy_scores)
+
+trend_strength = r_value^2  # R-squared (0-1)
+trend_direction = "improving" if slope > 0 else "degrading"
+```
+
+**Trend Adjustment**:
+
+If trend is statistically significant (R² > 0.3):
+```python
+# Extrapolate 6 months forward
+extrapolated_accuracy = current_accuracy + (slope * 0.5_years)
+
+# Blend extrapolated with current (30% extrapolation weight for strong trends)
+adjusted_credibility = current_accuracy * 0.70 + extrapolated_accuracy * 0.30
+```
+
+**Example**:
+- Strategy Analyst improving from 65% (Jan 2024) to 89% (Dec 2024)
+- Slope = +24% per year, R² = 0.81 (strong trend)
+- Extrapolated 6mo = 89% + (24% * 0.5) = 101% → capped at 95%
+- Adjusted credibility = 0.70 * 89% + 0.30 * 95% = 90.8%
+
+Without trend detection, would use 79% average (underestimates current capability by 11.8%).
+
+**Trend Monitoring**:
+- Flagged for review if trend_strength > 0.5
+- Improving agents: Expand responsibilities
+- Degrading agents: Investigate root cause, potential model drift
+
+#### Human Override Rate Tracking
+
+Track when humans override agents to identify over-reliance or systematic blind spots:
+
+**Override Metrics**:
+
+```python
+override_rate = human_overrides / total_recommendations
+```
+
+Tracked dimensions:
+- **Overall override rate** (across all contexts)
+- **Context-specific override rate** (by sector, metric, regime)
+- **Override outcome accuracy** (was human right to override?)
+- **Override reasons** (categorized: missed qualitative factor, stale data, flawed logic, etc.)
+
+**Credibility Penalty**:
+
+If override rate exceeds acceptable threshold:
+
+```python
+# Acceptable: <20% override rate
+# Concerning: 20-40% override rate
+# Critical: >40% override rate
+
+if override_rate > 0.40:
+    credibility_multiplier = 0.70  # 30% penalty
+elif override_rate > 0.20:
+    credibility_multiplier = 0.85  # 15% penalty
+else:
+    credibility_multiplier = 1.00  # No penalty
+```
+
+**Example**:
+- Valuation Agent: 78% base accuracy, but 45% of recommendations overridden by humans
+- Override outcome: 82% of human overrides proved correct
+- Interpretation: Agent has systematic blind spot (humans add value in 45% of cases)
+- Adjusted credibility: 78% * 0.70 = 54.6%
+- Triggers investigation: Why are humans overriding so frequently?
+
+**Root Cause Analysis Triggers**:
+- Override rate >30% for 3 consecutive months
+- Overrides clustered in specific context (e.g., 60% override rate in tech sector)
+- Human override accuracy >75% (humans consistently adding value)
+
+#### Multi-Dimensional Context Matching
+
+Credibility calculated with multi-factor context similarity:
+
+**Context Dimensions**:
+
+1. **Sector** (Technology, Healthcare, Retail, etc.)
+2. **Metric Type** (Revenue, Margin, Cash Flow, Strategic, Qualitative)
+3. **Time Horizon** (Near-term <1Y, Medium 1-3Y, Long-term >3Y)
+4. **Market Regime** (as defined above)
+5. **Company Size** (Mega-cap, Large-cap, Mid-cap, Small-cap, Micro-cap)
+6. **Growth Stage** (Mature, Growth, Turnaround, Startup)
+
+**Context Similarity Scoring**:
+
+```python
+# Exact match on all 6 dimensions
+if context_match == 6/6:
+    context_weight = 1.00  # Use context-specific accuracy directly
+
+# Partial match (4-5 dimensions)
+elif context_match >= 4/6:
+    context_weight = 0.70  # 70% context-specific, 30% overall
+
+# Weak match (2-3 dimensions)
+elif context_match >= 2/6:
+    context_weight = 0.30  # 30% context-specific, 70% overall
+
+# No match (<2 dimensions)
+else:
+    context_weight = 0.00  # Use overall accuracy only
+```
+
+**Credibility Calculation**:
+
+```python
+credibility = (
+    context_specific_accuracy * context_weight +
+    overall_accuracy * (1 - context_weight)
+) * temporal_weight * regime_adjustment * override_penalty
+```
+
+**Example**:
+- Current analysis: Tech sector, Revenue growth, 3-year horizon, NORMAL regime, Large-cap, Growth stage
+- Agent history: 120 predictions in Tech sector, 80 with Revenue focus, 45 at 3Y horizon
+- Context match: 5/6 dimensions (sector, metric, horizon, size, stage)
+- Context-specific accuracy: 86% vs. 78% overall
+- Credibility = (0.86 * 0.70 + 0.78 * 0.30) * temporal_weight = 83.6%
+
+Without context matching, would use 78% overall accuracy (undervalues domain expertise by 5.6%).
+
+#### Credibility Recalculation Schedule
+
+**Triggers**:
+- **Immediate** (within 1 hour): Major errors, human override, challenge lost in debate
+- **Daily**: Regime detection, new outcomes recorded
+- **Weekly**: Trend analysis updated (52-week rolling regression)
+- **Monthly**: Comprehensive review (all dimensions, pattern validation)
+- **Quarterly**: Override rate analysis, blind spot investigation
+
+**Computation Optimization**:
+- Incremental updates (don't recalculate from scratch)
+- Cached context-specific scores (invalidate on new data only)
+- Batch processing for non-urgent recalculations
+
+This enables agents to adapt to changing market dynamics, improve over time, and have credibility accurately reflect current capability rather than stale historical averages.
 
 ### Confidence Calibration
 

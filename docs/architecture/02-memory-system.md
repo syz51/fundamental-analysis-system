@@ -250,6 +250,36 @@ Additional Nodes for Debate Resolution:
     - time_weighted_score: float
     - bias_corrections: object
     - last_updated: datetime
+    # Temporal decay parameters
+    - decay_halflife_years: float (default 2.0, configurable per agent)
+    - last_decay_calculation: datetime
+    # Market regime-specific credibility
+    - regime_credibility: object
+        BULL_LOW_RATES: {accuracy: float, sample_size: int}
+        BULL_HIGH_RATES: {accuracy: float, sample_size: int}
+        BEAR_HIGH_RATES: {accuracy: float, sample_size: int}
+        BEAR_LOW_RATES: {accuracy: float, sample_size: int}
+        HIGH_VOLATILITY: {accuracy: float, sample_size: int}
+        NORMAL: {accuracy: float, sample_size: int}
+    # Performance trend metrics
+    - trend_slope: float (accuracy change per year, from linear regression)
+    - trend_direction: enum [improving, stable, degrading]
+    - trend_strength: float (R-squared, 0-1)
+    - extrapolated_6mo: float (projected accuracy in 6 months)
+    - trend_last_calculated: datetime
+    # Human override tracking
+    - override_rate: float (% of recommendations overridden)
+    - override_rate_by_context: object (override rate by sector/metric/regime)
+    - override_outcome_accuracy: float (% of overrides that were correct)
+    - override_reasons: object (breakdown: missed_qualitative_factor, stale_data, flawed_logic, etc.)
+    - override_credibility_penalty: float (multiplier 0.70-1.00 based on override rate)
+    # Context-specific credibility tracking
+    - context_dimensions: object
+        sector: {dimension_value: {accuracy: float, sample_size: int}}
+        metric_type: {dimension_value: {accuracy: float, sample_size: int}}
+        time_horizon: {dimension_value: {accuracy: float, sample_size: int}}
+        company_size: {dimension_value: {accuracy: float, sample_size: int}}
+        growth_stage: {dimension_value: {accuracy: float, sample_size: int}}
 
 Additional Relationships for Debate Resolution:
   - Debate -[RESOLVED_BY]-> Agent (facilitator or human)
@@ -307,25 +337,65 @@ RETURN AVG(dr.outcome_correctness) as success_rate,
 
 **Agent Credibility Tracking**:
 
-The system maintains dynamic credibility scores for each agent in specific domains:
+The system maintains sophisticated dynamic credibility scores for each agent using multi-factor temporal weighting, regime-specific performance, trend detection, and human override tracking.
 
-**Credibility Calculation**:
+**Comprehensive Credibility Calculation**:
 
-```text
+```python
+# Base accuracy calculation with multi-dimensional context matching
+base_accuracy = (
+    context_specific_accuracy * context_weight +
+    overall_accuracy * (1 - context_weight)
+)
+
+# Temporal decay weighting (exponential with configurable half-life)
+temporal_weight = 0.5^(age_years / decay_halflife_years)
+
+# Market regime adjustment (if sufficient regime-specific data)
+if regime_sample_size >= 50:
+    regime_adjustment = regime_accuracy * 0.70 + overall_accuracy * 0.30
+else:
+    regime_adjustment = regime_accuracy * 0.30 + overall_accuracy * 0.70
+
+# Performance trend extrapolation (if statistically significant R² > 0.3)
+if trend_strength > 0.3:
+    extrapolated = current_accuracy + (trend_slope * 0.5_years)
+    trend_adjusted = current_accuracy * 0.70 + extrapolated * 0.30
+else:
+    trend_adjusted = current_accuracy
+
+# Human override penalty (if override rate exceeds threshold)
+if override_rate > 0.40:
+    override_penalty = 0.70  # 30% penalty
+elif override_rate > 0.20:
+    override_penalty = 0.85  # 15% penalty
+else:
+    override_penalty = 1.00  # No penalty
+
+# Final credibility score
 credibility_score = (
-  0.4 * historical_accuracy_in_domain +
-  0.3 * recent_performance_last_10 +
-  0.2 * time_weighted_accuracy +
-  0.1 * evidence_quality_score
+    base_accuracy *
+    temporal_weight *
+    regime_adjustment *
+    trend_adjusted *
+    override_penalty
 )
 ```
 
-**Credibility Updates**:
+**Credibility Update Triggers**:
 
-- After each analysis outcome is known (6-12 months post-decision)
-- Weighted toward recent performance (exponential decay)
-- Domain-specific (agent may have high credibility in one area, lower in another)
-- Requires minimum 5 data points before use in auto-resolution
+- **Immediate** (within 1 hour): Major errors, human override, challenge lost in debate
+- **Daily**: Regime detection, new outcomes recorded
+- **Weekly**: Trend analysis updated (52-week rolling regression)
+- **Monthly**: Comprehensive review (all dimensions, pattern validation)
+- **Quarterly**: Override rate analysis, blind spot investigation
+
+**Credibility Requirements**:
+
+- Minimum 5 data points for basic credibility (domain-level)
+- Minimum 50 data points for regime-specific scoring
+- Minimum 52 weeks of data for trend detection (statistically meaningful regression)
+- Auto-resolution requires minimum 10 data points with credibility differential >0.25
 
 **Bias Correction Storage**:
 
