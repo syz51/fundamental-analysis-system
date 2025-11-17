@@ -88,9 +88,15 @@ _Storage: Neo4j, Size: Unlimited, TTL: Permanent, Access: <1s_
 
 ### Memory Synchronization
 
-Protocol for propagating important discoveries from agent local memory (L1/L2) to central knowledge graph (L3) and broadcasting to other agents.
+Event-driven protocol for propagating discoveries from agent local memory (L1/L2) to central knowledge graph (L3) and broadcasting to other agents.
 
-_Frequency: Every 5 minutes for important insights (importance > 0.7), hourly for batch updates._
+**Three Priority Levels**:
+
+- **Critical** (<2s): Debates, challenges, human gates - immediate bidirectional sync with snapshots
+- **High** (<10s): Important insights (importance > 0.7), alerts, findings with precedent
+- **Normal** (5min): Routine updates, batch operations, background synchronization
+
+_Trigger: Event-driven based on message type and importance, plus periodic 5-minute normal sync._
 
 ### Pattern
 

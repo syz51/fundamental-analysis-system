@@ -262,14 +262,29 @@ The system synthesizes:
 
 ## Debate Enhancement with Memory
 
-### Pre-Debate Memory Loading
+### Pre-Debate Memory Synchronization
 
-Before structured debates, the system:
+Before structured debates begin, the system ensures memory consistency:
 
-- Loads relevant historical debates
-- Identifies similar disagreements and resolutions
-- Weights agent credibility by track record
-- Surfaces applicable precedents
+**Critical Sync Protocol**:
+
+1. **Force sync all participants** (<2 seconds)
+   - Both challenger and challenged agents
+   - All related agents in same analysis stream
+   - Ensures no stale local cache data
+
+2. **Create memory snapshot**
+   - Point-in-time view of all relevant knowledge
+   - Locked state prevents mid-debate inconsistencies
+   - All participants work from identical evidence base
+
+3. **Load historical context**
+   - Relevant historical debates
+   - Similar disagreements and resolutions
+   - Agent credibility by track record
+   - Applicable precedents
+
+**Why Critical Sync Matters**: Without forced synchronization, debates could proceed with agents having different views of evidence, leading to contradictory positions and degraded debate quality.
 
 ### Challenge with Historical Evidence
 
@@ -288,6 +303,15 @@ Conflict resolution considers:
 - Which position proved correct historically
 - Agent credibility weighting
 - Statistical likelihood based on patterns
+
+### Post-Debate Synchronization
+
+After debate resolution:
+
+- Outcomes immediately synced to central knowledge graph
+- All agents receive debate conclusions (high-priority sync)
+- Updated credibility scores propagated
+- Lessons learned added to institutional knowledge
 
 ---
 

@@ -404,18 +404,42 @@ The system requires sophisticated infrastructure to support parallel agent execu
 
 ### Memory Synchronization Infrastructure
 
-#### Sync Protocols
+#### Event-Driven Sync Protocols
 
-- **Push sync**: L2 → L3 (every 5 minutes)
-- **Pull sync**: L3 → L2 (on-demand)
-- **Broadcast sync**: Important insights (real-time)
-- **Batch sync**: Bulk updates (hourly)
+**Three-Tier Priority System**:
+
+- **Critical sync** (<2s): Debates, challenges, human gates
+
+  - Immediate bidirectional sync (L1/L2 ↔ L3)
+  - Blocks until complete
+  - Creates memory snapshots for consistency
+
+- **High-priority sync** (<10s): Important findings, alerts
+
+  - Fast push: L2 → L3 for discoveries (importance > 0.7)
+  - Fast pull: L3 → L2 for relevant updates
+  - Async with priority queuing
+
+- **Normal sync** (5min): Routine updates, batch operations
+  - Scheduled push: L2 → L3 for background updates
+  - Periodic pull: L3 → L2 for cross-domain insights
+  - Standard async queuing
+
+**Message-Triggered Sync**:
+
+System automatically triggers appropriate sync level based on message type:
+
+- Challenge/Alert → Critical
+- Finding with precedent → High
+- Request/Confirmation → High
+- Routine communication → Normal
 
 #### Conflict Resolution
 
-- Timestamp-based ordering
+- Timestamp-based ordering with priority override
 - Importance-weighted merging
-- Human arbitration for critical conflicts
+- Locked snapshots during critical operations
+- Human arbitration for unresolvable conflicts
 
 ---
 

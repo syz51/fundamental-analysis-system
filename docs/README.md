@@ -56,11 +56,25 @@ Deep dives into specific complex architectural choices.
 
 ### ⚠️ Design Flaws & Solutions
 
-Critical issues identified in v2.0 design with proposed fixes.
+Design issues identified in v2.0 architecture with resolution tracking.
 
-- [Summary](design-flaws/00-SUMMARY.md) - Overview of 9 major flaws + resolution status
+- [Summary](design-flaws/00-SUMMARY.md) - Overview: 7 active, 2 resolved
 - [Priority Guide](design-flaws/PRIORITY.md) - Implementation order and dependencies
-- Individual Flaws: [#1](design-flaws/01-memory-sync.md) | [#2](design-flaws/02-event-driven-memory.md) | [#3-9](design-flaws/)
+
+**Active Flaws** (require resolution):
+
+- [#3 - Pattern Validation](design-flaws/03-pattern-validation.md)
+- [#4 - Credibility Scoring](design-flaws/04-credibility-scoring.md)
+- [#5 - Data Retention](design-flaws/05-data-retention.md)
+- [#6 - Expertise Routing](design-flaws/06-expertise-routing.md)
+- [#7 - Memory Scalability](design-flaws/07-memory-scalability.md)
+- [#8 - Debate Deadlock](design-flaws/08-debate-deadlock.md) ⚠️ **Next Priority**
+- [#9 - Negative Feedback](design-flaws/09-negative-feedback.md)
+
+**Resolved Issues** (see `design-flaws/resolved/`):
+
+- [#1 - Missing Human Gate](design-flaws/resolved/01-missing-human-gate.md) ✅
+- [#2 - Memory Sync Timing](design-flaws/resolved/02-memory-sync-timing.md) ✅
 
 ---
 

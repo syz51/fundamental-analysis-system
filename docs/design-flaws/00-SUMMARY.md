@@ -1,0 +1,127 @@
+# Design Flaws Summary
+
+**Version**: 2.0
+**Last Updated**: 2025-11-17
+**Total Identified**: 9
+**Resolved**: 2
+**Active**: 7
+
+---
+
+## Overview
+
+Design issues identified in v2.0 architecture. Resolved issues moved to `resolved/` subdirectory for historical reference. Active flaws require resolution before full implementation.
+
+## Active Flaws
+
+| #   | Flaw                                                                       | Priority | Status        |
+| --- | -------------------------------------------------------------------------- | -------- | ------------- |
+| 3   | [Pattern Validation Confirmation Bias Loop](03-pattern-validation.md)      | High     | ⚠️ UNRESOLVED |
+| 4   | [Agent Credibility Scoring - No Temporal Decay](04-credibility-scoring.md) | Medium   | ⚠️ UNRESOLVED |
+| 5   | [Data Retention Policy Conflict](05-data-retention.md)                     | Medium   | ⚠️ UNRESOLVED |
+| 6   | [Static Human Expertise Routing](06-expertise-routing.md)                  | Low      | ⚠️ UNRESOLVED |
+| 7   | [Memory Scalability vs Performance Targets](07-memory-scalability.md)      | High     | ⚠️ UNRESOLVED |
+| 8   | [Debate Resolution Deadlock Scenario](08-debate-deadlock.md)               | Critical | ⚠️ UNRESOLVED |
+| 9   | [Learning Loop - No Negative Feedback Mechanism](09-negative-feedback.md)  | Medium   | ⚠️ UNRESOLVED |
+
+## Resolved Issues
+
+| #   | Issue                                                                                     | Priority | Resolution        | Reference                                                                         |
+| --- | ----------------------------------------------------------------------------------------- | -------- | ----------------- | --------------------------------------------------------------------------------- |
+| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added      | [Design Decision](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)              |
+| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync | [Design Decision](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md) |
+
+## Quick Reference by Priority
+
+### Critical (Must Fix Before MVP)
+
+- ⚠️ **Flaw #8**: Debate Resolution Deadlock Scenario
+
+### High (Fix During Phase 2-3)
+
+- ⚠️ **Flaw #3**: Pattern Validation Confirmation Bias Loop
+- ⚠️ **Flaw #7**: Memory Scalability vs Performance Targets
+
+### Medium (Fix During Phase 3-4)
+
+- ⚠️ **Flaw #4**: Agent Credibility Scoring - No Temporal Decay
+- ⚠️ **Flaw #5**: Data Retention Policy Conflict
+- ⚠️ **Flaw #9**: Learning Loop - No Negative Feedback Mechanism
+
+### Low (Optimization Phase)
+
+- ⚠️ **Flaw #6**: Static Human Expertise Routing
+
+## Active Flaw Descriptions
+
+### 3. Pattern Validation Confirmation Bias Loop ⚠️
+
+**Problem**: Pattern detection and validation use same dataset, creating circular logic.
+**Impact**: False patterns amplified, no out-of-sample validation.
+**Status**: Requires train/validation/test split for pattern discovery.
+
+### 4. Agent Credibility Scoring - No Temporal Decay ⚠️
+
+**Problem**: Cumulative accuracy tracking with no time-based weighting.
+**Impact**: Agents penalized/rewarded for outdated performance in different regimes.
+**Status**: Needs weighted scoring with temporal decay and regime detection.
+
+### 5. Data Retention Policy Conflict ⚠️
+
+**Problem**: Patterns stored permanently but supporting evidence deleted after 3-5 years.
+**Impact**: Cannot re-validate or investigate patterns after evidence deleted.
+**Status**: Requires pattern-evidence linking and conditional retention.
+
+### 6. Static Human Expertise Routing ⚠️
+
+**Problem**: Four predefined specialist roles with no dynamic assignment.
+**Impact**: Sub-optimal expertise matching, no learning from human performance.
+**Status**: Needs dynamic routing, human credibility tracking, expertise discovery.
+
+### 7. Memory Scalability vs Performance Targets ⚠️
+
+**Problem**: Contradictory requirements - 1000+ stocks analyzed in <24hr with complex memory operations.
+**Impact**: Performance targets may be impossible at stated scale.
+**Status**: Requires capacity planning, benchmarking, architectural validation.
+
+### 8. Debate Resolution Deadlock Scenario ⚠️
+
+**Problem**: Debate protocol relies on human arbitration but no handling of human unavailability.
+**Impact**: Pipeline deadlocks, time-sensitive analyses delayed.
+**Status**: Needs escalation timeouts, proxy decision-makers, automated fallbacks.
+
+### 9. Learning Loop - No Negative Feedback Mechanism ⚠️
+
+**Problem**: Tracks outcomes but lacks structured failure investigation.
+**Impact**: System doesn't learn deeply from mistakes, misses root causes.
+**Status**: Requires post-mortem process, failure categorization, systematic analysis.
+
+---
+
+## Resolution Progress
+
+**Phase 1 (Foundation - Months 1-2)**: ✅ COMPLETE
+
+- Resolved: Flaws #1 (Gate 6), #2 (Event-driven sync)
+
+**Phase 2 (Core Systems - Months 3-4)**: IN PROGRESS
+
+- **Next Critical**: Flaw #8 (Debate Deadlock) - blocks pipeline operation
+- Coming: Flaw #3 (Pattern Validation), Flaw #7 (Scalability)
+
+See [PRIORITY.md](PRIORITY.md) for detailed implementation order and dependencies.
+
+## Resolved Issue Details
+
+For complete documentation of resolved issues, see:
+
+- [Flaw #1: Missing Human Gate](resolved/01-missing-human-gate.md) → [Gate 6 Design](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)
+- [Flaw #2: Memory Sync Timing](resolved/02-memory-sync-timing.md) → [Event-Driven Sync](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md)
+
+---
+
+## Related Documentation
+
+- [Design Decisions Index](../../design-decisions/INDEX.md)
+- [Implementation Roadmap](../implementation/01-roadmap.md)
+- [Architecture Overview](../architecture/01-system-overview.md)

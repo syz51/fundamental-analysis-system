@@ -105,32 +105,59 @@ Relationships:
 
 **Note**: Code samples referenced here have been omitted from architecture docs. See `/examples/` directory for implementation examples.
 
-### Synchronization Process
+### Event-Driven Priority Sync Architecture
 
-The Memory Sync Manager handles bidirectional synchronization between agent local memories and the central knowledge base:
+The Memory Sync Manager uses an event-driven approach with three priority tiers to ensure timely synchronization while minimizing overhead.
+
+**Sync Priority Levels**:
+
+| Priority | Trigger Events | Latency | Use Cases |
+|----------|---------------|---------|-----------|
+| **Critical** | Debates, challenges, human gates | <2 seconds | Ensures consistency during high-stakes interactions |
+| **High** | Important findings, alerts, confirmations | <10 seconds | Fast propagation of significant discoveries |
+| **Normal** | Routine updates, batch operations | 5 minutes | Background sync for non-urgent updates |
+
+### Synchronization Process
 
 **Push Operations** (Local → Central):
 
-- Important local discoveries (importance > 0.7)
-- New insights from agent analysis
-- Broadcast to relevant agents
+- Critical: Immediate push when debate initiated or human gate approaching
+- High: Fast push for important discoveries (importance > 0.7)
+- Normal: Scheduled push every 5 minutes for routine updates
 
 **Pull Operations** (Central → Local):
 
-- Relevant updates since last sync
-- Cross-domain insights applicable to agent's specialization
-- Pattern updates affecting agent's domain
+- Critical: Force immediate pull before debates/challenges
+- High: Fast pull when relevant high-priority updates available
+- Normal: Periodic pull of cross-domain insights
 
-**Sync Frequency**: Every 5 minutes for active agents
+**Event-Triggered Sync**:
+
+The system automatically triggers critical sync when:
+
+- **Debate/Challenge Initiated**: Both challenger and challenged agents force-synced
+- **Human Gate Approaching**: All agents synced 30 minutes before gate
+- **Alert Messages**: Sending and receiving agents high-priority synced
+- **Finding with Precedent**: High-priority sync to ensure historical context available
+
+### Memory Snapshot for Debates
+
+During debates, the system creates a point-in-time memory snapshot:
+
+1. **Force sync all participants** - ensures consistent starting state
+2. **Create locked snapshot** - prevents mid-debate inconsistencies
+3. **All agents reference snapshot** - uniform view of evidence
+4. **Sync after resolution** - propagate debate outcomes
 
 ### Relevance Determination
 
-The system determines which agents need immediate notification of insights based on:
+The system determines which agents need immediate notification based on:
 
 - Agent specialization overlap
 - Current active analyses
 - Historical usage patterns
 - Insight importance and urgency
+- Message type and priority
 
 ---
 
