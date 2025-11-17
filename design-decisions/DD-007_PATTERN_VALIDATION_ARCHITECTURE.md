@@ -13,6 +13,7 @@
 v2.0 pattern detection used same dataset for discovery and validation → circular logic amplifying false patterns.
 
 **Problem Flow**:
+
 1. Pattern detected: "Tech CEO changes → underperformance" (3 occurrences, 0.7 correlation)
 2. Pattern broadcast to all agents
 3. Agents apply pattern → adjust estimates down
@@ -21,6 +22,7 @@ v2.0 pattern detection used same dataset for discovery and validation → circul
 6. **Self-fulfilling prophecy strengthens false pattern**
 
 **Statistical Flaws**:
+
 - No independent hold-out set (in-sample testing only)
 - Data leakage (agents aware of pattern during analysis)
 - No baseline comparison (no tracking what happens without pattern)
@@ -45,12 +47,14 @@ Patterns progress through lifecycle: candidate → statistically_validated → h
 **Description**: Chronological train/val/test split (70%/15%/15%), validate on unseen data
 
 **Pros**:
+
 - Standard ML best practice
 - Prevents overfitting to training data
 - Simple to implement
 - Low computational cost
 
 **Cons**:
+
 - Doesn't prevent agent awareness contamination
 - No measurement of actual decision impact
 - Can't detect self-fulfilling prophecies
@@ -65,12 +69,14 @@ Patterns progress through lifecycle: candidate → statistically_validated → h
 **Description**: Shadow tracking - calculate outcomes with/without pattern, agents unaware
 
 **Pros**:
+
 - Prevents agent behavior contamination
 - Measures actual decision impact
 - Detects self-fulfilling prophecies
 - Real-world validation
 
 **Cons**:
+
 - Requires 6-month evaluation period
 - Double computation (with/without pattern)
 - Delayed pattern deployment
@@ -85,12 +91,14 @@ Patterns progress through lifecycle: candidate → statistically_validated → h
 **Description**: Require patterns pass (1) hold-out validation, (2) blind testing, (3) statistical significance vs control group
 
 **Pros**:
+
 - Comprehensive bias prevention (circular logic, self-fulfilling, spurious correlation)
 - High confidence in validated patterns (multi-stage filtering)
 - Audit trail for validation decisions
 - Aligns with scientific rigor standards
 
 **Cons**:
+
 - Longest validation time (6+ months)
 - Most complex implementation
 - Highest computational cost
@@ -105,22 +113,26 @@ Patterns progress through lifecycle: candidate → statistically_validated → h
 Selected Option 3 because:
 
 **Complementary Validation Methods**:
+
 - Hold-out prevents overfitting (statistical validity)
 - Blind testing prevents agent contamination (operational validity)
 - Control groups measure actual improvement (decision validity)
 - Each catches different failure modes
 
 **Risk Mitigation**:
+
 - False patterns cause systematic bias → compounds over time → high cost
 - Conservative approach justified (better reject true pattern than accept false one)
 - 30-50% pass rate acceptable (quality over quantity)
 
 **System Principles**:
+
 - "Rigorous validation over fast deployment" (principle #3)
 - "Anti-confirmation bias by design" (principle #7)
 - Aligns with Gate 6 human oversight philosophy
 
 **Tradeoffs Acceptable**:
+
 - 6-month delay tolerable (learning is long-term optimization)
 - Computational cost small vs analyst salaries
 - Complexity managed through modular implementation
@@ -170,18 +182,21 @@ Statistically Validated → Gate 6 Review → Human Approved → Active
 ### Validation Thresholds
 
 **Hold-Out Validation**:
+
 - Min validation occurrences: 3
 - Min validation correlation: 0.65
 - Performance degradation: <20% vs training accuracy
 - Pass criteria: ALL conditions met
 
 **Blind Testing**:
+
 - Evaluation period: 6 months
 - Min comparisons: 10
 - Improvement threshold: Pattern helps >1.5x more than hurts
-- Pass criteria: pattern_helped > pattern_hurt * 1.5
+- Pass criteria: pattern_helped > pattern_hurt \* 1.5
 
 **Control Group Testing**:
+
 - Duration: 6 months concurrent with blind testing
 - Statistical test: Two-sample t-test
 - Significance level: p < 0.05
@@ -263,7 +278,7 @@ class PatternValidationPipeline:
 ```yaml
 New Patterns Discovered:
   - pattern_name: string
-    status: statistically_validated  # New requirement
+    status: statistically_validated # New requirement
     validation_results:
       holdout_accuracy: float
       blind_test_score: float
@@ -275,6 +290,7 @@ New Patterns Discovered:
 ```
 
 **Gate 6 Validation Criteria** (added to existing criteria):
+
 - **Require statistical validation**: Patterns must have status='statistically_validated'
 - **Review validation scores**: Human checks p-value, sample size, test results
 - **Override option**: Human can reject statistically valid pattern if domain knowledge contradicts
@@ -293,6 +309,7 @@ New Patterns Discovered:
 **Estimated Implementation Effort**: 6-8 weeks (Phase 3)
 
 **Dependencies**:
+
 - Pattern detection system (Learning Engine) - Phase 2
 - Gate 6 validation dashboard (Human Interface) - Phase 2
 - Shadow analysis framework - Phase 3
@@ -319,22 +336,24 @@ None - specification complete, ready for implementation.
 
 ## Status History
 
-| Date       | Status      | Notes                                    |
-| ---------- | ----------- | ---------------------------------------- |
-| 2025-11-17 | Proposed    | Initial design from Flaw #3 analysis     |
-| 2025-11-17 | Approved    | Approved by system architect             |
-| 2025-11-17 | Implemented | Added to v2.0 design, resolves Flaw #3   |
+| Date       | Status      | Notes                                  |
+| ---------- | ----------- | -------------------------------------- |
+| 2025-11-17 | Proposed    | Initial design from Flaw #3 analysis   |
+| 2025-11-17 | Approved    | Approved by system architect           |
+| 2025-11-17 | Implemented | Added to v2.0 design, resolves Flaw #3 |
 
 ---
 
 ## Notes
 
 **Why 3 tiers vs just hold-out?** Each tier catches different failure mode:
+
 - Hold-out: Overfitting to training data
 - Blind: Agent behavior contamination, self-fulfilling prophecies
 - Control: Actual decision improvement vs baseline
 
 **Expected pass rates**:
+
 - Hold-out: ~70% (standard ML)
 - Blind testing: ~60% of hold-out survivors (catches contamination)
 - Control groups: ~70% of blind survivors (statistical significance)
