@@ -531,3 +531,159 @@ class HumanExpertiseDashboard:
    - Continuous refinement
 
 ---
+
+## Analysis & Implementation Status (2025-01-17)
+
+### Validity Assessment: CONFIRMED VALID
+
+Comprehensive review confirms this flaw remains **unresolved and valid**. Key findings:
+
+**Asymmetry with Agent Credibility System**:
+
+Agents have sophisticated credibility tracking (DD-008, Flaw #4 RESOLVED):
+- Multi-factor temporal decay (exponential, 2-year half-life)
+- Market regime-specific credibility (6 regimes)
+- Performance trend detection (52-week regression, R² > 0.3)
+- Human override rate penalties (>20% triggers credibility reduction)
+- Multi-dimensional context matching (sector/metric/horizon/size/stage)
+- Sample size confidence intervals
+
+**Humans have NONE of this** - only static 4-role assignment with no performance tracking.
+
+**Human Override Data Collected But Not Used**:
+
+System tracks human override rates (feedback-loops.md:199-243) for agent penalties:
+- Override rate calculation
+- Override outcome accuracy
+- Override reason categorization
+- Root cause analysis triggers
+
+However, this data is NOT used to:
+- Build human expertise profiles
+- Route decisions to humans with best track records
+- Identify which humans add value in which contexts
+- Learn from human decision patterns
+
+**Multi-Expert Workflows Lack Intelligence**:
+
+Human-integration.md (lines 546-555) describes purely rule-based workflows:
+- No expertise-based matching ("Route to Alex - 87% accuracy on EV companies")
+- No performance-based prioritization
+- Assumes single expert or random assignment
+
+**Queue Management Without Expertise Matching**:
+
+Collaboration-protocols.md (lines 212-230) shows workload management (max 3 concurrent) but:
+- No routing based on domain expertise
+- No historical accuracy consideration
+- No similarity matching to past successful decisions
+
+### Affected Documentation
+
+**Primary**:
+- `docs/design-flaws/06-expertise-routing.md` (this file)
+- `docs/design-flaws/PRIORITY.md` (roadmap tracking)
+- `docs/design-flaws/00-SUMMARY.md` (status tracking)
+
+**Requires Updates When Implemented**:
+- `docs/operations/02-human-integration.md` (lines 522-555: static 4-role section)
+- `docs/architecture/07-collaboration-protocols.md` (lines 212-230: debate routing)
+- `docs/learning/02-feedback-loops.md` (lines 199-243: extend override tracking)
+- `docs/architecture/04-memory-system.md` (knowledge graph schema: add HumanExpert nodes)
+- `docs/learning/01-learning-system.md` (Gate 6: add human credibility review)
+
+### Design Approach (When Implemented)
+
+**Human Credibility System** (parallel structure to DD-008 agent credibility):
+- Multi-dimensional tracking: sector/metric/decision-type/complexity
+- Temporal decay: 2-year half-life matching agent credibility
+- Sample size confidence intervals (min 10-30 decisions before routing uses expertise)
+- Override outcome accuracy tracking (6-month rolling windows)
+
+**5-Factor Dynamic Routing Algorithm**:
+1. **Domain expertise** (35% weight): Sector-specific accuracy track record
+2. **Complexity match** (20% weight): Has expert handled similar complexity?
+3. **Similarity** (25% weight): Historical accuracy on similar decisions
+4. **Availability** (10% weight): Current workload penalty if >10 pending
+5. **Recency** (10% weight): Recent experience in sector (3-month window)
+
+**Learning Integration**:
+- Capture human decision + context + outcome in knowledge graph
+- Extract patterns from override data (identify systematic AI weaknesses)
+- Update expertise profiles based on rolling performance windows
+- Gate 6 validation: Review human credibility changes alongside agent credibility
+
+**Architectural Principles**:
+- Parallel structure to agent credibility (consistency)
+- Privacy-preserving (aggregate insights, no individual shaming)
+- Graceful degradation (fall back to availability if insufficient data)
+- Transparency (humans see own expertise profiles via dashboard)
+
+### Deferral Rationale: Single Human Operator
+
+**Current State**: Project has **one human operator** currently.
+
+**Implementation Deferred** until multi-human team exists because:
+
+1. **No Routing Needed**: Single operator receives all decisions by default
+2. **Insufficient Data**: Expertise differentiation requires comparing multiple humans
+3. **Sequential Dependencies**: Requires operational gates with human decision history (Phases 1-4)
+4. **MVP Not Blocked**: System functions with single expert using static routing
+5. **Learning Prerequisite**: Needs 6+ months of multi-human data before expertise patterns become statistically meaningful
+6. **Scale Requirement**: Only becomes pain point when multiple human experts exist
+
+**Trigger for Implementation**: When project scales to 2+ human experts with overlapping domains.
+
+### Prerequisites for Implementation
+
+**Design Foundation**:
+- [ ] DD-008 agent credibility system (COMPLETE) - use as template
+- [ ] Operational gates collecting human decision data (Phase 2-3)
+- [ ] DD-006 post-mortem system (COMPLETE) - extend to capture human decisions
+- [ ] Knowledge graph with decision/outcome tracking (Phase 1-2)
+
+**Data Requirements**:
+- [ ] 6+ months human decision history per expert
+- [ ] Min 30 decisions per expert across 3+ domains
+- [ ] Human override outcomes tracked (win/loss/neutral)
+- [ ] Decision characteristics captured (sector/complexity/type)
+
+**Implementation Checklist** (when triggered):
+
+1. **Create DD-010**: Dynamic Human Expertise Routing & Credibility System
+   - Human credibility schema (parallel to DD-008 structure)
+   - DynamicExpertRouter algorithm specification
+   - Integration points with Gates 1-6
+   - Database extensions (HumanExpert nodes in knowledge graph)
+
+2. **Update Architecture Docs**:
+   - `memory-system.md`: Add HumanExpert nodes/relationships to schema
+   - `collaboration-protocols.md`: Add expertise matching to debate routing
+   - `learning-system.md`: Add human credibility to Gate 6 review items
+
+3. **Update Operations Docs**:
+   - `human-integration.md`: Replace static 4-role section with dynamic routing
+   - Add human performance dashboard specification
+   - Add expertise-based queue management
+
+4. **Extend Learning Systems**:
+   - `feedback-loops.md`: Extend override tracking to build expertise profiles
+   - Add human decision outcome analysis for routing improvements
+   - Add systematic AI weakness detection from override patterns
+
+5. **Implementation** (4-month plan):
+   - Month 1: HumanExpertiseProfile tracking, expertise database
+   - Month 2: DynamicExpertRouter, routing effectiveness metrics
+   - Month 3: Override pattern analysis, systematic weakness detection
+   - Month 4: Expertise dashboard, transparency reports, refinement
+
+### Open Questions (For Future Implementation)
+
+- **Visibility**: Should human credibility be visible to other humans or private only?
+- **Sample Size Threshold**: Min decisions before routing uses expertise vs availability (10? 20? 30?)?
+- **Expertise Declaration**: Should humans self-declare areas or purely data-driven?
+- **Review Frequency**: Gate 6 review frequency for human credibility (monthly? quarterly?)?
+- **Temporal Weighting**: Should recent overrides weight more than old ones?
+- **Expertise Differential Threshold**: Min credibility gap before routing prefers expert over available generalist (0.10? 0.15? 0.20?)?
+
+---
