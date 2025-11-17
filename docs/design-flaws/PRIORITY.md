@@ -124,23 +124,31 @@ This document outlines the recommended sequence for addressing design flaws, wit
 - ✅ Integration with Gate 6 for pattern revision validation
 - ✅ Knowledge graph extensions for post-mortem tracking
 
-### 🟡 Flaw #4: Agent Credibility Scoring - No Temporal Decay
+### ✅ Flaw #4: Agent Credibility Scoring - No Temporal Decay
 
 **Priority**: Medium
-**Status**: UNRESOLVED
+**Status**: RESOLVED (2025-11-17)
 **Rationale**: Improves agent credibility accuracy
 **Dependencies**: Operational agents with performance data
-**Effort**: 2 weeks
-**Impact**: Sub-optimal credibility weighting, especially during regime changes
+**Effort**: 2 weeks (estimated) → 3 weeks (actual, DD-008)
+**Impact**: Accurate credibility weighting adapts to regime changes and agent improvement
+**Resolution**: [DD-008: Agent Credibility System](../../design-decisions/DD-008_AGENT_CREDIBILITY_SYSTEM.md)
 
 **Why Now**: After 6+ months of agent operation, have enough data to implement temporal weighting.
 
-**Implementation Notes**:
+**Implementation Completed**:
 
-- Implement exponential decay for old predictions
-- Add market regime detection
-- Create regime-specific credibility scores
-- Test with historical regime transitions
+- ✅ Exponential decay with configurable half-life (default 2 years)
+- ✅ Market regime detection (6 regimes: BULL/BEAR × LOW/HIGH rates, VOLATILITY, NORMAL)
+- ✅ Regime-specific credibility scores (50+ decisions threshold)
+- ✅ Performance trend detection (52-week linear regression, R² > 0.3)
+- ✅ Human override rate tracking (>20%/40% thresholds, 15%/30% penalties)
+- ✅ Multi-dimensional context matching (6 dimensions: sector/metric/horizon/size/stage)
+- ✅ Confidence intervals (Wilson score for statistical significance)
+- ✅ Integration with Debate Facilitator auto-resolution logic
+- ✅ Comprehensive technical specification and class definitions
+
+**Documentation Updated**: 5 architecture docs + DD-008 + implementation spec
 
 ### 🟡 Flaw #5: Data Retention Policy Conflict
 
@@ -200,7 +208,7 @@ Foundation (Phase 1)
     │               │
     │               └── Phase 4: Optimization
     │                   ├── Flaw #9 ✅ → Negative Feedback (depends on #1, #3)
-    │                   ├── Flaw #4 🟡 → Credibility Temporal Decay
+    │                   ├── Flaw #4 ✅ → Credibility Temporal Decay
     │                   └── Flaw #5 🟡 → Data Retention
     │                       │
     │                       └── Phase 5: Refinement
@@ -214,7 +222,7 @@ Foundation (Phase 1)
 | #1 ✅ | -                      | #3, #9                             |
 | #2 ✅ | -                      | #7, #8                             |
 | #3 ✅ | #1                     | #9                                 |
-| #4 🟡 | Operational agents     | -                                  |
+| #4 ✅ | Operational agents     | -                                  |
 | #5 🟡 | Pattern storage        | -                                  |
 | #6 🟢 | Human gate data        | -                                  |
 | #7 ✅ | #2, operational agents | -                                  |
@@ -230,8 +238,7 @@ _None - all high-risk flaws resolved_
 ### Can Defer Safely
 
 1. **Flaw #6** (Expertise Routing) - marginal improvement
-2. **Flaw #4** (Credibility Decay) - quality improvement, not critical
-3. **Flaw #5** (Data Retention) - 3+ year timeline before impact
+2. **Flaw #5** (Data Retention) - 3+ year timeline before impact
 
 ---
 
@@ -256,7 +263,7 @@ _None - all high-risk flaws resolved_
 ### Future (Month 6+)
 
 - [x] ~~Plan Flaw #9 post-mortem process~~ ✅ COMPLETE
-- [ ] Design Flaw #4 temporal decay algorithm
+- [x] ~~Design Flaw #4 temporal decay algorithm~~ ✅ COMPLETE
 - [ ] Spec Flaw #5 retention policies
 - [ ] Research Flaw #6 expertise routing approaches
 
