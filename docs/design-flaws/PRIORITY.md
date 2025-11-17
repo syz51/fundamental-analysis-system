@@ -197,82 +197,394 @@ This document outlines the recommended sequence for addressing design flaws, wit
 - Create expertise discovery from gate decisions
 - Build adaptive routing algorithms
 
+### 🟢 Flaw #18: Learning Asymmetry - Human Expertise Not Tracked
+
+**Priority**: Medium
+**Status**: DEFERRED (subset of Flaw #6)
+**Rationale**: Asymmetric learning (agents penalized, humans not profiled)
+**Dependencies**: Human gates operational, Flaw #6 implementation
+**Effort**: Included in Flaw #6 (3 weeks)
+**Impact**: Suboptimal human-AI task division
+
+**Why Deferred**: Subset of Flaw #6 dynamic routing, address together in Phase 5.
+
 ---
 
-## Critical Path
+## Documentation Review Findings (2025-11-17)
+
+Following comprehensive documentation review, 11 new design flaws identified and documented:
+
+### Phase 2: Core Systems (Immediate - Months 3-4)
+
+### 🔴 Flaw #11: Missing Algorithm Specifications
+
+**Priority**: Critical
+**Status**: ACTIVE
+**Rationale**: Blocks automation features implementation
+**Dependencies**: Debate protocol operational (Flaw #8)
+**Effort**: 5 weeks
+**Impact**: Debate override impact calculation, post-mortem prioritization, dependency resolution all undefined
+
+**Sub-Issues**:
+
+- C1: Downstream impact calculation missing (debate overrides)
+- M3: Post-mortem priority formula undefined
+- G5: Agent dependency resolution algorithm missing
+
+**Documentation**: [Flaw #11](./11-algorithm-specs.md)
+
+### 🔴 Flaw #14: Statistical Reliability Issues
+
+**Priority**: High
+**Status**: ACTIVE
+**Rationale**: Auto-resolution may never trigger with current parameters
+**Dependencies**: Agent performance data, debate protocol
+**Effort**: 4 weeks
+**Impact**: Credibility system has inconsistent formulas, sample size too low (n=5)
+
+**Sub-Issues**:
+
+- C4: Two different confidence interval formulas
+- H6: Minimum sample size (n=5) insufficient for 0.25 threshold
+- CS4: Fixed vs dynamic threshold ambiguity
+
+**Documentation**: [Flaw #14](./14-statistical-reliability.md)
+
+### 🔴 Flaw #16: Timeline & Dependency Conflicts
+
+**Priority**: High
+**Status**: ACTIVE
+**Rationale**: Phase 2 blocked by Phase 4 dependency
+**Dependencies**: None (roadmap restructure)
+**Effort**: 2 weeks (roadmap updates + simplified credibility)
+**Impact**: Phase 2 requires credibility system not built until Phase 4
+
+**Sub-Issues**:
+
+- H1: Credibility dependency circular (Phase 2 needs Phase 4)
+- M8: Benchmarking sprints missing (8 weeks underestimation)
+
+**Documentation**: [Flaw #16](./16-timeline-conflicts.md)
+
+**Resolution Plan**: Two-phase credibility (simplified for Phase 2, comprehensive for Phase 4)
+
+### 🔴 Flaw #19: Partial Failure Handling Undefined
+
+**Priority**: High
+**Status**: ACTIVE
+**Rationale**: Undefined behavior when subset of agents fail
+**Dependencies**: Multi-agent workflows operational
+**Effort**: 4 weeks
+**Impact**: No quorum requirements, message queue specs missing, contradiction timeouts undefined
+
+**Sub-Issues**:
+
+- G1: Agent failure quorum undefined
+- G2: Message protocol implementation missing (RabbitMQ? Kafka?)
+- M6: Data contradiction resolution timeout missing
+
+**Documentation**: [Flaw #19](./19-partial-failures.md)
+
+### Phase 3: Quality & Learning (Months 5-6)
+
+### 🔴 Flaw #12: Pattern Archive Lifecycle Gaps
+
+**Priority**: Critical (C2), Medium (A3)
+**Status**: ACTIVE
+**Rationale**: Data loss risk for deprecated patterns, no archive promotion
+**Dependencies**: DD-009 implemented, post-mortem system (Flaw #9)
+**Effort**: 7 weeks
+**Impact**: Circular deletion logic risks evidence loss, archived knowledge inaccessible
+
+**Sub-Issues**:
+
+- C2: Circular dependency in deletion (deprecated pattern evidence)
+- A3: No archive promotion path (S3 → L3 graph)
+
+**Documentation**: [Flaw #12](./12-archive-lifecycle.md)
+
+### 🔴 Flaw #13: Learning System Validation Gaps
+
+**Priority**: Critical
+**Status**: ACTIVE
+**Rationale**: Auto-approval without validation, blind testing contamination
+**Dependencies**: Gate 6 operational, pattern validation (DD-007)
+**Effort**: 6 weeks
+**Impact**: 95% accuracy target unvalidated, pattern quarantine missing
+
+**Sub-Issues**:
+
+- C3: Auto-approval validation mechanism missing
+- H4: Blind testing contamination risk (logs/cache/debug)
+
+**Documentation**: [Flaw #13](./13-validation-gaps.md)
+
+### 🔴 Flaw #15: Query & Sync Failure Modes
+
+**Priority**: Critical (C5), Medium (A4, M5)
+**Status**: ACTIVE
+**Rationale**: System hangs from infinite recursion, memory overflow
+**Dependencies**: Memory system operational (DD-005, DD-002)
+**Effort**: 4 weeks
+**Impact**: Timeout fallbacks recurse infinitely, no backpressure, regime detection race
+
+**Sub-Issues**:
+
+- C5: Query timeout fallback infinite recursion risk
+- A4: Event-driven sync no backpressure mechanism
+- M5: Regime detection/credibility recalc race condition
+
+**Documentation**: [Flaw #15](./15-failure-modes.md)
+
+### 🔴 Flaw #20: Memory System Access Control Undefined
+
+**Priority**: Medium
+**Status**: ACTIVE
+**Rationale**: Data integrity risk from unrestricted modifications
+**Dependencies**: Memory system operational (L1/L2/L3)
+**Effort**: 4 weeks
+**Impact**: Agent permissions unclear, audit trail missing
+
+**Documentation**: [Flaw #20](./20-access-control.md)
+
+### Phase 4: Optimization (Months 7-8)
+
+### 🔴 Flaw #17: Data Tier Management Gaps
+
+**Priority**: High
+**Status**: ACTIVE
+**Rationale**: Performance degradation, no corruption recovery
+**Dependencies**: DD-009 tiered storage, Neo4j operational
+**Effort**: 4 weeks
+**Impact**: No migration rollback, no graph corruption recovery
+
+**Sub-Issues**:
+
+- H3: No storage tier migration rollback procedures
+- G4: Knowledge graph corruption recovery missing
+
+**Documentation**: [Flaw #17](./17-data-tier-mgmt.md)
+
+### 🔴 Flaw #21: Scalability Architecture Bottlenecks
+
+**Priority**: Critical
+**Status**: ACTIVE
+**Rationale**: Cannot scale to 1000+ stocks without redesign
+**Dependencies**: Neo4j, DD-004 auto-approval
+**Effort**: 8 weeks (HA setup + auto-approval validation)
+**Impact**: Single point of failure (Neo4j), human gates need 18 FTE at scale
+
+**Sub-Issues**:
+
+- A1: Central knowledge graph single point of failure (no HA)
+- A2: Human gate synchronous bottleneck (need 90%+ auto-approval)
+
+**Documentation**: [Flaw #21](./21-scalability.md)
+
+**Resolution Plan**: Neo4j HA clustering + increase auto-approval 50%→90%
+
+### 🟡 Minor Issues
+
+**Status**: LOW PRIORITY
+**Effort**: 1 day (8 hours)
+**Impact**: Ambiguous criteria, minor inconsistencies
+
+**Issues**: M1 (probation progress), M2 (cache hit definition), M4 (pattern lifecycle), M7 (screening false positives), CS1 (sync vs access latency), CS2 (occurrence count)
+
+**Documentation**: [Minor Issues](./MINOR-ISSUES.md)
+
+---
+
+## Critical Path (Updated 2025-11-17)
 
 ```text
-Foundation (Phase 1)
+Foundation (Phase 1) ✅ COMPLETE
 ├── Flaw #1 ✅ → Gate 6 Learning Validation
 └── Flaw #2 ✅ → Event-Driven Memory Sync
     │
-    ├── Phase 2: Core Systems
-    │   └── Flaw #8 ✅ → Debate Deadlock Resolution
+    ├── Phase 2: Core Systems (CRITICAL - UNRESOLVED BLOCKERS)
+    │   ├── Flaw #8 ✅ → Debate Deadlock Resolution
+    │   ├── Flaw #11 🔴 → Algorithm Specs (blocks #8 Level 4-5)
+    │   ├── Flaw #14 🔴 → Statistical Reliability (blocks #8 auto-resolution)
+    │   ├── Flaw #16 🔴 → Timeline Conflicts (restructure needed)
+    │   └── Flaw #19 🔴 → Partial Failures (blocks multi-agent)
     │       │
     │       └── Phase 3: Quality & Learning
     │           ├── Flaw #3 ✅ → Pattern Validation (depends on #1)
-    │           └── Flaw #7 ✅ → Scalability Validation (depends on #2)
+    │           ├── Flaw #7 ✅ → Scalability Validation (depends on #2)
+    │           ├── Flaw #12 🔴 → Archive Lifecycle (blocks #9 post-mortem)
+    │           ├── Flaw #13 🔴 → Validation Gaps (blocks auto-approval)
+    │           ├── Flaw #15 🔴 → Failure Modes (blocks memory reliability)
+    │           └── Flaw #20 🔴 → Access Control (security)
     │               │
-    │               └── Phase 4: Optimization
+    │               └── Phase 4: Optimization (PRODUCTION READINESS)
     │                   ├── Flaw #9 ✅ → Negative Feedback (depends on #1, #3)
     │                   ├── Flaw #4 ✅ → Credibility Temporal Decay
-    │                   └── Flaw #5 ✅ → Data Retention
+    │                   ├── Flaw #5 ✅ → Data Retention
+    │                   ├── Flaw #17 🔴 → Data Tier Management
+    │                   └── Flaw #21 🔴 → Scalability (CRITICAL - blocks 1000+ stocks)
     │                       │
     │                       └── Phase 5: Refinement
-    │                           └── Flaw #6 🟢 → Dynamic Expertise Routing
+    │                           ├── Flaw #6 🟢 → Dynamic Expertise Routing
+    │                           └── Flaw #18 🟢 → Learning Asymmetry (subset of #6)
 ```
 
-## Dependency Matrix
+## Dependency Matrix (Updated 2025-11-17)
 
-| Flaw  | Depends On             | Blocks                             |
-| ----- | ---------------------- | ---------------------------------- |
-| #1 ✅ | -                      | #3, #9                             |
-| #2 ✅ | -                      | #7, #8                             |
-| #3 ✅ | #1                     | #9                                 |
-| #4 ✅ | Operational agents     | -                                  |
-| #5 ✅ | Pattern storage        | -                                  |
-| #6 🟢 | Human gate data        | -                                  |
-| #7 ✅ | #2, operational agents | -                                  |
-| #8 ✅ | #2                     | ~~Core agent testing~~ (unblocked) |
-| #9 ✅ | #1, #3                 | -                                  |
+| Flaw   | Depends On                        | Blocks                             | Phase |
+| ------ | --------------------------------- | ---------------------------------- | ----- |
+| #1 ✅  | -                                 | #3, #9                             | 1     |
+| #2 ✅  | -                                 | #7, #8                             | 1     |
+| #3 ✅  | #1                                | #9                                 | 3     |
+| #4 ✅  | Operational agents                | -                                  | 4     |
+| #5 ✅  | Pattern storage                   | -                                  | 4     |
+| #6 🟢  | Human gate data                   | -                                  | 5     |
+| #7 ✅  | #2, operational agents            | -                                  | 3     |
+| #8 ✅  | #2                                | ~~Core agent testing~~ (unblocked) | 2     |
+| #9 ✅  | #1, #3                            | -                                  | 4     |
+| #11 🔴 | #8 (debate protocol)              | Debate Level 4-5, post-mortem      | 2     |
+| #12 🔴 | DD-009, #9 (post-mortem)          | Post-mortem investigation          | 3     |
+| #13 🔴 | Gate 6, DD-007 (pattern val)      | Auto-approval deployment           | 3     |
+| #14 🔴 | Agent perf data, debate protocol  | Auto-resolution (#8)               | 2     |
+| #15 🔴 | Memory system (DD-005, DD-002)    | Memory reliability                 | 3     |
+| #16 🔴 | - (roadmap only)                  | Phase 2 implementation             | 2     |
+| #17 🔴 | DD-009, Neo4j                     | Production reliability             | 4     |
+| #18 🟢 | Human gate data, #6               | -                                  | 5     |
+| #19 🔴 | Multi-agent workflows             | Multi-agent reliability            | 2     |
+| #20 🔴 | Memory system (L1/L2/L3)          | Production security                | 3     |
+| #21 🔴 | Neo4j, DD-004 auto-approval       | Scale to 1000+ stocks              | 4     |
 
-## Risk Assessment
+## Risk Assessment (Updated 2025-11-17)
 
-### Highest Risk if Unfixed
+### Highest Risk if Unfixed (CRITICAL)
 
-_None - all high-risk flaws resolved_
+1. **Flaw #21** (Scalability Bottlenecks) - blocks 1000+ stock target, need 18 FTE without fix
+2. **Flaw #16** (Timeline Conflicts) - blocks Phase 2 implementation START
+3. **Flaw #11** (Algorithm Specs) - debate override automation blocked
+4. **Flaw #13** (Validation Gaps) - auto-approval accuracy unvalidated
+
+### High Risk (Should Fix Before MVP)
+
+1. **Flaw #14** (Statistical Reliability) - auto-resolution never triggers at n=5
+2. **Flaw #19** (Partial Failures) - undefined behavior when agents fail
+3. **Flaw #12** (Archive Lifecycle) - data loss risk for post-mortem evidence
+4. **Flaw #15** (Failure Modes) - system hangs from infinite recursion
+
+### Medium Risk (Fix Before Production)
+
+1. **Flaw #17** (Data Tier Management) - performance degradation, corruption recovery
+2. **Flaw #20** (Access Control) - security/integrity risk
 
 ### Can Defer Safely
 
 1. **Flaw #6** (Expertise Routing) - marginal improvement
+2. **Flaw #18** (Learning Asymmetry) - subset of Flaw #6
+3. **Minor Issues** - clarifications, low impact
 
 ---
 
-## Next Steps
+## Next Steps (Updated 2025-11-17)
 
-### Immediate (Month 3-4)
+### IMMEDIATE (Before Phase 2 Start)
+
+**BLOCKERS - Must resolve before Month 3:**
+
+- [ ] **Flaw #16: Restructure roadmap** (2 weeks)
+  - [ ] Add phased credibility (simplified Phase 2, comprehensive Phase 4)
+  - [ ] Add benchmark sprints (1 week each phase)
+  - [ ] Update timeline dependencies
+- [ ] **Flaw #14: Fix statistical reliability** (4 weeks)
+  - [ ] Standardize Wilson score confidence intervals
+  - [ ] Increase min sample size 5→15
+  - [ ] Update all credibility calculations
+
+### Phase 2 (Months 3-4) - Core Systems
 
 - [x] ~~Start Flaw #8 implementation (Debate Deadlock)~~ ✅ COMPLETE
 - [x] ~~Design escalation timeout mechanisms~~ ✅ COMPLETE
 - [x] ~~Identify proxy decision-makers~~ ✅ COMPLETE (conservative defaults)
 - [x] ~~Draft automated fallback protocols~~ ✅ COMPLETE
+- [ ] **Flaw #11: Implement algorithm specs** (5 weeks)
+  - [ ] Downstream impact calculation
+  - [ ] Post-mortem priority formula
+  - [ ] Dependency resolution algorithm
+- [ ] **Flaw #19: Partial failure handling** (4 weeks)
+  - [ ] Agent quorum requirements
+  - [ ] RabbitMQ message queue setup
+  - [ ] Contradiction resolution fallback
 - [ ] **Begin code implementation of debate resolution system**
 - [ ] **Test 8 scenarios from roadmap (human unavailability, overload, etc.)**
 
-### Coming Soon (Month 5-6)
+### Phase 3 (Months 5-6) - Quality & Learning
 
 - [x] ~~Begin Flaw #3 planning (Pattern Validation)~~ ✅ COMPLETE
 - [x] ~~Start Flaw #7 capacity planning (Scalability)~~ ✅ COMPLETE
+- [ ] **Flaw #12: Archive lifecycle fixes** (7 weeks)
+  - [ ] Deprecated pattern retention rules
+  - [ ] Archive promotion system
+- [ ] **Flaw #13: Validation gaps** (6 weeks)
+  - [ ] Auto-approval shadow mode (90 days)
+  - [ ] Blind testing quarantine
+- [ ] **Flaw #15: Failure mode handling** (4 weeks)
+  - [ ] Query timeout recursion prevention
+  - [ ] Memory sync backpressure
+  - [ ] Regime detection sequencing
+- [ ] **Flaw #20: Access control** (4 weeks)
+  - [ ] Permission matrix implementation
+  - [ ] Audit logging
 - [ ] Implement Phase 3 benchmarking (Flaw #7 validation)
 - [ ] Begin code implementation for optimizations
 
-### Future (Month 7-8)
+### Phase 4 (Months 7-8) - Production Readiness
 
 - [x] ~~Plan Flaw #9 post-mortem process~~ ✅ COMPLETE
 - [x] ~~Design Flaw #4 temporal decay algorithm~~ ✅ COMPLETE
 - [x] ~~Spec Flaw #5 retention policies~~ ✅ COMPLETE (DD-009)
-- [ ] Implement Flaw #5 tiered storage and archive system (Phase 4)
+- [ ] **Flaw #21: Scalability architecture** (8 weeks) **CRITICAL**
+  - [ ] Neo4j HA clustering (3 core + 2 replica)
+  - [ ] Auto-approval validation 90% target (shadow mode)
+  - [ ] Failover testing
+- [ ] **Flaw #17: Data tier management** (4 weeks)
+  - [ ] Access-based re-promotion
+  - [ ] Graph integrity monitoring
+  - [ ] Corruption recovery procedures
+- [ ] Implement Flaw #5 tiered storage and archive system
+- [ ] Upgrade to comprehensive credibility (DD-008)
+
+### Phase 5 (Months 9-12) - Refinement
+
 - [ ] Research Flaw #6 expertise routing approaches
+- [ ] Implement Flaw #6 + #18 (human expertise tracking)
+- [ ] Address minor issues (1 day)
+
+---
+
+## Summary Statistics (Post-Review)
+
+**Total Flaws Identified**: 21 + Minor Issues
+**Status Breakdown**:
+
+- ✅ Resolved: 9 (Flaws #1-5, #7-9 + Flaw #10 Gate params)
+- 🔴 Active: 11 (Flaws #11-17, #19-21)
+- 🟢 Deferred: 2 (Flaws #6, #18)
+- 🟡 Low Priority: Minor Issues
+
+**By Priority**:
+
+- Critical: 4 (#11, #13, #15-C5, #21)
+- High: 5 (#12-C2, #14, #16, #17, #19)
+- Medium: 3 (#12-A3, #15-A4/M5, #18, #20)
+- Low: Minor Issues
+
+**Implementation Effort**:
+
+- Phase 2 (Immediate): 2 + 5 + 4 + 4 = 15 weeks
+- Phase 3: 7 + 6 + 4 + 4 = 21 weeks
+- Phase 4: 8 + 4 = 12 weeks
+- Phase 5: 3 weeks
+- **Total**: ~51 weeks additional (on top of original roadmap)
+
+**Key Finding**: Phase 2 has 4 active blockers requiring ~15 weeks resolution before core implementation can proceed
 
 ---
 
