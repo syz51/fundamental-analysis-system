@@ -96,4 +96,10 @@ python main.py
 
 ---
 
+## Disclaimer
+
+Educational project demonstrating multi-agent systems architecture. Not financial advice. Not an investment service. For personal research and portfolio demonstration only.
+
+---
+
 **Status**: v2.0 Design | **Last Updated**: 2025-11-17
