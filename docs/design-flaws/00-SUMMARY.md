@@ -3,8 +3,8 @@
 **Version**: 2.0
 **Last Updated**: 2025-11-17
 **Total Identified**: 10
-**Resolved**: 3
-**Active**: 7
+**Resolved**: 4
+**Active**: 6
 
 ---
 
@@ -22,15 +22,15 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 | 6   | [Static Human Expertise Routing](06-expertise-routing.md)                  | Low      | ⚠️ UNRESOLVED |
 | 7   | [Memory Scalability vs Performance Targets](07-memory-scalability.md)      | High     | ⚠️ UNRESOLVED |
 | 9   | [Learning Loop - No Negative Feedback Mechanism](09-negative-feedback.md)  | Medium   | ⚠️ UNRESOLVED |
-| 10  | [Gate 6 Parameter Optimization](10-gate-6-parameters.md)                   | Medium   | ⚠️ UNRESOLVED |
 
 ## Resolved Issues
 
-| #   | Issue                                                                                     | Priority | Resolution                | Reference                                                             |
-| --- | ----------------------------------------------------------------------------------------- | -------- | ------------------------- | --------------------------------------------------------------------- |
-| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added              | [DD-001](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md) |
-| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync         | [DD-002](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)   |
-| 8   | [Debate Resolution Deadlock Scenario](resolved/08-debate-deadlock.md)                     | Critical | 5-level tiered escalation | [DD-003](../../design-decisions/DD-003_DEBATE_DEADLOCK_RESOLUTION.md) |
+| #   | Issue                                                                                     | Priority | Resolution                | Reference                                                                |
+| --- | ----------------------------------------------------------------------------------------- | -------- | ------------------------- | ------------------------------------------------------------------------ |
+| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added              | [DD-001](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md)    |
+| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync         | [DD-002](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)      |
+| 8   | [Debate Resolution Deadlock Scenario](resolved/08-debate-deadlock.md)                     | Critical | 5-level tiered escalation | [DD-003](../../design-decisions/DD-003_DEBATE_DEADLOCK_RESOLUTION.md)    |
+| 10  | [Gate 6 Parameter Optimization](resolved/10-gate-6-parameters.md)                         | Medium   | Parameter specs for scale | [DD-004](../../design-decisions/DD-004_GATE_6_PARAMETER_OPTIMIZATION.md) |
 
 ## Quick Reference by Priority
 
@@ -48,7 +48,7 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 - ⚠️ **Flaw #4**: Agent Credibility Scoring - No Temporal Decay
 - ⚠️ **Flaw #5**: Data Retention Policy Conflict
 - ⚠️ **Flaw #9**: Learning Loop - No Negative Feedback Mechanism
-- ⚠️ **Flaw #10**: Gate 6 Parameter Optimization
+- ✅ **Flaw #10**: Gate 6 Parameter Optimization (RESOLVED - DD-004)
 
 ### Low (Optimization Phase)
 
@@ -92,12 +92,6 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 **Impact**: System doesn't learn deeply from mistakes, misses root causes.
 **Status**: Requires post-mortem process, failure categorization, systematic analysis.
 
-### 10. Gate 6 Parameter Optimization ⚠️
-
-**Problem**: Gate 6 implemented with basic triggers but lacks optimized parameters for production scale.
-**Impact**: May overwhelm human with 100+ monthly reviews, rigid triggers, indefinite probation, inconsistent statistical rigor.
-**Status**: 4 parameters need tuning: trigger priority, auto-approval thresholds, probation duration, statistical thresholds.
-
 ---
 
 ## Resolution Progress
@@ -109,6 +103,7 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 **Phase 2 (Core Systems - Months 3-4)**: ✅ COMPLETE
 
 - **Resolved**: Flaw #8 (Debate Deadlock) - 5-level tiered escalation implemented
+- **Resolved**: Flaw #10 (Gate 6 Parameters) - DD-004 optimization specifications
 - **Next**: Flaw #3 (Pattern Validation), Flaw #7 (Scalability)
 
 See [PRIORITY.md](PRIORITY.md) for detailed implementation order and dependencies.

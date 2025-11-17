@@ -312,9 +312,16 @@ Humans make the final go/no-go decision with full transparency into AI reasoning
 **Purpose**: Prevent confirmation bias and false pattern propagation by requiring human validation of system learnings
 
 **Input Required**: Review and validate learning updates
-**Trigger**: Monthly or after 50 new outcomes tracked
+**Trigger**: (50 outcomes OR 30 days) AND 7-day cooldown since last validation
 **Time Limit**: 48 hours
 **Default Action**: Quarantine unvalidated patterns (don't use in decisions)
+
+**Trigger Logic** (DD-004):
+
+- Validation fires when either threshold met: 50 outcomes accumulated OR 30 days elapsed
+- Minimum 7-day cooldown prevents validation spam (no trigger within 7 days of last)
+- Urgency escalates if 75+ outcomes or 45+ days (prompts faster review)
+- Whichever threshold reached first (after cooldown) triggers validation
 
 ```yaml
 Display:
@@ -347,11 +354,22 @@ Display:
       success_rate_before: 0.62
       projected_success_after: 0.71
 
+**Auto-Approval Rules** (DD-004 - Production Phase):
+
+Items that bypass human review (accuracy target >95%):
+
+- **Credibility Changes**: Auto-approve if delta <0.05 AND sample_size ≥20
+- **Lessons Learned**: Auto-approve if confirmations ≥5 AND confidence ≥0.9
+- **Patterns**: NEVER auto-approved (too high-risk for false propagation)
+- **Valuation Domain**: NEVER auto-approved (high stakes)
+
+Phase-based auto-approval: MVP 0% → Beta 20-30% → Production 40-50% → Scale 50-60%
+
 Human Actions:
   Pattern Validation:
     - Approve pattern (use in future decisions)
     - Reject pattern (spurious correlation)
-    - Request more evidence (need 3+ more occurrences)
+    - Request more evidence (triggers adaptive probation - see below)
     - Modify pattern (adjust correlation threshold or conditions)
     - Add validity conditions (market regime, sector, timeframe)
 
@@ -375,7 +393,7 @@ Approve if:
 - Logical causation mechanism exists (not just correlation)
 - Passes hold-out validation (performance within 20% on unseen data)
 - Sufficient sample size (typically 5+ occurrences)
-- Statistically significant (p < 0.05)
+- Statistically significant per domain thresholds (see below)
 - Aligns with domain expertise
 - No obvious confounding variables
 
@@ -387,6 +405,31 @@ Reject if:
 - Specific to unique historical event
 - Contradicts fundamental principles
 - Human expert has counter-evidence
+
+**Domain-Specific Statistical Thresholds** (DD-004):
+
+Universal minimum: p < 0.10 (absolute floor)
+
+| Domain              | p < 0.01 | p < 0.05             | p < 0.10             |
+| ------------------- | -------- | -------------------- | -------------------- |
+| Valuation Models    | APPROVE  | PROBATION            | REJECT               |
+| Market Timing       | APPROVE  | PROBATION            | REJECT               |
+| Financial Metrics   | APPROVE  | APPROVE              | PROBATION            |
+| Business Model      | APPROVE  | APPROVE              | APPROVE_WITH_CAVEATS |
+| Strategy/Management | APPROVE  | APPROVE_WITH_CAVEATS | PROBATION (if r>0.8) |
+| Operational Metrics | APPROVE  | APPROVE              | PROBATION            |
+
+Rationale: High-stakes domains (valuation, timing) require stricter thresholds. Strategy/management domains accommodate smaller samples with large effect sizes.
+
+**Adaptive Probation Policy** (DD-004):
+
+When "Request more evidence" selected:
+
+- **Duration**: 90 days (monthly patterns), 180 days (quarterly), 365 days (annual)
+- **Required occurrences**: 2-5 more (based on initial correlation strength)
+- **Extensions**: Max 2 extensions (90 days each) if 50%+ progress toward target
+- **Deadline evaluation**: Auto-approve if correlation holds, reject if degrades or insufficient evidence
+- **Total maximum**: Original duration + 180 days (prevents indefinite probation)
 
 **Anti-Confirmation Bias Mechanisms**:
 

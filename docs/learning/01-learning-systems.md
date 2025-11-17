@@ -32,9 +32,11 @@ Patterns move through distinct validation stages:
 - **statistically_validated**: Passed hold-out/blind tests
 - **human_approved**: Passed Gate 6 validation
 - **active**: Currently used in decisions
-- **probationary**: Needs more evidence
+- **probationary**: Needs more evidence (DD-004: 90-365 day time-box, max 2 extensions)
 - **rejected**: Failed validation
 - **deprecated**: Previously valid but no longer applicable
+
+**Probation Details** (DD-004): Time-boxed by pattern frequency (monthly=90d, quarterly=180d, annual=365d). Requires 2-5 additional occurrences. Auto-evaluated at deadline: approve if correlation holds, reject if degrades. Max 2 extensions (90d each) if 50%+ progress.
 
 ## Outcome Tracking
 
@@ -179,7 +181,14 @@ A/B test pattern-using analyses vs. baseline analyses to measure true incrementa
 
 #### 4. Statistical Rigor
 
-Require p-value < 0.05 for statistical significance, reducing false positive rate.
+Domain-specific p-value thresholds (DD-004) apply appropriate statistical standards:
+
+- **Valuation/Market Timing**: p < 0.01 required (high stakes, strict threshold)
+- **Financial/Operational Metrics**: p < 0.05 standard threshold
+- **Business Model**: p < 0.10 acceptable (qualitative, less statistical)
+- **Strategy/Management**: p < 0.10 if effect size r > 0.8 (small samples, large effects)
+
+Universal minimum: p < 0.10 (absolute floor for all domains)
 
 #### 5. Human Expert Review
 
@@ -402,7 +411,7 @@ Supporting Analysis Signals:
 
 ### Learning Integration with Gate 6
 
-Debate fallback learnings are presented at Gate 6 for validation:
+Debate fallback learnings presented at Gate 6 for validation (parameters per DD-004):
 
 ```yaml
 Gate 6 Review - Debate Resolution Learnings:
@@ -507,10 +516,14 @@ The learning system operates on multiple timescales:
 
 ### Monthly Learning (Gate 6)
 
-- Human validation of new patterns
-- Agent credibility score updates
-- Lessons learned approval
+**Trigger** (DD-004): (50 outcomes OR 30 days) AND 7-day cooldown
+
+- Human validation of new patterns (never auto-approved)
+- Agent credibility score updates (auto-approve if delta <0.05, n≥20)
+- Lessons learned approval (auto-approve if 5+ confirmations, 90%+ confidence)
 - Pattern library maintenance
+- Auto-approval rate: MVP 0% → Production 40-50% → Scale 50-60%
+- Adaptive probation: 90-365 days based on pattern frequency, max 2 extensions
 
 ### Quarterly Learning
 
