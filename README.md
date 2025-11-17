@@ -51,13 +51,9 @@ python main.py
 
 ## Project Structure
 
-```text
-/data
-├── /raw                    # Source data (SEC filings, transcripts, market data, news)
-├── /processed              # Cleaned/transformed (financial statements, ratios, sentiment)
-├── /models                 # Valuation models (DCF, relative valuations, sensitivity)
-└── /outputs                # Reports, watchlists, decision logs
-```
+- `/docs` - Architecture and design documentation
+- `/design-decisions` - Architectural decision records
+- `/examples` - Code samples (to be populated)
 
 ## Roadmap
 
@@ -68,14 +64,15 @@ python main.py
 
 ## Documentation
 
-**[📚 Complete Documentation](docs/README.md)** - Modular design docs organized by topic:
+**[📚 Complete Documentation](docs/README.md)** - Full design documentation:
 
-- **[Architecture](docs/architecture/)** - System design, memory, agents, protocols (7 docs)
-- **[Operations](docs/operations/)** - Pipeline, human integration, data management (3 docs)
-- **[Learning](docs/learning/)** - Learning systems, feedback loops, metrics (3 docs)
-- **[Implementation](docs/implementation/)** - Roadmap, tech stack, compliance (4 docs)
-- **[Design Decisions](design-decisions/)** - Architectural deep-dives
-- **[Examples](examples/)** - Code samples (to be added)
+- **[Architecture](docs/architecture/)** - 5-layer system, 13 agents, memory system, collaboration protocols
+- **[Operations](docs/operations/)** - 12-day analysis pipeline, 6 human gates, data management
+- **[Learning](docs/learning/)** - Pattern recognition, feedback loops, performance metrics
+- **[Implementation](docs/implementation/)** - Roadmap, tech stack, compliance, glossary
+- **[Design Decisions](design-decisions/)** - DD-XXX architectural decision records
+- **[Design Flaws](docs/design-flaws/)** - Active issues tracking, resolved flaws
+- **[Examples](examples/)** - Code samples (to be populated)
 
 **Quick Links**: [System Overview](docs/architecture/01-system-overview.md) | [Roadmap](docs/implementation/01-roadmap.md) | [CLAUDE.md](CLAUDE.md)
 
