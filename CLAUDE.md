@@ -1,0 +1,209 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI agents to perform comprehensive investment research, mimicking human analyst teams. System designed around parallel processing, collaborative intelligence, and human-in-the-loop oversight at key decision gates.
+
+## Architecture
+
+### 4-Layer System
+
+- **Human Interface**: Dashboard, notifications, feedback loop
+- **Coordination**: Lead coordinator, debate facilitator, QC agent
+- **Specialist Agents**: Screening, business, financial, strategy, valuation
+- **Support**: Data collector, news monitor, report writer
+
+### 12 Agent Typest
+
+1. **Screening**: Initial filtering, quantitative screens (10Y revenue CAGR, margins, debt ratios)
+2. **Business Research**: SEC filings, SWOT, competitive moats, KPIs
+3. **Financial Analyst**: Statement analysis, ratios (ROE/ROA/ROIC), peer comparisons, red flags
+4. **Strategy Analyst**: Capital allocation, management track record, M&A review
+5. **Valuation**: DCF modeling, relative valuation (P/E, EV/EBITDA), scenarios
+6. **Data Collector**: API interfaces, document parsing, data quality
+7. **News Monitor**: Real-time tracking, event impact assessment
+8. **QC Agent**: Cross-verification, contradiction detection
+9. **Lead Coordinator**: Workflow orchestration, conflict resolution
+10. **Debate Facilitator**: Structured arguments, consensus building
+11. **Report Writer**: Investment memos, documentation
+12. **Watchlist Manager**: Position monitoring, alerts
+
+### Analysis Pipeline (12-day cycle)
+
+1. **Screening** (Days 1-2): Identify candidates → Human Gate 1
+2. **Parallel Analysis** (Days 3-7): Business/Financial/Strategy/News research
+3. **Debate & Synthesis** (Days 8-9): Agent findings challenged → Human Gate 2
+4. **Valuation** (Days 10-11): DCF, scenarios → Human Gate 3
+5. **Documentation** (Day 12): Reports, watchlists → Human Gate 4 & 5
+
+### Human Decision Gates
+
+- **Gate 1**: Screening validation (24h, approve candidate list)
+- **Gate 2**: Research direction (12h, focus areas)
+- **Gate 3**: Assumption validation (24h, model parameters)
+- **Gate 4**: Debate arbitration (6h, resolve disagreements)
+- **Gate 5**: Final decision (blocking, investment/sizing)
+
+## Tech Stack
+
+### Required Components
+
+- **Backend**: Agent services, API layer
+- **Frontend**: Dashboard, visualization interface
+- **Orchestration**: Workflow management
+- **Analysis**: Data processing, statistical analysis, time series forecasting
+- **AI**: Agent framework, LLM integration
+
+### Infrastructure Needs
+
+- **Compute**: Scalable processing for parallel agent execution
+- **Database**: Structured data storage, document storage
+- **Message Queue**: Inter-agent communication
+- **APIs**: External data access, internal services
+
+### Data Sources
+
+- SEC EDGAR (10-K, 10-Q, 8-K, proxies)
+- Financial providers (Koyfin, Bloomberg, Refinitiv)
+- News feeds (Reuters, Bloomberg)
+- Alternative data (web traffic, social sentiment)
+
+## Project Setup
+
+### Prerequisites
+
+- Python 3.14+ (current requirement in pyproject.toml)
+- Dependencies managed via pyproject.toml
+
+### Initial Setup
+
+```bash
+# Install dependencies (once dependencies are added to pyproject.toml)
+uv sync
+
+# Run main entry point
+python main.py
+```
+
+## Data Structure
+
+```text
+/data
+├── /raw                    # Source data
+│   ├── /sec_filings
+│   ├── /transcripts
+│   ├── /market_data
+│   └── /news_articles
+├── /processed              # Cleaned/transformed
+│   ├── /financial_statements
+│   ├── /ratios
+│   ├── /sentiment_scores
+│   └── /peer_comparisons
+├── /models                 # Valuation models
+│   ├── /dcf_models
+│   ├── /relative_valuations
+│   └── /sensitivity_analyses
+└── /outputs                # Final products
+    ├── /reports
+    ├── /watchlists
+    └── /decision_logs
+```
+
+## Inter-Agent Communication
+
+### Message Protocol
+
+JSON-based with structure:
+
+- `from_agent`, `to_agent`, `message_type`, `priority`
+- `content`: finding/evidence/confidence/impact
+- `requires_response`, `timestamp`
+
+### Message Types
+
+- **Finding**: Analytical results
+- **Request**: Ask for analysis
+- **Challenge**: Dispute conclusions
+- **Confirmation**: Validate info
+- **Alert**: Urgent attention
+
+### Debate Protocol
+
+- Challenges include: challenger, challenged, disputed_finding, evidence required
+- Response time: acknowledge 15min, evidence 1hr
+- Escalate to human if unresolved
+
+## Implementation Roadmap
+
+### Phase 1: Foundation (Months 1-2)
+
+- Data infrastructure, data collector agent
+- Screening agent, basic dashboard
+- Message protocols
+
+### Phase 2: Core Agents (Months 3-4)
+
+- Financial analyst, business research agents
+- Debate facilitator, human gate system
+- Integration testing
+
+### Phase 3: Advanced (Months 5-6)
+
+- Strategy analyst, valuation agent
+- QC, report writer
+- Full system testing
+
+### Phase 4: Optimization (Months 7-8)
+
+- Parameter tuning, workflow optimization
+- Learning loops, benchmarking
+- Production deployment
+
+### Key Milestones
+
+- Month 4: MVP (10 stocks end-to-end)
+- Month 6: Beta (50 stocks, 80% accuracy)
+- Month 8: Production (200 stocks, <24hr)
+- Month 12: Scale (1000+ stocks)
+
+## Key Metrics & Ratios
+
+### Financial Health Indicators
+
+- 10Y revenue CAGR
+- Operating margin
+- Net debt/EBITDA
+- ROE, ROA, ROIC
+- Asset turnover, working capital ratios
+- Debt/equity, interest coverage
+- Current ratio, quick ratio
+
+### Red Flags
+
+- Related-party transactions
+- Excessive management comp
+- Aggressive accounting policies
+- Unusual adjustments
+
+### Strategic Metrics
+
+- Historical ROI (5/10/15Y)
+- ROCE, ROIC
+- Execution success rate
+
+## Compliance & Governance
+
+### Regulatory
+
+- SEC investment advisor regulations
+- GDPR/CCPA for data privacy
+- No material non-public info
+- Complete audit trails
+
+### Data Governance
+
+- Source verification, timestamp validation
+- Consistency checks, outlier detection
+- Retention: raw (5Y), processed (3Y), models/reports (permanent)
