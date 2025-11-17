@@ -112,12 +112,17 @@ The implementation follows an agile methodology with continuous integration of m
 
 #### Collaboration System
 
-- [ ] Implement memory-enhanced debate facilitator
-  - Structured debate protocols
+- [ ] Implement memory-enhanced debate facilitator with tiered escalation
+  - Structured debate protocols (5-level escalation)
   - Historical context loading
-  - Credibility-weighted resolution
+  - **Credibility-weighted auto-resolution (Level 2, >0.25 threshold)**
+  - **Conservative default fallback logic (Level 4)**
+  - **Provisional resolution tracking and override mechanisms**
   - Precedent-based arguments
   - Challenge-response tracking
+  - **Workload-aware debate routing (max 3 concurrent per expert)**
+  - **Priority-based queue management (critical-path, valuation, supporting)**
+  - **Timeout enforcement at each escalation level**
 
 #### Human Gates
 
@@ -146,6 +151,80 @@ The implementation follows an agile methodology with continuous integration of m
 - Memory sync maintaining <100ms L1, <1s L3 latency
 - Human gates processing 10+ stocks with historical context
 - Gate 6 preventing >90% of false patterns from propagation
+- **Debate resolution system preventing pipeline deadlocks (zero blocking debates)**
+- **Fallback resolutions tested in all scenarios (human unavailable, concurrent overload, queue full)**
+- **Conservative defaults maintaining >85% accuracy in testing**
+
+### Debate Resolution Testing Scenarios
+
+Critical testing required for debate deadlock resolution system:
+
+1. **Human Unavailability Testing**:
+
+   - Simulate off-hours debate escalation (Friday 6pm)
+   - Verify conservative default applied after 6hr timeout
+   - Confirm pipeline continues with provisional resolution
+   - Test override at next gate (Gate 3 or Gate 5)
+   - Measure: Zero pipeline blocks, provisional review completion
+
+2. **Concurrent Debate Overload**:
+
+   - Simulate 5+ debates escalating simultaneously
+   - Verify queue limit enforcement (max 3 concurrent)
+   - Test overflow handling (auto-resolve or defer based on priority)
+   - Confirm critical-path debates force-resolved, supporting debates deferred
+   - Measure: Queue never exceeds 3, appropriate routing
+
+3. **Queue Priority Management**:
+
+   - Test priority classification (critical-path, valuation, supporting)
+   - Verify critical-path debates bypass queue when full
+   - Test valuation debates queue correctly
+   - Confirm supporting debates defer to next gate
+   - Measure: >85% priority classification accuracy
+
+4. **Credibility-Weighted Auto-Resolution**:
+
+   - Test with credibility differentials: 0.20, 0.25, 0.30, 0.35, 0.40
+   - Verify auto-resolution triggers at >0.25 threshold
+   - Confirm escalation to human when <0.25
+   - Test minimum data requirement (5 historical points)
+   - Measure: Auto-resolution accuracy >80%
+
+5. **Conservative Default Logic**:
+
+   - Test identification of most cautious position
+   - Verify provisional marking and override window setup
+   - Test downstream impact analysis on override
+   - Confirm learning capture (fallback accuracy tracking)
+   - Measure: Conservative defaults >85% correct (simulated outcomes)
+
+6. **Provisional Resolution Override**:
+
+   - Test review display at Gates 3 and 5
+   - Verify override triggers re-calculation
+   - Test downstream dependency propagation
+   - Confirm override rationale capture
+   - Measure: All provisional decisions reviewed before final
+
+7. **Timeout Enforcement**:
+
+   - Test 15min agent acknowledgment timeout
+   - Test 1hr evidence provision timeout
+   - Test 6hr human arbitration timeout
+   - Test 24hr fallback timeout (until next gate)
+   - Measure: All timeouts enforced within ±5 seconds
+
+8. **Workload Management**:
+   - Test load indicator display (0/3, 2/3, 3/3)
+   - Verify queue position tracking
+   - Test notification on debate assignment
+   - Confirm overflow prevention mechanisms
+   - Measure: Expert workload never exceeds 3 concurrent
+
+**Testing Timeline**: Month 4 (parallel with agent deployment)
+**Testing Coverage Target**: 100% of failure scenarios
+**Success Gate**: Zero pipeline deadlocks in 50 test cycles
 
 ---
 

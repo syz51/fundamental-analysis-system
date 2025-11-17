@@ -141,8 +141,8 @@ The system shows historical accuracy of similar assumptions, enabling humans to 
 
 **Input Required**: Resolve significant disagreements
 **Interface**: Side-by-side comparison view
-**Time Limit**: 6 hours
-**Default Action**: Flag as high uncertainty
+**Time Limit**: 6 hours (with automatic fallback)
+**Default Action**: Apply conservative default (provisional resolution)
 
 ```yaml
 Display:
@@ -150,13 +150,78 @@ Display:
   - Historical precedents for similar debates
   - Pattern success rates supporting each position
   - Agent track records in this context
+  - Priority classification (critical-path, valuation, supporting)
+  - Queue status: "Debate 2/3" (current load indicator)
+  - Timeout countdown: "4h 23m remaining"
+  - Facilitator's recommended resolution (if credibility gap exists)
 
 Human Actions:
-  - Arbitrate between positions
-  - Request additional evidence
+  - Arbitrate between positions (binding resolution)
+  - Request additional evidence (extends timeout +2hr, max once)
   - Identify missing considerations
   - Set uncertainty level for final decision
+  - Accept facilitator's recommendation (if auto-resolution attempted)
+  - Defer to next gate (low-priority only)
 ```
+
+**Timeout Enforcement**:
+
+If human doesn't respond within 6 hours:
+
+1. **Automatic Fallback Triggered** (Level 4 escalation)
+
+   - System applies conservative default logic
+   - Most cautious position selected automatically
+   - Resolution marked as "provisional - awaiting review"
+   - Pipeline continues (non-blocking)
+
+2. **Override Window Opens**
+
+   - Provisional decision reviewable at next gate
+   - Appears in gate queue as "X provisional decisions require review"
+   - Human can confirm, override, or request re-debate
+
+3. **Notification Sent**
+   - Alert: "Debate auto-resolved using conservative default"
+   - Summary of provisional resolution
+   - Reminder to review at next gate
+
+**Queue Management (Single Expert)**:
+
+The system enforces workload limits to prevent expert overload:
+
+- **Max concurrent debates**: 3
+- **Current load displayed**: "2/3 debates" indicator
+- **Queue position shown**: "Your debate is #1 in queue"
+
+**Overflow Handling**:
+
+When expert queue reaches capacity (3/3) and new debate arrives:
+
+1. **High-Priority Debates** (critical-path blocking):
+
+   - If credibility differential >0.25: Auto-resolve via facilitator (Level 2)
+   - If credibility differential <0.25: Apply conservative default (Level 4)
+   - Never queue high-priority debates beyond 3
+
+2. **Medium-Priority Debates** (valuation impact):
+
+   - If credibility auto-resolution possible: Apply automatically
+   - Else: Defer to next gate or apply conservative default
+
+3. **Low-Priority Debates** (supporting analysis):
+   - Automatically defer to next gate
+   - No provisional resolution needed (not blocking pipeline)
+
+**Priority Classification**:
+
+Debates are automatically classified and routed:
+
+| Priority          | Definition                         | Queue Behavior                    | Timeout Action                   |
+| ----------------- | ---------------------------------- | --------------------------------- | -------------------------------- |
+| **Critical-Path** | Blocks immediate pipeline progress | Force resolution (never queue >3) | Conservative default immediately |
+| **Valuation**     | Affects DCF, price targets         | Queue if <3, else auto-resolve    | Conservative default after 6hr   |
+| **Supporting**    | Background research                | Queue if <3, else defer           | Defer to next gate               |
 
 **Conflict Resolution**:
 
@@ -166,8 +231,43 @@ When agents disagree significantly, humans see:
 - Historical accuracy of each agent in similar contexts
 - Past debates on similar topics and their resolutions
 - Pattern success rates supporting each argument
+- **Facilitator's analysis**: Credibility scores and recommended resolution
+- **Conservative default preview**: Which position would be applied if timeout
+- **Downstream impact**: What analyses depend on this resolution
 
 This enables informed arbitration based on both current evidence and historical performance.
+
+**Provisional Decision Review at Subsequent Gates**:
+
+At each gate following a provisional resolution, human sees:
+
+```yaml
+Provisional Decisions Requiring Review: [2]
+
+1. Debate: Management Capital Allocation Effectiveness
+   - Conservative Position Applied: Strategy Analyst (skeptical view)
+   - Alternative Position: Financial Analyst (optimistic view)
+   - Rationale: Selected lower ROIC projection (8% vs 12%)
+   - Impact: Reduced DCF valuation by 15%
+   - Credibility Scores: Strategy 0.73, Financial 0.68
+   - Your Actions:
+     * Confirm conservative default (becomes final)
+     * Override to Financial Analyst position (check downstream impact)
+     * Request re-debate with additional context
+
+2. Debate: [similar format]
+
+If Override Selected:
+  Downstream Impact Analysis:
+    - Valuation model: Re-run required (5min)
+    - Target price: Will increase ~$12-15
+    - Risk assessment: Confidence score will adjust
+    - Recommendation: May shift from Hold to Buy
+
+  Confirm Override? [Yes] [No]
+```
+
+This ensures no provisional decision becomes final without explicit human review.
 
 ### Gate 5: Final Decision with Full Context
 
@@ -322,12 +422,20 @@ Reject if:
 
 ### Request Prioritization
 
-| Priority | Description         | Response Time | Auto-Action          |
-| -------- | ------------------- | ------------- | -------------------- |
-| CRITICAL | Blocks all analysis | 2 hours       | Halt pipeline        |
-| HIGH     | Major impact        | 6 hours       | Conservative proceed |
-| MEDIUM   | Improves accuracy   | 24 hours      | Standard proceed     |
-| LOW      | Nice-to-have        | 48 hours      | Skip                 |
+| Priority | Description                    | Response Time | Auto-Action (After Timeout)          | Applies To                                  |
+| -------- | ------------------------------ | ------------- | ------------------------------------ | ------------------------------------------- |
+| CRITICAL | Blocks all analysis            | 2 hours       | Halt pipeline                        | System errors, data corruption              |
+| HIGH     | Critical-path blocking debates | 6 hours       | Conservative default (provisional)   | Debates blocking immediate progress         |
+| MEDIUM   | Valuation/model decisions      | 24 hours      | Conservative estimates (provisional) | Gate 3 assumptions, medium-priority debates |
+| LOW      | Nice-to-have                   | 48 hours      | Skip or defer to next gate           | Supporting analysis debates                 |
+
+**Debate-Specific Priority Routing**:
+
+- **Critical-Path Debates** → HIGH priority (6hr timeout → conservative default)
+- **Valuation Debates** → MEDIUM priority (24hr timeout → conservative estimates)
+- **Supporting Debates** → LOW priority (48hr timeout → defer to next gate)
+
+All provisional resolutions remain reviewable until next gate, enabling human override without blocking pipeline progress.
 
 ### Notification System
 

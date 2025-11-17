@@ -3,8 +3,8 @@
 **Version**: 2.0
 **Last Updated**: 2025-11-17
 **Total Identified**: 9
-**Resolved**: 2
-**Active**: 7
+**Resolved**: 3
+**Active**: 6
 
 ---
 
@@ -21,21 +21,21 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 | 5   | [Data Retention Policy Conflict](05-data-retention.md)                     | Medium   | ⚠️ UNRESOLVED |
 | 6   | [Static Human Expertise Routing](06-expertise-routing.md)                  | Low      | ⚠️ UNRESOLVED |
 | 7   | [Memory Scalability vs Performance Targets](07-memory-scalability.md)      | High     | ⚠️ UNRESOLVED |
-| 8   | [Debate Resolution Deadlock Scenario](08-debate-deadlock.md)               | Critical | ⚠️ UNRESOLVED |
 | 9   | [Learning Loop - No Negative Feedback Mechanism](09-negative-feedback.md)  | Medium   | ⚠️ UNRESOLVED |
 
 ## Resolved Issues
 
-| #   | Issue                                                                                     | Priority | Resolution        | Reference                                                                         |
-| --- | ----------------------------------------------------------------------------------------- | -------- | ----------------- | --------------------------------------------------------------------------------- |
-| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added      | [Design Decision](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)              |
-| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync | [Design Decision](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md) |
+| #   | Issue                                                                                     | Priority | Resolution                | Reference                                                                         |
+| --- | ----------------------------------------------------------------------------------------- | -------- | ------------------------- | --------------------------------------------------------------------------------- |
+| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added              | [Design Decision](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)              |
+| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync         | [Design Decision](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md) |
+| 8   | [Debate Resolution Deadlock Scenario](resolved/08-debate-deadlock.md)                     | Critical | 5-level tiered escalation | See flaw file for complete resolution details                                     |
 
 ## Quick Reference by Priority
 
 ### Critical (Must Fix Before MVP)
 
-- ⚠️ **Flaw #8**: Debate Resolution Deadlock Scenario
+- ✅ **All critical flaws resolved** (Flaws #1, #2, #8)
 
 ### High (Fix During Phase 2-3)
 
@@ -84,12 +84,6 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 **Impact**: Performance targets may be impossible at stated scale.
 **Status**: Requires capacity planning, benchmarking, architectural validation.
 
-### 8. Debate Resolution Deadlock Scenario ⚠️
-
-**Problem**: Debate protocol relies on human arbitration but no handling of human unavailability.
-**Impact**: Pipeline deadlocks, time-sensitive analyses delayed.
-**Status**: Needs escalation timeouts, proxy decision-makers, automated fallbacks.
-
 ### 9. Learning Loop - No Negative Feedback Mechanism ⚠️
 
 **Problem**: Tracks outcomes but lacks structured failure investigation.
@@ -104,10 +98,10 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 
 - Resolved: Flaws #1 (Gate 6), #2 (Event-driven sync)
 
-**Phase 2 (Core Systems - Months 3-4)**: IN PROGRESS
+**Phase 2 (Core Systems - Months 3-4)**: ✅ COMPLETE
 
-- **Next Critical**: Flaw #8 (Debate Deadlock) - blocks pipeline operation
-- Coming: Flaw #3 (Pattern Validation), Flaw #7 (Scalability)
+- **Resolved**: Flaw #8 (Debate Deadlock) - 5-level tiered escalation implemented
+- **Next**: Flaw #3 (Pattern Validation), Flaw #7 (Scalability)
 
 See [PRIORITY.md](PRIORITY.md) for detailed implementation order and dependencies.
 
@@ -117,6 +111,7 @@ For complete documentation of resolved issues, see:
 
 - [Flaw #1: Missing Human Gate](resolved/01-missing-human-gate.md) → [Gate 6 Design](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)
 - [Flaw #2: Memory Sync Timing](resolved/02-memory-sync-timing.md) → [Event-Driven Sync](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md)
+- [Flaw #8: Debate Deadlock](resolved/08-debate-deadlock.md) - Complete resolution details in flaw file
 
 ---
 

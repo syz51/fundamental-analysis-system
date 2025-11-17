@@ -80,17 +80,78 @@ graph TB
     C --> D[Structured Challenge with Precedents]
     D --> E[Evidence + Historical Support]
     E --> F[Facilitator Weighs by Track Record]
-    F --> G[Human Arbitration with Context]
-    G --> H[Consensus with Confidence Score]
+    F --> G{Credibility Gap >0.25?}
+    G -->|Yes| H[Auto-Resolve to Higher Credibility]
+    G -->|No| I[Human Arbitration with Context]
+    I --> J{Human Response?}
+    J -->|Within 6hr| K[Binding Resolution]
+    J -->|Timeout| L[Conservative Default - Provisional]
+    H --> M[Consensus with Confidence Score]
+    K --> M
+    L --> N[Pipeline Continues - Non-Blocking]
+    N --> O[Review at Next Gate]
 ```
 
-**Debate Protocol**:
+**Debate Protocol (Non-Blocking with Fallbacks)**:
 
 1. Each agent presents findings
-2. Structured challenges issued
-3. Evidence-based responses
-4. Human breaks deadlocks
-5. Document final positions
+2. Structured challenges issued (15min ack, 1hr evidence)
+3. **Facilitator applies credibility-weighted auto-resolution if gap >0.25**
+4. If unresolved, escalate to human (6hr timeout)
+5. **If human unavailable, apply conservative default (provisional)**
+6. **Pipeline continues with provisional resolution**
+7. **Human reviews provisional decisions at next gate**
+
+**Async Resolution Pathway**:
+
+The system ensures debates never block pipeline progress:
+
+**Path A: Direct Resolution (No Human Needed)**
+
+- Agent consensus reached → Continue immediately
+- Credibility gap >0.25 → Facilitator auto-resolves → Continue immediately
+
+**Path B: Human Resolution (Standard)**
+
+- Human arbitrates within 6 hours → Binding resolution → Continue
+
+**Path C: Provisional Resolution (Fallback)**
+
+- Human timeout after 6 hours → Conservative default applied → **Pipeline continues**
+- Resolution marked "provisional - awaiting review"
+- Override window opens until next gate
+- Downstream analyses proceed with conservative assumption
+
+**Provisional Resolution Handling**:
+
+When conservative default is applied:
+
+1. **Most Cautious Position Selected**:
+
+   - Compare agent positions on risk spectrum
+   - Select lowest price target, highest risk assessment, most conservative assumptions
+
+2. **Downstream Continuation**:
+
+   - Valuation agent receives provisional assumption
+   - Proceeds with DCF modeling using conservative inputs
+   - Final recommendation reflects conservative stance
+
+3. **Gate Review Integration**:
+
+   - At Gate 3 (Valuation) or Gate 5 (Final Decision):
+     - Display: "2 provisional decisions require review"
+     - Show conservative position applied vs alternative positions
+     - Enable override with downstream impact analysis
+   - If overridden:
+     - Re-run affected valuations (typically 5-10min)
+     - Update target prices and recommendations
+     - Propagate changes through dependency chain
+
+4. **Learning Capture**:
+   - Track fallback accuracy (human override rate)
+   - Learn which types of debates benefit from conservative defaults
+   - Improve credibility scoring over time
 
 **Memory Enhancement**:
 
@@ -102,8 +163,10 @@ The debate facilitator enhances discussions by:
 - Finding counter-examples from past analyses
 - Checking pattern success rates to validate claims
 - Resolving conflicts using historical outcomes
+- **Tracking fallback resolution accuracy for calibration**
+- **Learning conservative default effectiveness by debate type**
 
-When agents disagree, the system can surface which position proved correct in similar past situations, enabling data-driven conflict resolution while still allowing human judgment to override when context differs.
+When agents disagree, the system can surface which position proved correct in similar past situations, enabling data-driven conflict resolution while still allowing human judgment to override when context differs. **If human unavailable, conservative defaults ensure pipeline progress while maintaining safety through provisional status and mandatory review.**
 
 ### Phase 4: Calibrated Valuation (Days 10-11)
 
@@ -203,13 +266,15 @@ The QC Agent validates work at each phase:
 
 ### Standard 12-Day Cycle
 
-| Phase | Days  | Activities                      | Gates          |
-| ----- | ----- | ------------------------------- | -------------- |
-| 1     | 1-2   | Screening & validation          | Gate 1         |
-| 2     | 3-7   | Parallel specialist analysis    | Gate 2 (Day 3) |
-| 3     | 8-9   | Debate & synthesis              | Gate 4         |
-| 4     | 10-11 | Valuation modeling              | Gate 3         |
-| 5     | 12    | Documentation & watchlist setup | Gate 5         |
+| Phase | Days  | Activities                      | Gates          | Fallback Handling                                   |
+| ----- | ----- | ------------------------------- | -------------- | --------------------------------------------------- |
+| 1     | 1-2   | Screening & validation          | Gate 1         | Auto-proceed with top 10 (24hr)                     |
+| 2     | 3-7   | Parallel specialist analysis    | Gate 2 (Day 3) | Standard checklist (12hr)                           |
+| 3     | 8-9   | Debate & synthesis              | Gate 4         | **Conservative default (6hr), review at next gate** |
+| 4     | 10-11 | Valuation modeling              | Gate 3         | Conservative estimates (24hr)                       |
+| 5     | 12    | Documentation & watchlist setup | Gate 5         | Blocking (no auto-action)                           |
+
+**Key Change**: Phase 3 debates are now **non-blocking**. If human unavailable, conservative defaults applied provisionally and pipeline continues. Provisional decisions reviewed at Gates 3 or 5.
 
 ### Accelerated Cycle (6 Days)
 

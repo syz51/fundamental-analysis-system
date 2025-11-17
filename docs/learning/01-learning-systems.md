@@ -224,6 +224,232 @@ The system's learning accelerates over time as:
 - Agent track records enable better credibility weighting
 - Human validation becomes more efficient with experience
 
+## Debate Fallback Resolution Learning
+
+The system learns from debate resolution outcomes to improve fallback accuracy and optimize the tiered escalation system.
+
+### Fallback Accuracy Tracking
+
+When debates are resolved using conservative defaults (Level 4) or credibility-weighted auto-resolution (Level 2), the system tracks whether the fallback resolution was correct:
+
+**Tracking Mechanism**:
+
+1. **Initial Fallback**: Conservative default or auto-resolution applied
+2. **Human Review**: Human confirms, overrides, or validates at next gate
+3. **Outcome Tracking**: When analysis outcome is known (6-12 months later), compare:
+   - Fallback position outcome
+   - Alternative position outcome (counterfactual)
+   - Human override outcome (if applicable)
+
+**Accuracy Metrics**:
+
+```yaml
+Fallback Resolution Metrics:
+
+Conservative Default Accuracy:
+  - Overall success rate: 0.87 (conservative default proved correct)
+  - By debate type:
+      margin_sustainability: 0.92 (15 cases)
+      growth_assumptions: 0.83 (12 cases)
+      management_quality: 0.79 (9 cases)
+  - Human override rate: 0.15 (15% of cases overridden)
+  - Override correctness: 0.67 (human overrides correct 67% of time)
+
+Credibility-Weighted Auto-Resolution Accuracy:
+  - Overall success rate: 0.84
+  - By credibility differential:
+      >0.40: 0.93 (high confidence)
+      0.30-0.40: 0.86 (medium confidence)
+      0.25-0.30: 0.76 (threshold cases)
+  - False auto-resolution rate: 0.16 (should have escalated)
+```
+
+### Conservative Default Calibration
+
+The system learns which types of debates benefit most from conservative defaults:
+
+**Pattern Learning**:
+
+- **High conservative accuracy** (>0.90): Margin compression debates, competitive threat assessments
+- **Medium conservative accuracy** (0.75-0.90): Growth assumptions, capital allocation quality
+- **Low conservative accuracy** (<0.75): Innovation potential, market timing calls
+
+**Adaptive Logic**:
+
+Based on historical accuracy, the system adjusts conservative default application:
+
+```python
+# Pseudocode for adaptive conservative default
+if debate_type in high_conservative_accuracy_types:
+    conservative_threshold = "lowest_estimate"  # Most cautious
+elif debate_type in medium_conservative_accuracy_types:
+    conservative_threshold = "middle_estimate"  # Moderate caution
+else:
+    conservative_threshold = "lower_quartile"  # Mild caution, escalate to human preferred
+```
+
+### Human Override Pattern Learning
+
+The system tracks when humans override fallback resolutions and learns from these patterns:
+
+**Override Analysis**:
+
+1. **Override Frequency by Debate Type**:
+
+   - Which debates are humans most likely to override?
+   - Which fallbacks do humans consistently accept?
+
+2. **Override Correctness**:
+
+   - When human overrides, what's the outcome accuracy?
+   - Are overrides improving decisions or introducing bias?
+
+3. **Override Timing**:
+   - How long after fallback does human review occur?
+   - Does review delay correlate with override likelihood?
+
+**Learning Applications**:
+
+```yaml
+Lessons from Override Patterns:
+
+Pattern 1: "Margin debates in tech overridden 30% of time"
+  - Conservative defaults too pessimistic for high-growth tech
+  - Adjustment: Use "lower quartile" instead of "lowest estimate" for tech margins
+  - Expected override reduction: 30% → 15%
+
+Pattern 2: "Management quality debates rarely overridden (5%)"
+  - Conservative defaults well-calibrated
+  - Maintain current logic
+  - High confidence in fallback accuracy
+
+Pattern 3: "Overrides during Gate 5 more accurate than Gate 3"
+  - More context available at final decision
+  - Prioritize provisional review at Gate 5 when possible
+  - Flag high-impact debates for Gate 5 review
+```
+
+### Credibility Threshold Optimization
+
+The system learns the optimal credibility differential threshold for auto-resolution:
+
+**Current Threshold**: 0.25
+
+**Learning Objective**: Minimize (false_auto_resolutions + missed_auto_resolutions)
+
+**Analysis**:
+
+```yaml
+Threshold Performance Analysis:
+
+Threshold 0.20:
+  - Auto-resolution rate: 45%
+  - False auto-resolution rate: 22% (too high)
+  - Verdict: Too aggressive
+
+Threshold 0.25:
+  - Auto-resolution rate: 32%
+  - False auto-resolution rate: 16%
+  - Verdict: Optimal balance
+
+Threshold 0.30:
+  - Auto-resolution rate: 21%
+  - False auto-resolution rate: 11%
+  - Verdict: Too conservative, missing opportunities
+
+Recommendation: Maintain 0.25 threshold
+  - Consider domain-specific thresholds (tech: 0.28, financials: 0.23)
+```
+
+**Domain-Specific Thresholds**:
+
+As the system accumulates more data, it learns domain-specific thresholds:
+
+- **High-uncertainty domains** (innovation, disruption): Higher threshold (0.30) - prefer human review
+- **Stable domains** (margin analysis, cash flow): Standard threshold (0.25)
+- **Well-understood domains** (accounting quality): Lower threshold (0.22) - safe to auto-resolve
+
+### Debate Priority Learning
+
+The system learns to classify debate priority more accurately:
+
+**Initial Classification** (Rule-Based):
+
+- Critical-path blocking: Keywords like "required for", "blocking", "dependency"
+- Valuation impact: Keywords like "DCF", "target price", "valuation"
+- Supporting: Everything else
+
+**Learned Classification** (ML-Enhanced):
+
+After tracking actual debate impact, the system learns:
+
+```yaml
+Learned Priority Indicators:
+
+Critical-Path Signals:
+  - Debate references "base case assumptions" (0.83 correlation with critical)
+  - Multiple downstream analyses waiting (0.91 correlation)
+  - Debate topic in ["revenue_growth", "margin_assumptions"] (0.76 correlation)
+
+Valuation Impact Signals:
+  - Debate affects WACC or terminal value (0.94 correlation with high impact)
+  - Disagreement >20% on key driver (0.87 correlation)
+
+Supporting Analysis Signals:
+  - Debate on qualitative factors (0.72 correlation with low priority)
+  - No numerical disagreement (0.81 correlation with supporting)
+```
+
+### Learning Integration with Gate 6
+
+Debate fallback learnings are presented at Gate 6 for validation:
+
+```yaml
+Gate 6 Review - Debate Resolution Learnings:
+
+New Pattern Discovered:
+  - pattern: 'Conservative defaults in tech margin debates'
+    current_accuracy: 0.78
+    human_override_rate: 0.30
+    proposed_change: 'Use lower quartile instead of minimum'
+    expected_improvement: 'Accuracy 0.78 → 0.86, override 0.30 → 0.15'
+    sample_size: 23 debates
+    validation_required: YES
+
+Credibility Score Updates:
+  - Financial Analyst credibility in "tech_margins" domain: 0.82 → 0.79
+    reason: 'Overestimated margin sustainability in 4 of 6 recent tech cases'
+    proposed_bias_correction: '-2% to tech margin projections'
+
+Human Actions:
+  - Approve pattern change
+  - Reject (maintain current conservative logic)
+  - Request more evidence (need 5+ more cases)
+  - Modify threshold (specify alternative)
+```
+
+### Success Metrics for Debate Learning
+
+| Metric                     | Description                                      | Current | Target |
+| -------------------------- | ------------------------------------------------ | ------- | ------ |
+| Fallback Accuracy          | % of conservative defaults that proved correct   | 87%     | >85%   |
+| Override Rate              | % of fallbacks overridden by human               | 15%     | <20%   |
+| Override Correctness       | % of human overrides that improved outcome       | 67%     | >70%   |
+| Auto-Resolution Accuracy   | % of credibility-weighted resolutions correct    | 84%     | >80%   |
+| False Auto-Resolution Rate | % of auto-resolutions that should have escalated | 16%     | <20%   |
+| Debate Priority Accuracy   | % of debates correctly prioritized               | 81%     | >85%   |
+
+### Continuous Calibration
+
+The debate fallback system recalibrates quarterly based on:
+
+1. **Accuracy trends**: Are fallbacks maintaining >85% accuracy?
+2. **Override patterns**: Are humans consistently overriding certain debate types?
+3. **Threshold effectiveness**: Is 0.25 credibility threshold optimal?
+4. **Priority classification**: Are debates routed correctly?
+
+Recalibration results presented at Gate 6 for approval before application.
+
 ## Memory Integration
 
 Learning is tightly integrated with the memory system:

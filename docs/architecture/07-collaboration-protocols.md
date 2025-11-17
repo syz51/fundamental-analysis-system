@@ -78,37 +78,166 @@ This document defines the communication and collaboration protocols that enable 
   "disputed_finding": "Management effectiveness",
   "challenge_basis": "ROI declining despite claims",
   "required_evidence": ["Historical ROI data", "Peer comparison"],
-  "escalation_timer": 3600
+  "escalation_timer": 3600,
+  "priority": "critical-path",
+  "provisional_resolution": null
 }
 ```
 
-### Response Requirements
+### 5-Level Tiered Escalation System
 
-1. **Acknowledge within 15 minutes**
+The debate protocol uses a tiered escalation approach with timeouts and fallback mechanisms to prevent pipeline deadlocks when humans are unavailable.
 
-   - Confirm receipt of challenge
-   - Commit to response timeline
-   - Request clarification if needed
+#### Level 1: Agent Direct Resolution (15min timeout)
 
-2. **Provide evidence within 1 hour**
+**Process**:
 
-   - Address challenge directly
-   - Present supporting evidence
-   - Acknowledge limitations
-   - Revise position if warranted
+1. Challenged agent acknowledges within 15 minutes
+2. Agent provides evidence addressing challenge
+3. Challenger evaluates response
+4. If accepted → resolved, end debate
+5. If rejected → escalate to Level 2
 
-3. **Escalate to human if unresolved**
+**Actions**:
 
-   - Document disagreement
-   - Present both positions
-   - Highlight decision impact
-   - Request arbitration
+- Confirm receipt of challenge
+- Commit to response timeline
+- Request clarification if needed
+- Address challenge directly with evidence
+- Acknowledge limitations
+- Revise position if warranted
 
-4. **Document resolution**
-   - Final agreed position
-   - Evidence considered
-   - Confidence level
-   - Impact on analysis
+#### Level 2: Debate Facilitator Mediation (1hr timeout)
+
+**Process**:
+
+1. Debate Facilitator reviews both positions
+2. Applies credibility scoring based on agent track records
+3. If credibility differential >0.25 → auto-resolve to higher credibility position
+4. If credibility differential <0.25 → escalate to Level 3
+5. Documents reasoning and evidence considered
+
+**Auto-Resolution Criteria**:
+
+- Credibility gap threshold: 0.25
+- Based on agent historical accuracy in similar contexts
+- Requires minimum 5 historical data points per agent
+- Falls back to escalation if insufficient data
+
+#### Level 3: Human Arbitration - Gate 4 (6hr timeout)
+
+**Process**:
+
+1. Debate added to human queue with priority classification
+2. Queue managed (max 3 concurrent per expert)
+3. Human receives both positions with credibility scores and precedents
+4. If human responds within 6 hours → binding resolution
+5. If timeout → escalate to Level 4
+
+**Priority Classification** (determines queue order):
+
+- **Critical-path blocking**: Debates preventing immediate pipeline progress (highest)
+- **Valuation impact**: Debates affecting DCF assumptions, price targets (medium)
+- **Supporting analysis**: Background research disagreements (lowest)
+
+**Queue Management**:
+
+- Max concurrent debates per expert: 3
+- Overflow handling: Auto-escalate to Level 4 or defer to next gate
+- Load indicator displayed in dashboard
+
+#### Level 4: Fallback Resolution (24hr timeout)
+
+**Process**:
+
+1. Conservative default logic applied automatically
+2. Resolution marked as "provisional decision"
+3. Pipeline continues (non-blocking)
+4. Override window opens: Until next gate
+5. Human can review and override at subsequent gates
+
+**Conservative Default Logic**:
+
+1. Identify most cautious position:
+   - Lowest price target
+   - Highest risk assessment
+   - Most conservative assumptions
+   - Most skeptical interpretation
+2. Apply that position as provisional resolution
+3. Document rationale in decision log
+4. Flag for mandatory review at next gate
+
+**Override Window**:
+
+- Opens when fallback applied
+- Closes at next human decision gate
+- Human sees "X provisional decisions require review" at gate
+- Actions: Confirm, Override (with rationale), Request re-debate
+
+#### Level 5: Gate Review (at next decision point)
+
+**Process**:
+
+1. Next gate displays all provisional decisions requiring review
+2. Human reviews fallback reasoning and agent positions
+3. Options:
+   - **Confirm**: Accept conservative default, becomes final
+   - **Override**: Apply different resolution, check downstream impact
+   - **Re-debate**: Trigger new debate with additional context
+4. Final resolution propagated to all agents
+
+**Downstream Impact Check**:
+
+- If override changes key assumptions, flag dependent analyses
+- Re-run affected calculations if needed
+- Update confidence scores if cascading changes occur
+
+### Escalation Timeouts Summary
+
+| Level             | Timeout                     | Action if Exceeded                 |
+| ----------------- | --------------------------- | ---------------------------------- |
+| 1: Agent Direct   | 15min (ack), 1hr (evidence) | Escalate to Level 2                |
+| 2: Facilitator    | 1hr                         | Escalate to Level 3                |
+| 3: Human (Gate 4) | 6hr                         | Escalate to Level 4                |
+| 4: Fallback       | 24hr (provisional)          | Continue with conservative default |
+| 5: Gate Review    | Until next gate             | Override window closes             |
+
+### Priority-Based Queue Management
+
+**Queue Limits**:
+
+- Single expert: Max 3 concurrent debates
+- Overflow: Auto-resolve or defer based on priority
+
+**Routing Logic**:
+
+1. Critical-path debates → immediate attention (skip queue if <3)
+2. Valuation debates → queue position based on arrival time
+3. Supporting debates → defer to next gate if queue full
+
+**Load Balancing** (future multi-expert):
+
+- Round-robin assignment
+- Expertise-based routing
+- Workload-aware distribution
+
+### Documentation Requirements
+
+**For All Resolutions** (regardless of level):
+
+- Final agreed/applied position
+- Evidence considered
+- Resolution level and method
+- Confidence level
+- Impact on analysis
+- If provisional: Override window status
+
+**Additional for Provisional Resolutions**:
+
+- Conservative default rationale
+- Alternative positions considered
+- Review deadline (next gate)
+- Downstream dependencies
 
 ---
 
@@ -269,11 +398,13 @@ Before structured debates begin, the system ensures memory consistency:
 **Critical Sync Protocol**:
 
 1. **Force sync all participants** (<2 seconds)
+
    - Both challenger and challenged agents
    - All related agents in same analysis stream
    - Ensures no stale local cache data
 
 2. **Create memory snapshot**
+
    - Point-in-time view of all relevant knowledge
    - Locked state prevents mid-debate inconsistencies
    - All participants work from identical evidence base
