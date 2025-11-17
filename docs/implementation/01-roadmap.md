@@ -21,11 +21,11 @@ The implementation follows an agile methodology with continuous integration of m
 
 #### Data Infrastructure
 
-- [x] Set up data infrastructure
+- [ ] Set up data infrastructure
   - PostgreSQL for structured data
   - MongoDB for document storage
   - S3/object storage for raw files
-- [x] Implement data collector agent
+- [ ] Implement data collector agent
   - SEC EDGAR integration
   - Financial data API connections
   - Document parsing pipeline
@@ -33,7 +33,7 @@ The implementation follows an agile methodology with continuous integration of m
 
 #### Screening System
 
-- [x] Build screening agent
+- [ ] Build screening agent
   - Quantitative filter engine (10Y CAGR, margins, debt ratios)
   - Company summary generation
   - Candidate prioritization logic
