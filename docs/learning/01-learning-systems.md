@@ -163,9 +163,44 @@ Based on investigation, patterns receive validity conditions:
 - Regime dependencies ("only works in low rate environment")
 - Structural factors ("requires fragmented competition")
 
+### Implementation Requirements
+
+Complete 3-tier validation architecture specified in [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md). Implementation requires:
+
+**Core Components**:
+
+1. **PatternValidationPipeline** - Orchestrates all three validation tiers
+2. **HoldOutValidator** - Chronological train/val/test split logic
+3. **BlindTestingFramework** - Shadow analysis infrastructure (6-month evaluation)
+4. **ControlGroupManager** - A/B testing with statistical significance tests
+5. **PatternLifecycleManager** - Status transitions from candidate → active
+6. **QuarantineEnforcer** - Prevents unvalidated patterns from reaching agents
+
+**Success Criteria** (all must pass):
+
+- Hold-out validation: >0.65 correlation on test set, <20% degradation from training
+- Blind testing: Pattern helps >1.5x more than hurts (6-month evaluation, 10+ comparisons)
+- Statistical significance: p < 0.05 improvement vs control group (domain-specific thresholds apply)
+
+**Expected Pass Rates**:
+
+- Hold-out: ~70% of candidates
+- Blind testing: ~60% of hold-out survivors
+- Control groups: ~70% of blind survivors
+- **Overall**: ~30% of candidates become active patterns (aggressive filtering intentional)
+
+**Integration Points**:
+
+- Knowledge Base Agent: Pattern lifecycle management, quarantine storage
+- Memory System: Validation metadata tracking (see [Memory System](../architecture/02-memory-system.md#pattern-validation-knowledge-graph-extensions))
+- Gate 6: Human review of statistically validated patterns
+- All Specialist Agents: Only consume active (validated + approved) patterns
+
+**Implementation Phase**: Phase 3 (Months 5-6), estimated 6-8 weeks
+
 ### Anti-Confirmation Bias Mechanisms
 
-Multiple safeguards prevent false pattern acceptance:
+Multiple safeguards prevent false pattern acceptance (see [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md) for complete architecture):
 
 #### 1. Hold-Out Validation
 

@@ -323,19 +323,35 @@ Humans make the final go/no-go decision with full transparency into AI reasoning
 - Urgency escalates if 75+ outcomes or 45+ days (prompts faster review)
 - Whichever threshold reached first (after cooldown) triggers validation
 
+**Pattern Validation Architecture** ([DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
+
+All patterns presented at Gate 6 have already passed 3-tier statistical validation:
+
+1. **Hold-out validation**: Performance within 20% of training accuracy on unseen data
+2. **Blind testing**: Pattern helps >1.5x more than hurts (6-month shadow analysis, agents unaware)
+3. **Statistical significance**: p < 0.05 improvement vs control group (domain-specific thresholds)
+
+Only patterns with status='statistically_validated' reach Gate 6. Human review focuses on causal mechanisms and domain expertise validation.
+
 ```yaml
 Display:
   New Patterns Discovered:
     - pattern_name: 'Tech margin compression in rising rate environment'
+      status: statistically_validated  # Passed all 3 validation tiers
       occurrences: 5
       correlation: 0.73
       training_accuracy: 0.73
       validation_accuracy: 0.68
+      test_accuracy: 0.66
+      blind_test_score: 2.3  # Helped 2.3x more than hurt
+      control_p_value: 0.04  # Statistically significant improvement
       affected_sectors: [Technology, Software]
       proposed_action: 'Reduce margin estimates by 2%'
       confidence: MEDIUM
-      validation_method: [hold_out_test, blind_test]
-      statistical_significance: p=0.04
+      validation_summary:
+        - hold_out: PASSED (test accuracy 0.66, degradation 10% < 20% threshold)
+        - blind_test: PASSED (improvement_ratio 2.3 > 1.5 threshold)
+        - statistical: PASSED (p=0.04 < 0.05 threshold)
 
   Agent Credibility Changes:
     - agent: Financial Analyst
@@ -431,13 +447,17 @@ When "Request more evidence" selected:
 - **Deadline evaluation**: Auto-approve if correlation holds, reject if degrades or insufficient evidence
 - **Total maximum**: Original duration + 180 days (prevents indefinite probation)
 
-**Anti-Confirmation Bias Mechanisms**:
+**Anti-Confirmation Bias Mechanisms** ([DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
 
-1. **Hold-Out Validation**: Patterns tested on data not used for discovery
-2. **Blind Testing**: Track pattern performance without agent awareness
-3. **Control Groups**: A/B test pattern-using vs. baseline analyses
-4. **Statistical Rigor**: Require p-value < 0.05 for significance
-5. **Human Expert Review**: Domain experts validate causal mechanisms
+All patterns undergo 3-tier validation before Gate 6 review:
+
+1. **Hold-Out Validation**: Patterns tested on data not used for discovery (train/val/test split 70%/15%/15%)
+2. **Blind Testing**: Track pattern performance without agent awareness (6-month shadow analysis)
+3. **Control Groups**: A/B test pattern-using vs. baseline analyses (statistical significance testing)
+4. **Statistical Rigor**: Domain-specific p-value thresholds (p < 0.01 to p < 0.10 depending on domain)
+5. **Human Expert Review**: Domain experts validate causal mechanisms at Gate 6
+
+This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/03-pattern-validation.md)).
 
 ---
 

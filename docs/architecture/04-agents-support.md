@@ -125,12 +125,25 @@ Key capabilities include:
 - Calculate average accuracy
 - Aggregate lessons learned
 
-**Identify Patterns**:
+**Identify Patterns** (with 3-Tier Validation - see [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
 
-- Analyze outcomes over timeframes
-- Detect recurring patterns in markets/sectors
-- Validate pattern strength (correlation, occurrence)
-- Alert relevant agents to validated patterns
+- Discover candidate patterns from historical outcomes
+- Run hold-out validation (train/val/test split)
+- Perform blind testing (6-month shadow analysis, agents unaware)
+- Execute control group comparison (statistical significance testing)
+- Manage pattern lifecycle: candidate → statistically_validated → human_approved (Gate 6) → active
+- Quarantine unvalidated patterns (never broadcast to agents)
+- Track validation metadata (p-values, accuracy scores, test dates)
+- Deprecate patterns showing degraded performance
+- Alert relevant agents only to active (validated + approved) patterns
+
+**Validation Requirements**: Patterns must pass ALL three tests before deployment:
+
+1. Hold-out: Performance on unseen data within 20% of training accuracy
+2. Blind testing: Pattern helps >1.5x more than hurts when agents unaware
+3. Statistical significance: p < 0.05 improvement vs control group
+
+This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/03-pattern-validation.md)).
 
 ---
 

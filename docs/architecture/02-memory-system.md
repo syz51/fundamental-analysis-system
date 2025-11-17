@@ -75,6 +75,17 @@ Nodes:
     - category: string
     - success_rate: float
     - occurrence_count: integer
+    - status: enum [candidate, statistically_validated, human_approved, active, rejected_holdout, rejected_blind, rejected_statistical, deprecated]
+    - training_correlation: float
+    - validation_correlation: float
+    - test_correlation: float
+    - blind_test_score: float
+    - control_p_value: float
+    - validation_sample_size: integer
+    - validated_date: datetime
+    - approved_date: datetime
+    - last_performance_check: datetime
+    - quarantined: boolean
 
   Decision:
     - id: string
@@ -98,6 +109,103 @@ Relationships:
   - Pattern -[SIMILAR_TO]-> Pattern
   - Company -[PEER_OF]-> Company
 ```
+
+### Pattern Validation Knowledge Graph Extensions
+
+To support the 3-tier pattern validation system ([DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)), the knowledge graph includes specialized nodes and relationships for tracking validation metadata:
+
+```yaml
+Additional Nodes for Pattern Validation:
+  PatternValidation:
+    - pattern_id: string
+    - validation_type: enum [holdout, blind_test, control_group]
+    - test_start_date: datetime
+    - test_end_date: datetime
+    - passed: boolean
+    - test_correlation: float
+    - sample_size: integer
+    - p_value: float (for control group tests)
+    - improvement_ratio: float (for blind tests)
+    - failure_reason: string (if rejected)
+    - test_metadata: object
+
+  ShadowAnalysis:
+    - id: string
+    - pattern_id: string
+    - analysis_id: string
+    - with_pattern_prediction: float
+    - without_pattern_prediction: float
+    - actual_outcome: float
+    - pattern_helped: boolean
+    - timestamp: datetime
+
+Additional Relationships for Pattern Validation:
+  - Pattern -[HAS_VALIDATION]-> PatternValidation
+  - Pattern -[TESTED_IN]-> ShadowAnalysis
+  - PatternValidation -[BLOCKED_BY]-> PatternValidation (dependency chain)
+  - Pattern -[REJECTED_AT_GATE6]-> Human (if human rejected)
+  - Pattern -[APPROVED_AT_GATE6]-> Human (if human approved)
+```
+
+**Pattern Lifecycle Tracking**:
+
+The system stores complete validation history including:
+
+- All validation test results (holdout, blind, control)
+- Shadow analysis outcomes for each pattern
+- Gate 6 human review decisions and rationale
+- Pattern performance degradation over time
+- Rejection reasons for failed patterns
+
+**Query Capabilities**:
+
+```cypher
+# Find patterns ready for Gate 6 review
+MATCH (p:Pattern)
+WHERE p.status = 'statistically_validated'
+  AND NOT EXISTS((p)-[:APPROVED_AT_GATE6]->())
+RETURN p.name, p.validation_correlation, p.control_p_value, p.validated_date
+ORDER BY p.validated_date ASC
+
+# Retrieve complete validation history for a pattern
+MATCH (p:Pattern {name: 'Q4_retail_margin_compression'})-[:HAS_VALIDATION]->(v:PatternValidation)
+RETURN p.status, v.validation_type, v.passed, v.test_correlation, v.failure_reason
+ORDER BY v.test_start_date ASC
+
+# Find patterns that failed blind testing
+MATCH (p:Pattern)-[:HAS_VALIDATION]->(v:PatternValidation)
+WHERE v.validation_type = 'blind_test'
+  AND v.passed = false
+RETURN p.name, v.improvement_ratio, v.failure_reason
+ORDER BY v.test_end_date DESC
+
+# Calculate validation pass rates by tier
+MATCH (p:Pattern)-[:HAS_VALIDATION]->(v:PatternValidation)
+WHERE v.test_end_date > datetime() - duration({months: 6})
+RETURN v.validation_type,
+       SUM(CASE WHEN v.passed THEN 1 ELSE 0 END) as passed_count,
+       COUNT(*) as total_count,
+       toFloat(SUM(CASE WHEN v.passed THEN 1 ELSE 0 END)) / COUNT(*) as pass_rate
+GROUP BY v.validation_type
+
+# Find active patterns showing performance degradation
+MATCH (p:Pattern)
+WHERE p.status = 'active'
+  AND p.success_rate < p.training_correlation * 0.8
+RETURN p.name, p.training_correlation, p.success_rate,
+       (p.training_correlation - p.success_rate) as degradation
+ORDER BY degradation DESC
+LIMIT 10
+```
+
+**Pattern Quarantine Enforcement**:
+
+The memory system enforces strict quarantine rules:
+
+- Patterns with `status != 'active'` never returned to agent queries
+- Separate storage partitions for validated vs unvalidated patterns
+- Broadcast operations filtered to only include active patterns
+- Audit trail for all pattern access attempts
 
 ### Debate-Specific Knowledge Graph Extensions
 
