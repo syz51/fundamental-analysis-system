@@ -21,6 +21,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-002 | [Event-Driven Memory Synchronization](DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)           | Implemented | 2025-11-17 | Memory Architecture         | [Memory System](../docs/architecture/02-memory-system.md), [Flaw #2](../docs/design-flaws/resolved/02-memory-sync-timing.md)                                                                                   |
 | DD-003 | [Debate Deadlock Resolution](DD-003_DEBATE_DEADLOCK_RESOLUTION.md)                  | Implemented | 2025-11-17 | Collaboration, Operations   | [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md), [Human Integration](../docs/operations/02-human-integration.md), [Flaw #8](../docs/design-flaws/resolved/08-debate-deadlock.md) |
 | DD-004 | [Gate 6: Parameter Optimization for Scale](DD-004_GATE_6_PARAMETER_OPTIMIZATION.md) | Implemented | 2025-11-17 | Human Integration, Learning | [DD-001](DD-001_GATE_6_LEARNING_VALIDATION.md), [Human Integration](../docs/operations/02-human-integration.md), [Flaw #10](../docs/design-flaws/10-gate-6-parameters.md)                                      |
+| DD-005 | [Memory Scalability Optimization](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md)        | Implemented | 2025-11-17 | Memory Architecture         | [Memory System](../docs/architecture/02-memory-system.md), [Flaw #7](../docs/design-flaws/resolved/07-memory-scalability.md)                                                                                   |
+| DD-006 | [Negative Feedback System](DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)                      | Approved    | 2025-11-17 | Learning, Quality Assurance | [Learning Systems](../docs/learning/01-learning-systems.md), [Memory System](../docs/architecture/02-memory-system.md), [Flaw #9](../docs/design-flaws/resolved/09-negative-feedback.md)                      |
 | DD-007 | [Pattern Validation Architecture](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)        | Implemented | 2025-11-17 | Learning, Quality Assurance | [Learning Systems](../docs/learning/01-learning-systems.md), [Memory System](../docs/architecture/02-memory-system.md), [Flaw #3](../docs/design-flaws/resolved/03-pattern-validation.md)                        |
 
 ---
@@ -33,11 +35,12 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-002**: Event-Driven Memory Synchronization
 - **DD-003**: Debate Deadlock Resolution (5-level tiered escalation)
 - **DD-004**: Gate 6 Parameter Optimization for Scale
+- **DD-005**: Memory Scalability Optimization (tiered cache, query optimization)
 - **DD-007**: Pattern Validation Architecture (3-tier statistical validation)
 
 ### 🟢 Approved (Pending Implementation)
 
-- None currently
+- **DD-006**: Negative Feedback System (async post-mortem, success validation)
 
 ### 🟡 Under Review
 
@@ -57,7 +60,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 ### Architecture
 
-- **Memory Architecture**: DD-002
+- **Memory Architecture**: DD-002, DD-005
 
 ### Operations
 
@@ -67,6 +70,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 - **Human Integration & Learning Validation**: DD-001, DD-004
 - **Pattern Validation & Quality Assurance**: DD-007
+- **Negative Feedback & Failure Analysis**: DD-006
 
 ### Implementation
 
@@ -134,4 +138,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-17 (added DD-007, resolved Flaw #3: Pattern Validation)
+**Last Updated**: 2025-11-17 (added DD-005, DD-006, DD-007; resolved Flaws #3, #7, #9)

@@ -388,6 +388,174 @@ This precedent context enables:
 - Pattern-based argument validation
 - Learning from past resolution effectiveness
 
+### Post-Mortem Knowledge Graph Extensions
+
+To support negative feedback mechanisms ([DD-006](../../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)), the knowledge graph includes nodes and relationships for tracking failure investigations and lessons learned:
+
+```yaml
+Additional Nodes for Post-Mortem System:
+  PostMortem:
+    - id: string
+    - decision_id: string
+    - checkpoint: enum [30, 90, 180, 365]
+    - deviation: float
+    - trigger_date: datetime
+    - status: enum [queued, in_review, completed, timeout]
+    - priority: float (based on deviation severity)
+    - completion_date: datetime
+
+  FailureAnalysis:
+    - id: string
+    - postmortem_id: string
+    - root_cause_category: enum [data_quality, model_assumptions, missing_factors, timing, regime_change, black_swan]
+    - root_cause_details: string
+    - foreseeability_rating: integer (1-5)
+    - unexpected_changes: array
+    - missing_factors: array
+    - warning_signs: array
+
+  HumanInsight:
+    - id: string
+    - postmortem_id: string
+    - primary_reason: string
+    - factors_missed: string
+    - warning_signs_missed: string
+    - future_actions: string
+    - patterns_to_revise: array
+    - foreseeability_rating: integer (1-5)
+    - review_date: datetime
+
+  SuccessValidation:
+    - id: string
+    - decision_id: string
+    - thesis_score: float (thesis validation 0-1)
+    - market_contribution: float
+    - sector_contribution: float
+    - stock_specific_contribution: float
+    - skill_ratio: float
+    - classification: enum [genuine_success, partial_success, lucky_success]
+
+  Lesson:
+    - id: string
+    - source: enum [ai_analysis, human_insight, combined]
+    - postmortem_id: string
+    - category: string
+    - insight: string
+    - recommended_action: string
+    - affected_domains: array
+    - priority: enum [high, medium, low]
+    - applied: boolean
+    - applied_date: datetime
+    - effectiveness_tracked: boolean
+
+Additional Relationships for Post-Mortem System:
+  - Decision -[HAS_POSTMORTEM]-> PostMortem
+  - PostMortem -[HAS_ANALYSIS]-> FailureAnalysis
+  - PostMortem -[HAS_INSIGHT]-> HumanInsight
+  - PostMortem -[GENERATED_LESSON]-> Lesson
+  - Decision -[HAS_SUCCESS_VALIDATION]-> SuccessValidation
+  - Lesson -[AFFECTS_AGENT]-> Agent
+  - Lesson -[AFFECTS_PATTERN]-> Pattern
+  - Lesson -[ADDED_TO_CHECKLIST]-> Agent
+  - Agent -[RECEIVED_LESSON]-> Lesson
+  - Pattern -[REVISED_BY]-> Lesson (triggers Gate 6 review)
+```
+
+**Post-Mortem Workflow Storage**:
+
+The system stores complete failure investigation histories:
+
+- Deviation triggers and queue management
+- AI-driven root cause categorization
+- Human review responses with structured insights
+- Success validation (luck vs skill decomposition)
+- Lessons extracted from both AI and human analysis
+- Lesson application tracking (which agents/patterns affected)
+- Effectiveness measurement of lessons over time
+
+**Query Capabilities**:
+
+```cypher
+# Find post-mortems pending human review
+MATCH (pm:PostMortem)
+WHERE pm.status = 'in_review'
+  AND pm.trigger_date < datetime() - duration({hours: 24})
+RETURN pm.decision_id, pm.deviation, pm.trigger_date, pm.priority
+ORDER BY pm.priority DESC
+LIMIT 5
+
+# Retrieve complete post-mortem for a decision
+MATCH (d:Decision)-[:HAS_POSTMORTEM]->(pm:PostMortem)
+WHERE d.id = $decision_id
+OPTIONAL MATCH (pm)-[:HAS_ANALYSIS]->(fa:FailureAnalysis)
+OPTIONAL MATCH (pm)-[:HAS_INSIGHT]->(hi:HumanInsight)
+OPTIONAL MATCH (pm)-[:GENERATED_LESSON]->(l:Lesson)
+RETURN pm, fa, hi, COLLECT(l) as lessons
+
+# Find lessons learned from specific failure category
+MATCH (pm:PostMortem)-[:HAS_ANALYSIS]->(fa:FailureAnalysis)
+WHERE fa.root_cause_category = 'missing_factors'
+MATCH (pm)-[:GENERATED_LESSON]->(l:Lesson)
+WHERE l.applied = true
+RETURN l.insight, l.recommended_action, l.affected_domains, l.applied_date
+ORDER BY l.applied_date DESC
+LIMIT 10
+
+# Calculate success validation statistics
+MATCH (sv:SuccessValidation)
+WHERE sv.classification = 'lucky_success'
+RETURN COUNT(*) as lucky_count,
+       AVG(sv.skill_ratio) as avg_skill_ratio,
+       AVG(sv.market_contribution) as avg_market_contribution
+
+# Find patterns pending revision from post-mortem lessons
+MATCH (l:Lesson)-[:AFFECTS_PATTERN]->(p:Pattern)
+WHERE l.applied = false
+  AND p.status = 'active'
+RETURN p.name, COLLECT(l.insight) as revision_reasons,
+       COUNT(l) as lesson_count
+ORDER BY lesson_count DESC
+
+# Track lesson effectiveness
+MATCH (l:Lesson)-[:AFFECTS_AGENT]->(a:Agent)
+WHERE l.effectiveness_tracked = true
+  AND l.applied_date > datetime() - duration({months: 6})
+MATCH (a)-[:MADE]->(d:Decision)
+WHERE d.date > l.applied_date
+RETURN l.insight, AVG(d.accuracy) as post_lesson_accuracy,
+       COUNT(d) as decisions_since_lesson
+```
+
+**NegativeFeedbackManager Component**:
+
+Orchestrates post-mortem workflow and integrates with existing systems:
+
+**Integration Points**:
+
+- **OutcomeTracker**: Triggers post-mortems when checkpoint deviation >30%
+- **Central Knowledge Graph**: Stores post-mortem reports, lessons, validation data
+- **Learning Engine**: Applies lessons to patterns (queued for Gate 6 validation)
+- **Human Interface**: Post-mortem review dashboard with structured questions
+- **All Specialist Agents**: Receive lesson updates (checklists, bias corrections)
+- **Gate 6**: Validates pattern revisions proposed by post-mortem lessons
+
+**Queue Management**:
+
+- Max 5 concurrent post-mortems in human review
+- Priority queue by deviation severity (largest deviations first)
+- Timeout tracking (48hr SLA for human review)
+- Overflow queue for pending investigations
+
+**Lesson Broadcasting**:
+
+When post-mortem completed, lessons propagated via:
+
+1. Agent checklist updates (new items to consider)
+2. Pattern revision proposals (flagged for Gate 6 review)
+3. Screening filter updates (if applicable)
+4. Bias correction storage (systematic over/under-estimation)
+5. Lesson library indexing (searchable by category/agent/pattern)
+
 ---
 
 ## Memory Synchronization Protocol

@@ -74,6 +74,85 @@ Significant deviations (>30% error) trigger pattern reviews to understand:
 - Whether underlying patterns have changed
 - What corrections should be applied
 
+### Post-Mortem Investigation (DD-006)
+
+When checkpoint outcomes deviate >30% from predictions, mandatory post-mortem investigation triggered to conduct root cause analysis and extract negative lessons.
+
+**Trigger Conditions**:
+
+```text
+abs(actual_outcome - predicted_outcome) / predicted_outcome > 0.30
+```
+
+Applies to both failures (negative outcomes) and missed opportunities (passed stocks that outperformed).
+
+**Post-Mortem Workflow**:
+
+1. **Queue Management**: Async investigation queue (max 5 concurrent), prioritized by deviation severity
+2. **Root Cause Analysis**: AI-driven investigation categorizes failure using taxonomy:
+   - Data quality issues (missing/incorrect data)
+   - Model assumptions (DCF inputs, growth rates)
+   - Missing factors (unconsidered variables)
+   - Timing (thesis correct, too early/late)
+   - Regime change (market conditions shifted)
+   - Black swan (unforeseeable events)
+3. **Human Review**: Structured questions completed within 48hrs:
+   - Primary reason for unexpected outcome
+   - Specific factors missed/underweighted
+   - Warning signs should have caught
+   - What to do differently in similar situations
+   - Which patterns need revision
+   - Foreseeability rating (1-5 scale)
+4. **Success Validation**: For positive outcomes, validate that success was skill, not luck:
+   - Thesis decomposition (did predicted drivers occur?)
+   - Baseline comparison (performance vs market/sector)
+   - Luck vs skill attribution (market/sector/stock-specific contributions)
+   - Classification: Genuine Success (reinforce), Partial Success (partial credit), Lucky Success (don't reinforce)
+5. **Lesson Broadcasting**: Actionable lessons extracted and applied:
+   - Update affected agents (checklists, bias corrections)
+   - Propose pattern revisions (for Gate 6 validation)
+   - Add to screening filters (if relevant)
+   - Store in searchable lesson library
+   - Notify human of changes applied
+
+**Failure Categorization Taxonomy**:
+
+| Category          | Description                   | Example                                         |
+| ----------------- | ----------------------------- | ----------------------------------------------- |
+| Data Quality      | Missing or incorrect data     | Stale financials, unreported debt               |
+| Model Assumptions | DCF parameters wrong          | Overstated growth, understated cost of capital  |
+| Missing Factors   | Unconsidered variables        | Competitive threat, regulatory change           |
+| Timing            | Thesis correct but early/late | Disruption predicted but adoption slower        |
+| Regime Change     | Market conditions shifted     | Multiple compression, interest rate environment |
+| Black Swan        | Unforeseeable events          | Pandemic, fraud, geopolitical shock             |
+
+**Success Validation Logic**:
+
+To prevent false positive learning (stock goes up for wrong reasons):
+
+```yaml
+Luck vs Skill Decomposition:
+  market_contribution: Stock return attributable to market performance
+  sector_contribution: Stock return attributable to sector performance
+  stock_specific_contribution: Stock return unique to company
+
+skill_ratio = stock_specific_contribution × thesis_validation_score
+
+Classification:
+  - skill_ratio > 0.6 AND thesis correct → Genuine Success (reinforce pattern)
+  - 0.4 < skill_ratio ≤ 0.6 AND beat market → Partial Success (partial credit)
+  - skill_ratio ≤ 0.4 → Lucky Success (do not reinforce, prevents false learning)
+```
+
+**Integration with Learning System**:
+
+- Post-mortem lessons presented at Gate 6 for validation before pattern revisions applied
+- Failure patterns stored in central knowledge graph for future reference
+- Agents receive lesson updates to prevent recurrence
+- Dashboard tracks "lessons learned from failures" by category
+
+Complete specification: [DD-006: Negative Feedback System](../../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)
+
 ## Pattern Discovery and Validation
 
 The system continuously mines historical data to identify recurring patterns while preventing confirmation bias through rigorous statistical validation.
