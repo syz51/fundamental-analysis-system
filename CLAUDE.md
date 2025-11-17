@@ -120,6 +120,16 @@ python main.py
 
 ## Inter-Agent Communication
 
+### Memory Sync (v2.0)
+
+Event-driven priority sync replaces fixed 5min intervals:
+
+- **Critical** (2s): Debates, human gates, challenges - force immediate sync
+- **High** (10s): Important findings with precedents
+- **Normal** (5min): Regular interval-based sync
+
+Triggered by message type to prevent stale data in debates.
+
 ### Message Protocol
 
 JSON-based with structure:
@@ -132,15 +142,21 @@ JSON-based with structure:
 
 - **Finding**: Analytical results
 - **Request**: Ask for analysis
-- **Challenge**: Dispute conclusions
+- **Challenge**: Dispute conclusions (triggers critical sync)
 - **Confirmation**: Validate info
-- **Alert**: Urgent attention
+- **Alert**: Urgent attention (triggers critical sync)
 
 ### Debate Protocol
 
-- Challenges include: challenger, challenged, disputed_finding, evidence required
-- Response time: acknowledge 15min, evidence 1hr
-- Escalate to human if unresolved
+5-level tiered escalation (v2.0):
+
+1. **Agent negotiation** (15min): Evidence exchange
+2. **Facilitator mediation** (1hr): Auto-resolve if credibility differential >0.25
+3. **Human arbitration** (6hr): Expert review, queue max 3 concurrent
+4. **Conservative default** (provisional): Most cautious position, continues pipeline
+5. **Gate review**: Validate/override provisionals at Gates 3/5
+
+Prevents deadlocks via fallbacks when human unavailable. Challenges include: challenger, challenged, disputed_finding, evidence required.
 
 ## Implementation Roadmap
 

@@ -3,7 +3,7 @@
 **Status**: RESOLVED ✅
 **Priority**: Critical
 **Resolution**: Gate 6 added to v2.0 design
-**Reference**: [Gate 6 Design Decisions](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)
+**Reference**: [DD-001: Gate 6 Learning Validation](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md)
 
 ---
 
@@ -163,6 +163,7 @@ Patterns should be rejected if:
 
 **Related Documentation**:
 
-- [Gate 6 Full Design](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)
+- [DD-001: Gate 6 Learning Validation](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md)
+- [Flaw #10: Gate 6 Parameter Optimization](../10-gate-6-parameters.md)
 - [Human Integration](../operations/02-human-integration.md)
 - [Learning Systems](../learning/01-learning-systems.md)

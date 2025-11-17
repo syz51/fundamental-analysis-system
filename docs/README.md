@@ -49,32 +49,15 @@ Roadmap, technical requirements, and deployment considerations.
 
 Deep dives into specific complex architectural choices.
 
-- [Index of All Decisions](../design-decisions/INDEX.md) - Track all design decisions with status
+- [Index of All Decisions](../design-decisions/INDEX.md) - All design decisions with status (3 implemented)
 - [Template](../design-decisions/TEMPLATE.md) - Standard format for documenting new decisions
-- [Gate 6 Design Decisions](../design-decisions/GATE_6_DESIGN_DECISIONS.md) - Learning validation gate analysis
-- [Flaw #2 Fix: Event-Driven Memory Sync](../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md) - Memory synchronization architecture
 
-### ⚠️ Design Flaws & Solutions
+### ⚠️ Design Flaws
 
-Design issues identified in v2.0 architecture with resolution tracking.
+Known design issues and resolutions tracked in `design-flaws/`:
 
-- [Summary](design-flaws/00-SUMMARY.md) - Overview: 6 active, 3 resolved
+- [Summary](design-flaws/00-SUMMARY.md) - Active & resolved issues (7 active, 3 resolved)
 - [Priority Guide](design-flaws/PRIORITY.md) - Implementation order and dependencies
-
-**Active Flaws** (require resolution):
-
-- [#3 - Pattern Validation](design-flaws/03-pattern-validation.md) ⚠️ **Next Priority**
-- [#4 - Credibility Scoring](design-flaws/04-credibility-scoring.md)
-- [#5 - Data Retention](design-flaws/05-data-retention.md)
-- [#6 - Expertise Routing](design-flaws/06-expertise-routing.md)
-- [#7 - Memory Scalability](design-flaws/07-memory-scalability.md) ⚠️ **High Priority**
-- [#9 - Negative Feedback](design-flaws/09-negative-feedback.md)
-
-**Resolved Issues** (see `design-flaws/resolved/`):
-
-- [#1 - Missing Human Gate](design-flaws/resolved/01-missing-human-gate.md) ✅
-- [#2 - Memory Sync Timing](design-flaws/resolved/02-memory-sync-timing.md) ✅
-- [#8 - Debate Deadlock](design-flaws/resolved/08-debate-deadlock.md) ✅ **Latest**
 
 ---
 

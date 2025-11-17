@@ -15,10 +15,11 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 ## All Design Decisions
 
-| ID     | Decision Title                                                                    | Status       | Date    | Area                        | Related Docs                                                                                                                 |
-| ------ | --------------------------------------------------------------------------------- | ------------ | ------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| DD-001 | [Gate 6: Learning Validation Design](GATE_6_DESIGN_DECISIONS.md)                  | Under Review | 2025-11 | Human Integration, Learning | [Human Integration](../docs/operations/02-human-integration.md), [Learning Systems](../docs/learning/01-learning-systems.md) |
-| DD-002 | [Event-Driven Memory Sync (Flaw #2 Fix)](FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md) | Approved     | 2025-11 | Memory Architecture         | [Memory System](../docs/architecture/02-memory-system.md), [Design Flaws #2](../docs/design-flaws/02-event-driven-memory.md) |
+| ID     | Decision Title                                                             | Status      | Date       | Area                        | Related Docs                                                                                                                                                                                                   |
+| ------ | -------------------------------------------------------------------------- | ----------- | ---------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DD-001 | [Gate 6: Learning Validation System](DD-001_GATE_6_LEARNING_VALIDATION.md) | Implemented | 2025-11-17 | Human Integration, Learning | [Human Integration](../docs/operations/02-human-integration.md), [Learning Systems](../docs/learning/01-learning-systems.md), [Flaw #1](../docs/design-flaws/resolved/01-missing-human-gate.md)                |
+| DD-002 | [Event-Driven Memory Synchronization](DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)  | Implemented | 2025-11-17 | Memory Architecture         | [Memory System](../docs/architecture/02-memory-system.md), [Flaw #2](../docs/design-flaws/resolved/02-memory-sync-timing.md)                                                                                   |
+| DD-003 | [Debate Deadlock Resolution](DD-003_DEBATE_DEADLOCK_RESOLUTION.md)         | Implemented | 2025-11-17 | Collaboration, Operations   | [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md), [Human Integration](../docs/operations/02-human-integration.md), [Flaw #8](../docs/design-flaws/resolved/08-debate-deadlock.md) |
 
 ---
 
@@ -26,15 +27,17 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 ### ✅ Approved & Implemented
 
-- None yet
+- **DD-001**: Gate 6 Learning Validation System
+- **DD-002**: Event-Driven Memory Synchronization
+- **DD-003**: Debate Deadlock Resolution (5-level tiered escalation)
 
 ### 🟢 Approved (Pending Implementation)
 
-- **DD-002**: Event-Driven Memory Sync
+- None currently
 
 ### 🟡 Under Review
 
-- **DD-001**: Gate 6 Learning Validation Design
+- None currently
 
 ### 🔴 Proposed (Not Yet Reviewed)
 
@@ -54,11 +57,11 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 ### Operations
 
-- None yet
+- **Collaboration & Debate Resolution**: DD-003
 
 ### Learning & Feedback
 
-- **Human Integration**: DD-001
+- **Human Integration & Learning Validation**: DD-001
 
 ### Implementation
 
@@ -76,14 +79,10 @@ Track questions that need decisions:
 
 ### High Priority
 
-1. **Agent Memory Consistency** (from DD-001, DD-002)
-
-   - How to handle conflicts when multiple agents update same memory simultaneously?
-   - Related: DD-002
-
-2. **Gate 6 Interaction Model** (from DD-001)
-   - Should learning validation be async feedback or blocking gate?
+1. **Gate 6 Parameter Optimization** (from DD-001) - **See Flaw #10**
+   - Trigger priority logic, auto-approval thresholds, probation duration, statistical thresholds
    - Related: DD-001
+   - Status: Documented in design-flaws/10-gate-6-parameters.md
 
 ### Medium Priority
 
@@ -98,7 +97,7 @@ Track questions that need decisions:
 ## Decision Templates & Guidelines
 
 - **Template**: [TEMPLATE.md](TEMPLATE.md)
-- **Naming**: `[TOPIC]_[BRIEF_DESCRIPTION].md` (e.g., `GATE_6_DESIGN_DECISIONS.md`)
+- **Naming**: `DD-XXX_[BRIEF_DESCRIPTION].md` (e.g., `DD-001_GATE_6_LEARNING_VALIDATION.md`)
 - **ID Assignment**: Sequential DD-XXX format
 - **When to Create**:
 
@@ -133,4 +132,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-17
+**Last Updated**: 2025-11-17 (added DD-003)

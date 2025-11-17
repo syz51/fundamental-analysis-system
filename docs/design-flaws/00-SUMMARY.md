@@ -2,9 +2,9 @@
 
 **Version**: 2.0
 **Last Updated**: 2025-11-17
-**Total Identified**: 9
+**Total Identified**: 10
 **Resolved**: 3
-**Active**: 6
+**Active**: 7
 
 ---
 
@@ -22,14 +22,15 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 | 6   | [Static Human Expertise Routing](06-expertise-routing.md)                  | Low      | ⚠️ UNRESOLVED |
 | 7   | [Memory Scalability vs Performance Targets](07-memory-scalability.md)      | High     | ⚠️ UNRESOLVED |
 | 9   | [Learning Loop - No Negative Feedback Mechanism](09-negative-feedback.md)  | Medium   | ⚠️ UNRESOLVED |
+| 10  | [Gate 6 Parameter Optimization](10-gate-6-parameters.md)                   | Medium   | ⚠️ UNRESOLVED |
 
 ## Resolved Issues
 
-| #   | Issue                                                                                     | Priority | Resolution                | Reference                                                                         |
-| --- | ----------------------------------------------------------------------------------------- | -------- | ------------------------- | --------------------------------------------------------------------------------- |
-| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added              | [Design Decision](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)              |
-| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync         | [Design Decision](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md) |
-| 8   | [Debate Resolution Deadlock Scenario](resolved/08-debate-deadlock.md)                     | Critical | 5-level tiered escalation | See flaw file for complete resolution details                                     |
+| #   | Issue                                                                                     | Priority | Resolution                | Reference                                                             |
+| --- | ----------------------------------------------------------------------------------------- | -------- | ------------------------- | --------------------------------------------------------------------- |
+| 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added              | [DD-001](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md) |
+| 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync         | [DD-002](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)   |
+| 8   | [Debate Resolution Deadlock Scenario](resolved/08-debate-deadlock.md)                     | Critical | 5-level tiered escalation | [DD-003](../../design-decisions/DD-003_DEBATE_DEADLOCK_RESOLUTION.md) |
 
 ## Quick Reference by Priority
 
@@ -47,6 +48,7 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 - ⚠️ **Flaw #4**: Agent Credibility Scoring - No Temporal Decay
 - ⚠️ **Flaw #5**: Data Retention Policy Conflict
 - ⚠️ **Flaw #9**: Learning Loop - No Negative Feedback Mechanism
+- ⚠️ **Flaw #10**: Gate 6 Parameter Optimization
 
 ### Low (Optimization Phase)
 
@@ -90,6 +92,12 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 **Impact**: System doesn't learn deeply from mistakes, misses root causes.
 **Status**: Requires post-mortem process, failure categorization, systematic analysis.
 
+### 10. Gate 6 Parameter Optimization ⚠️
+
+**Problem**: Gate 6 implemented with basic triggers but lacks optimized parameters for production scale.
+**Impact**: May overwhelm human with 100+ monthly reviews, rigid triggers, indefinite probation, inconsistent statistical rigor.
+**Status**: 4 parameters need tuning: trigger priority, auto-approval thresholds, probation duration, statistical thresholds.
+
 ---
 
 ## Resolution Progress
@@ -109,9 +117,9 @@ See [PRIORITY.md](PRIORITY.md) for detailed implementation order and dependencie
 
 For complete documentation of resolved issues, see:
 
-- [Flaw #1: Missing Human Gate](resolved/01-missing-human-gate.md) → [Gate 6 Design](../../design-decisions/GATE_6_DESIGN_DECISIONS.md)
-- [Flaw #2: Memory Sync Timing](resolved/02-memory-sync-timing.md) → [Event-Driven Sync](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md)
-- [Flaw #8: Debate Deadlock](resolved/08-debate-deadlock.md) - Complete resolution details in flaw file
+- [Flaw #1: Missing Human Gate](resolved/01-missing-human-gate.md) → [DD-001: Gate 6](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md)
+- [Flaw #2: Memory Sync Timing](resolved/02-memory-sync-timing.md) → [DD-002: Event-Driven Sync](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)
+- [Flaw #8: Debate Deadlock](resolved/08-debate-deadlock.md) → [DD-003: Debate Resolution](../../design-decisions/DD-003_DEBATE_DEADLOCK_RESOLUTION.md)
 
 ---
 

@@ -3,7 +3,7 @@
 **Status**: RESOLVED ✅
 **Priority**: Critical
 **Resolution**: Event-driven memory sync architecture implemented
-**Reference**: [Event-Driven Memory Sync Design](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md)
+**Reference**: [DD-002: Event-Driven Memory Synchronization](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)
 
 ---
 
@@ -213,6 +213,6 @@ class DebateSyncProtocol:
 
 **Related Documentation**:
 
-- [Full Event-Driven Design](../../design-decisions/FLAW_02_FIX_EVENT_DRIVEN_MEMORY_SYNC.md)
+- [DD-002: Event-Driven Memory Synchronization](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)
 - [Memory System](../architecture/02-memory-system.md)
 - [Collaboration Protocols](../architecture/07-collaboration-protocols.md)
