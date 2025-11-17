@@ -145,12 +145,58 @@ Key capabilities include:
 
 This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/resolved/03-pattern-validation.md)).
 
+### Performance Optimization (NEW - v2.0 Scalability)
+
+To maintain <500ms memory retrieval at scale (1000+ stocks, 15K+ analyses), the Knowledge Base Agent implements query budgets and optimization strategies (see [DD-005](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md)):
+
+**Query Budget Enforcement**:
+
+- **Hard 500ms timeout** on all memory queries
+- Prevents runaway queries from blocking analysis pipeline
+- Graceful degradation with fallback strategies
+
+**Fallback Strategies** (when query exceeds budget):
+
+- Return approximate result (e.g., top-5 instead of top-10 similar analyses)
+- Return cached result with staleness indicator
+- Sample-based results (partial pattern matches)
+
+**Cache Warming**:
+
+- Before analysis starts, predictively preload likely queries:
+  - Similar analyses for target company
+  - Sector patterns and peer comparisons
+  - Company history and precedents
+- Reduces cache misses and runtime query latency
+
+**Incremental Updates**:
+
+- Agent credibility scores updated incrementally (not full historical scan)
+- Pattern index maintained with incremental additions
+- Reduces query time from 800ms+ → <10ms for credibility lookups
+
+**Query Monitoring**:
+
+- Track timeout frequency by query type
+- Alert if >5% queries timeout (optimization needed)
+- Log slow queries for investigation and tuning
+
+**Performance Targets**:
+
+| Metric           | Target                         | Phase     |
+| ---------------- | ------------------------------ | --------- |
+| Memory retrieval | <200ms cached, <500ms uncached | Phase 3-4 |
+| Cache hit rate   | >80%                           | Phase 3-4 |
+| Timeout rate     | <5%                            | Phase 3-5 |
+| Query success    | >95% within budget or fallback | Phase 3-5 |
+
 ---
 
 ## Related Documentation
 
 - [System Overview](./01-system-overview.md) - Overall architecture
-- [Memory System](./02-memory-system.md) - Knowledge graph and memory layers
+- [Memory System](./02-memory-system.md) - Knowledge graph and memory layers with scalability optimizations
 - [Specialist Agents](./03-agents-specialist.md) - Core analysis agents
 - [Coordination Agents](./05-agents-coordination.md) - Workflow orchestration
 - [Output Agents](./06-agents-output.md) - Report and watchlist generation
+- [DD-005: Memory Scalability Optimization](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design

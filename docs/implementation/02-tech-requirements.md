@@ -557,18 +557,19 @@ System automatically triggers appropriate sync level based on message type:
 
 ### Response Times
 
-- **L1 memory access**: <10ms
-- **L2 memory access**: <100ms
-- **L3 memory access**: <500ms (p95)
+- **L1 memory access**: <10ms (in-memory cache)
+- **L2 memory access**: <50ms (local agent cache)
+- **L3 memory access**: <500ms uncached, <200ms cached (p95) - see scalability requirements below
 - **API endpoints**: <200ms (p95)
 - **Dashboard load**: <2s initial, <500ms interactions
 
 ### Throughput
 
 - **Screening**: 1000+ companies/day
-- **Analysis**: 50+ companies/day (full analysis)
-- **Memory queries**: 1000+ queries/second
+- **Analysis**: 50+ companies/day (full analysis), target 200+ at scale
+- **Memory queries**: 1000+ queries/second with <5% timeout rate
 - **Message processing**: 10,000+ messages/second
+- **Cache hit rate**: >80% for memory queries (Phase 3-4)
 
 ### Availability
 
@@ -578,15 +579,71 @@ System automatically triggers appropriate sync level based on message type:
 - **RTO (Recovery Time Objective)**: <1 hour
 - **RPO (Recovery Point Objective)**: <5 minutes
 
+### Scalability Optimization Requirements (DD-005)
+
+To support 1000+ stocks and <24hr analysis turnaround, the system implements comprehensive memory optimization. Requirements are tech-agnostic pending production research.
+
+**Caching Infrastructure**:
+
+- System-wide L1 cache (hot layer):
+  - Sub-10ms access time
+  - Recent/frequent queries
+  - 1hr TTL, ~500MB capacity
+  - Tech options: Redis, Memcached, or equivalent
+- Query result caching with 80%+ hit rate target
+- Cache warming capabilities (predictive preload before analysis)
+- Separate cache instances for different priority tiers
+
+**Query Optimization**:
+
+- Pre-computed similarity indexes (offline batch processing):
+  - Nightly/weekly rebuild pipeline
+  - Top-K storage (e.g., top 10 similar analyses per company)
+  - Incremental index updates during day
+- Materialized views for common queries:
+  - Top patterns by sector
+  - Agent credibility scores
+  - Peer comparison matrices
+- Query budget enforcement (500ms hard timeout):
+  - Fallback to approximate results when timeout exceeded
+  - Monitoring: alert if >5% queries timeout
+
+**Monitoring Metrics**:
+
+- Memory query latency (p50, p95, p99) by query type
+- Cache hit rate tracking and alerting (target >80%)
+- Timeout frequency by query type (target <5%)
+- Graph query performance at scale (track degradation)
+- Query success rate (target >95% within budget or fallback)
+- Index rebuild time and staleness metrics
+- Agent credibility calculation time (target <10ms incremental)
+
+**Memory Pruning**:
+
+- Archive strategy for >2yr old memories
+- Pruning criteria (age, access frequency, relevance, superseded)
+- Summarization before archival (preserve key findings)
+- Cold storage for archived detail (S3, data warehouse, or equivalent)
+- Active graph size limit: <50K nodes
+
+**Benchmarking Requirements**:
+
+- Phase 1-2 (MVP): Baseline at 100 analyses, 100 patterns
+- Phase 3 (Beta): Validate at 150-500 analyses, 500-1K patterns
+- Phase 4 (Production): Stress test at 600-2K analyses, 1K-3K patterns
+- Phase 5 (Scale): Confirm targets at 3K-15K analyses, 3K-5K patterns
+- Track: graph query latency, pattern matching time, credibility calc time, cache hit rate, end-to-end memory overhead
+
 ---
 
 ## Related Documentation
 
 - **Implementation Roadmap**: See `01-roadmap.md` for phased deployment plan
 - **System Architecture**: See main design doc Section 2 for high-level architecture
-- **Memory Architecture**: See main design doc Section 3 for memory system details
+- **Memory Architecture**: See `../architecture/02-memory-system.md` for memory system details with scalability optimizations
 - **Risk Assessment**: See `03-risks-compliance.md` for technical risks and mitigation
 - **Agent Specifications**: See main design doc Section 4 for agent requirements
+- **DD-005: Memory Scalability Optimization**: See `../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md` for performance optimization design
 
 ---
 

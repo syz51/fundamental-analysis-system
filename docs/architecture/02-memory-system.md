@@ -450,9 +450,179 @@ The system determines which agents need immediate notification based on:
 
 ---
 
+## Scalability & Performance Optimization
+
+The system implements comprehensive optimization strategies to maintain performance targets (<500ms memory retrieval) at production scale (1000+ stocks, 15K+ analyses). See [DD-005](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) for complete design rationale.
+
+### Performance Targets
+
+| Metric             | Target                               | Implementation Phase |
+| ------------------ | ------------------------------------ | -------------------- |
+| Memory retrieval   | <200ms (cached), <500ms (uncached)   | Phase 3-4            |
+| Cache hit rate     | >80%                                 | Phase 3-4            |
+| Graph size         | <50K active nodes                    | Phase 4-5            |
+| Memory utilization | >85% of decisions use historical ctx | Phase 2-5            |
+
+### Tiered Cache Architecture
+
+**Extended 3-Tier Cache** (beyond agent L1/L2):
+
+```text
+┌─────────────────────────────────────────────────┐
+│  System-Wide L1 Cache (Hot, <10ms)              │
+│  Recent/frequent queries, 1hr TTL, 500MB         │
+│  Tech: Fast in-memory cache (Redis/equivalent)   │
+└─────────────────────────────────────────────────┘
+                    ▲ ▼
+┌─────────────────────────────────────────────────┐
+│  Agent L2 Cache (Warm, <50ms)                   │
+│  Specialized patterns per agent, LRU eviction    │
+│  Tech: Local in-process memory                   │
+└─────────────────────────────────────────────────┘
+                    ▲ ▼
+┌─────────────────────────────────────────────────┐
+│  Central L3 Storage (Cold, <500ms)              │
+│  Full knowledge graph, persistent                │
+│  Tech: Graph database or equivalent              │
+└─────────────────────────────────────────────────┘
+```
+
+**Cache Warming Strategy**:
+
+- Before analysis starts, predictively preload:
+  - Similar analyses for target company
+  - Sector patterns and peer comparisons
+  - Company history and precedents
+- Reduces runtime cache misses from ~50% to <20%
+
+**Cache Invalidation**:
+
+- L1: Time-based (1hr TTL)
+- L2: LRU eviction when capacity exceeded
+- L3: Always fresh (source of truth)
+
+### Query Optimization & Indexing
+
+**Pre-Computed Similarity Index**:
+
+- Offline batch process computes pairwise analysis similarities
+- Stores top-K similar analyses per company (e.g., top 10)
+- Nightly/weekly rebuild based on new analyses
+- **Performance gain**: 2-5s graph traversal → <50ms index lookup
+
+**Materialized Views**:
+
+- Top patterns by sector
+- Agent credibility scores (incrementally updated)
+- Peer comparison matrices
+
+**Index Rebuild Pipeline**:
+
+- Incremental updates throughout day (new analyses added to index)
+- Full rebuild weekly (recalculate all similarities, prune stale)
+- Background batch process, minimal runtime impact
+
+### Query Budget Enforcement
+
+**Hard 500ms Timeout**:
+
+- All memory queries wrapped with timeout enforcement
+- Prevents runaway queries from blocking analysis pipeline
+
+**Fallback Strategies** (when timeout exceeded):
+
+- Return approximate result (e.g., top-5 instead of top-10 similar analyses)
+- Return cached result marked with timestamp (slightly stale but fast)
+- Sample-based results (50% sample of pattern matches)
+
+**Monitoring**:
+
+- Track timeout frequency by query type
+- Alert if >5% queries timeout (indicates optimization needed)
+- Log slow queries for investigation
+
+### Incremental Credibility Updates
+
+**Agent Credibility Optimization**:
+
+Current approach (L3 queries scan all history):
+
+```cypher
+# Full historical scan on each query - O(n) with decision count
+MATCH (a:Agent)-[:MADE]->(d:Decision)
+WHERE a.id = $agent_id
+RETURN avg(d.accuracy)
+```
+
+Optimized approach (cached + incremental):
+
+```text
+# Cache current score, update incrementally with new decisions
+new_score = (current_score * count * decay + new_accuracy) / (count * decay + 1)
+```
+
+**Performance gain**: 800ms full scan → <10ms incremental update
+
+### Memory Pruning Strategy
+
+**Pruning Criteria** (must meet 2+ to archive):
+
+- Age >2 years
+- Access frequency <3 (rarely queried)
+- Relevance score <0.3
+- Superseded by better/newer memory
+
+**Archival Process**:
+
+1. Summarize: Extract key findings, outcomes, lessons learned
+2. Store lightweight summary in active graph (keeps context)
+3. Archive full detail to cold storage (S3, data warehouse, or equivalent)
+4. Remove full detail from L3 graph
+
+**Graph Size Management**:
+
+- Target: <50K active nodes in L3 graph
+- Monthly pruning review
+- Ensures query performance remains consistent as system scales
+
+### Parallel Query Execution
+
+**Concurrent Memory Fetches**:
+
+- Each analysis requires multiple memory queries (similar analyses, patterns, history, precedents)
+- Execute all queries in parallel vs sequential
+- Fail gracefully if individual query fails (don't block entire analysis)
+
+**Performance gain**:
+
+- Sequential: 5 queries × 200ms = 1,000ms
+- Parallel: max(5 queries) = 200ms (5× faster)
+
+### Benchmarking Requirements
+
+Performance validation at each scale milestone:
+
+| Phase     | Scale      | Analyses | Patterns | Benchmark Focus                      |
+| --------- | ---------- | -------- | -------- | ------------------------------------ |
+| Phase 1-2 | MVP        | 100      | 100      | Baseline, identify first bottlenecks |
+| Phase 3   | Beta       | 150-500  | 500-1K   | Validate cache effectiveness         |
+| Phase 4   | Production | 600-2K   | 1K-3K    | Stress test optimizations            |
+| Phase 5   | Scale      | 3K-15K   | 3K-5K    | Confirm targets at full scale        |
+
+**Key Metrics**:
+
+- Graph query latency (variable-length path traversal)
+- Pattern matching time (linear search across all patterns)
+- Credibility calculation time (incremental vs full scan)
+- Cache hit rate (target >80%)
+- End-to-end memory overhead per analysis (target <200ms)
+
+---
+
 ## Related Documentation
 
 - [System Overview](./01-system-overview.md) - High-level architecture
 - [Specialist Agents](./03-agents-specialist.md) - Agents using memory systems
 - [Knowledge Base Agent](./04-agents-support.md#knowledge-base-agent) - Memory management agent
 - [Collaboration Protocols](./07-collaboration-protocols.md) - Memory-enhanced communication
+- [DD-005: Memory Scalability Optimization](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design

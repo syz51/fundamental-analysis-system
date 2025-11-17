@@ -267,6 +267,32 @@ Critical testing required for debate deadlock resolution system:
   - Result analysis and reporting
   - Automatic pattern retirement on failure
 
+#### Memory Scalability Optimization (DD-005)
+
+- [ ] Benchmark baseline memory performance
+  - Graph query latency at beta scale (150-500 analyses)
+  - Pattern matching time with 500-1K patterns
+  - Agent credibility calculation performance
+  - Cache effectiveness measurement
+  - Document actual vs projected bottlenecks
+- [ ] Implement tiered caching infrastructure
+  - System-wide L1 cache (hot, <10ms) - tech research required
+  - Query result caching with TTL management
+  - Cache warming before analysis start
+  - Cache invalidation strategy
+  - Monitor cache hit rate (target >80%)
+- [ ] Deploy query optimization & indexing
+  - Pre-computed similarity indexes (offline batch)
+  - Nightly/weekly index rebuild pipeline
+  - Materialized views (patterns, credibility, peers)
+  - Incremental index updates during day
+  - Validate 10-15× query speedup
+- [ ] Implement query budget enforcement
+  - 500ms hard timeout on memory queries
+  - Fallback strategies (approximate, cached, sampled results)
+  - Timeout monitoring and alerting (target <5%)
+  - Slow query logging for investigation
+
 #### Additional Agents
 
 - [ ] Add strategy analyst with track record system
@@ -298,6 +324,9 @@ Critical testing required for debate deadlock resolution system:
 - Strategy and valuation agents operational with memory
 - Report writer generating memos with historical context
 - <10% false pattern rate (spurious correlations rejected)
+- Memory retrieval <200ms cached, <500ms uncached (p95) at beta scale
+- Cache hit rate >80%
+- Query timeout rate <5%
 
 ---
 
@@ -314,10 +343,18 @@ Critical testing required for debate deadlock resolution system:
 
 #### Performance Optimization
 
+- [ ] Advanced memory scalability optimizations (DD-005)
+  - Implement incremental credibility updates (800ms → <10ms)
+  - Deploy parallel query execution (5× speedup)
+  - Build memory pruning strategy (>2yr archival)
+  - Implement similarity index rebuild pipeline
+  - Cold storage archival with summarization
+  - Active graph size management (<50K nodes)
+  - Re-benchmark at production scale (600-2K analyses)
 - [ ] Tune memory retrieval algorithms
   - Query optimization for graph database
-  - Index strategy refinement
-  - Cache warming strategies
+  - Index strategy refinement (nightly vs weekly)
+  - Cache warming strategies optimization
   - Similarity search optimization
   - Batch query consolidation
   - Memory access pattern analysis
@@ -368,7 +405,11 @@ Critical testing required for debate deadlock resolution system:
 
 ### Success Criteria
 
-- Memory retrieval <500ms p95
+- Memory retrieval <500ms uncached, <200ms cached (p95) at production scale
+- Cache hit rate >80%
+- Query timeout rate <5%
+- Active graph size <50K nodes (with >2yr memories archived)
+- Incremental credibility updates <10ms
 - Pattern accuracy >70% on validation set
 - Confidence scores calibrated within 5% of actual
 - System processes 200 stocks in production

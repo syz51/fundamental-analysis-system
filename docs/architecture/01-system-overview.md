@@ -181,11 +181,53 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 
 ---
 
+## System Performance Constraints
+
+To support ambitious scale targets (1000+ stocks, <24hr analysis turnaround), the system implements performance optimization strategies across the memory and coordination layers. See [DD-005](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) for complete design.
+
+### Performance Targets
+
+| Metric               | Target                               | Phase     |
+| -------------------- | ------------------------------------ | --------- |
+| Analysis turnaround  | <24 hours (end-to-end)               | Phase 4-5 |
+| Memory retrieval     | <200ms (cached), <500ms (uncached)   | Phase 3-4 |
+| Cache hit rate       | >80%                                 | Phase 3-4 |
+| Memory utilization   | >85% of decisions use historical ctx | Phase 2-5 |
+| Active graph size    | <50K nodes                           | Phase 4-5 |
+| Parallel agent limit | 4-6 concurrent specialist agents     | Phase 2-5 |
+
+### Key Optimizations
+
+**Memory System**:
+
+- Tiered caching (L1: <10ms, L2: <50ms, L3: <500ms)
+- Pre-computed similarity indexes (2-5s graph traversal → <50ms lookup)
+- Query budget enforcement (500ms timeout with graceful fallbacks)
+- Incremental credibility updates (800ms full scan → <10ms incremental)
+- Memory pruning (archive >2yr memories, maintain <50K active nodes)
+
+**Coordination**:
+
+- Parallel query execution (5× faster via concurrent memory fetches)
+- Event-driven memory sync (2s critical, 10s high, 5min normal)
+- Cache warming before analysis (predictive preload reduces cache misses)
+
+**Scalability Validation**:
+
+- Benchmarking at each phase (MVP→Beta→Production→Scale)
+- Performance monitoring with alerting (>5% query timeouts triggers optimization)
+- Continuous tuning based on operational metrics
+
+See [Memory Architecture](./02-memory-system.md#scalability--performance-optimization) for implementation details.
+
+---
+
 ## Related Documentation
 
-- [Memory Architecture](./02-memory-system.md) - Detailed memory system design
+- [Memory Architecture](./02-memory-system.md) - Detailed memory system design with scalability optimizations
 - [Specialist Agents](./03-agents-specialist.md) - Core analysis agents
-- [Support Agents](./04-agents-support.md) - Infrastructure and support agents
+- [Support Agents](./04-agents-support.md) - Infrastructure and support agents with query budgets
 - [Coordination Agents](./05-agents-coordination.md) - Workflow orchestration agents
 - [Output Agents](./06-agents-output.md) - Report and watchlist agents
 - [Collaboration Protocols](./07-collaboration-protocols.md) - Inter-agent communication
+- [DD-005: Memory Scalability Optimization](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
