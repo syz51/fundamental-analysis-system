@@ -8,14 +8,17 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 
 ## Architecture
 
-### 4-Layer System
+**Full design documentation**: [docs/README.md](docs/README.md)
 
-- **Human Interface**: Dashboard, notifications, feedback loop
+### 5-Layer System (v2.0)
+
+- **Human Interface**: Dashboard, notifications, feedback loop, analytics
+- **Memory & Learning**: Central knowledge graph, learning engine, pattern recognition
 - **Coordination**: Lead coordinator, debate facilitator, QC agent
-- **Specialist Agents**: Screening, business, financial, strategy, valuation
-- **Support**: Data collector, news monitor, report writer
+- **Specialist Agents**: Screening, business, financial, strategy, valuation (with memory)
+- **Support**: Data collector, news monitor, knowledge base agent, report writer
 
-### 12 Agent Typest
+### 13 Agent Types
 
 1. **Screening**: Initial filtering, quantitative screens (10Y revenue CAGR, margins, debt ratios)
 2. **Business Research**: SEC filings, SWOT, competitive moats, KPIs
@@ -25,10 +28,11 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 6. **Data Collector**: API interfaces, document parsing, data quality
 7. **News Monitor**: Real-time tracking, event impact assessment
 8. **QC Agent**: Cross-verification, contradiction detection
-9. **Lead Coordinator**: Workflow orchestration, conflict resolution
-10. **Debate Facilitator**: Structured arguments, consensus building
-11. **Report Writer**: Investment memos, documentation
-12. **Watchlist Manager**: Position monitoring, alerts
+9. **Knowledge Base Agent**: Memory management, pattern recognition, institutional knowledge (NEW in v2.0)
+10. **Lead Coordinator**: Workflow orchestration, conflict resolution
+11. **Debate Facilitator**: Structured arguments, consensus building
+12. **Report Writer**: Investment memos, documentation
+13. **Watchlist Manager**: Position monitoring, alerts
 
 ### Analysis Pipeline (12-day cycle)
 
@@ -38,13 +42,16 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 4. **Valuation** (Days 10-11): DCF, scenarios → Human Gate 3
 5. **Documentation** (Day 12): Reports, watchlists → Human Gate 4 & 5
 
-### Human Decision Gates
+### Human Decision Gates (6 total in v2.0)
 
-- **Gate 1**: Screening validation (24h, approve candidate list)
-- **Gate 2**: Research direction (12h, focus areas)
-- **Gate 3**: Assumption validation (24h, model parameters)
-- **Gate 4**: Debate arbitration (6h, resolve disagreements)
-- **Gate 5**: Final decision (blocking, investment/sizing)
+- **Gate 1**: Screening validation with history (24h, approve candidates)
+- **Gate 2**: Research direction with precedents (12h, focus areas)
+- **Gate 3**: Assumption validation with calibration (24h, model parameters)
+- **Gate 4**: Debate arbitration with context (6h, resolve disagreements)
+- **Gate 5**: Final decision with full context (blocking, investment/sizing)
+- **Gate 6**: Learning validation (async, anti-confirmation bias) (NEW in v2.0)
+
+See [Human Integration](docs/operations/02-human-integration.md) for details.
 
 ## Tech Stack
 
@@ -207,3 +214,18 @@ JSON-based with structure:
 - Source verification, timestamp validation
 - Consistency checks, outlier detection
 - Retention: raw (5Y), processed (3Y), models/reports (permanent)
+- Memory-specific: working (24h), cache (30d), central graph (permanent)
+
+## Documentation Structure (v2.0)
+
+Design docs organized into modular files for easier iteration:
+
+- **[docs/README.md](docs/README.md)** - Master navigation
+- **[docs/architecture/](docs/architecture/)** - System design, memory, agents, protocols (7 docs)
+- **[docs/operations/](docs/operations/)** - Pipeline, human integration, data (3 docs)
+- **[docs/learning/](docs/learning/)** - Learning systems, feedback, metrics (3 docs)
+- **[docs/implementation/](docs/implementation/)** - Roadmap, tech, compliance (4 docs)
+- **[design-decisions/](design-decisions/)** - Architectural decisions with template
+- **[examples/](examples/)** - Code samples (to be populated)
+
+Quick links: [System Overview](docs/architecture/01-system-overview.md) | [Roadmap](docs/implementation/01-roadmap.md)
