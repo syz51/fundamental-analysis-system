@@ -626,6 +626,188 @@ When post-mortem completed, lessons propagated via:
 4. Bias correction storage (systematic over/under-estimation)
 5. Lesson library indexing (searchable by category/agent/pattern)
 
+### Pattern Evidence Archive Knowledge Graph Extensions
+
+To support data retention and pattern validation over time ([DD-009](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)), the knowledge graph includes nodes and relationships for tracking pattern evidence archives:
+
+```yaml
+Pattern Node Extensions for Evidence Archiving:
+  Pattern:
+    # Evidence tracking
+    evidence_refs: array<string>        # File paths to supporting evidence
+    archive_tier: integer               # 0 (none), 1 (lightweight), 2 (full)
+    archive_refs: array<string>         # Archive directory paths
+    is_critical: boolean                # Meets 2-of-4 criteria for full archive
+    critical_score: integer             # 0-4 based on criteria met
+
+    # Critical pattern criteria
+    used_in_investment_decision: boolean
+    confidence_score: float
+    impact_score: float                 # >0.5 = influenced >$50K or >10% allocation
+    validation_count: integer           # ≥3 = proven track record
+
+    # Archive metadata
+    tier1_created_date: datetime        # When lightweight archive created
+    tier2_created_date: datetime        # When full archive created (if applicable)
+    archive_size_mb: float              # Total archive size
+
+Additional Nodes for Evidence Management:
+  ArchiveDirectory:
+    - pattern_id: string
+    - tier: integer (1 or 2)
+    - path: string
+    - created_date: datetime
+    - size_mb: float
+    - retention_expiry: datetime
+    - content_types: array (metadata, processed_summary, analysis_snapshot, full_processed, agent_analysis, validation_history)
+
+  DataFile:
+    - file_path: string
+    - storage_tier: enum [hot, warm, cold]
+    - created_date: datetime
+    - tier_migration_date: datetime
+    - size_mb: float
+    - supports_pattern_count: integer  # How many active patterns reference this file
+    - retention_expiry: datetime       # When eligible for deletion
+    - in_archive: boolean              # Whether archived for pattern preservation
+
+Additional Relationships for Evidence Archives:
+  - Pattern -[SUPPORTED_BY_FILE]-> DataFile
+  - Pattern -[HAS_ARCHIVE {tier: 1|2}]-> ArchiveDirectory
+  - ArchiveDirectory -[CONTAINS_FILE]-> DataFile (archived copies)
+  - DataFile -[MIGRATED_TO_TIER {from: tier, to: tier, date: datetime}]-> DataFile
+```
+
+**Archive Creation Workflow**:
+
+The system automatically creates archives based on pattern lifecycle:
+
+**Tier 1 Archive** (Lightweight, 1-5MB):
+
+- **Trigger**: Pattern passes first validation (DD-007)
+- **Contents**:
+  - `metadata.json`: Pattern definition, confidence, validation results
+  - `processed_summary.json`: Key metrics, ratios (1-5MB)
+  - `analysis_snapshot.json`: Agent findings, evidence references
+- **Retention**: 7 years
+- **Purpose**: Safety net if evidence ages out before investment decision
+
+**Tier 2 Archive** (Full, 50-200MB):
+
+- **Trigger**: Pattern used in investment decision OR becomes critical (2-of-4 criteria)
+- **Contents**:
+  - All Tier 1 content
+  - Full processed data: financial statements, ratios, peer comparisons
+  - Complete agent analysis: findings, confidence, debates
+  - Validation history: all re-validation results
+- **Retention**: 10 years
+- **Purpose**: Deep post-mortems, regulatory compliance, agent training
+
+**Critical Pattern Scoring** (2-of-4 criteria triggers Tier 2):
+
+```yaml
+Critical Criteria:
+  1. used_in_investment_decision: true (auto-qualifies)
+  2. confidence_score: >0.7 (statistical strength)
+  3. impact_score: >0.5 (>$50K position or >10% allocation)
+  4. validation_count: ≥3 (proven track record)
+
+Scoring Examples:
+  - Investment decision + High confidence → Score 2 → Tier 2
+  - High confidence + Multiple validations → Score 2 → Tier 2
+  - Medium confidence + Low validations → Score 0 → No archive
+```
+
+**Query Capabilities**:
+
+```cypher
+# Find patterns eligible for Tier 2 archive promotion
+MATCH (p:Pattern)
+WHERE p.archive_tier = 1
+  AND (
+    p.used_in_investment_decision = true OR
+    (p.confidence_score > 0.7 AND p.validation_count >= 3) OR
+    (p.confidence_score > 0.7 AND p.impact_score > 0.5) OR
+    (p.validation_count >= 3 AND p.impact_score > 0.5)
+  )
+RETURN p.name, p.confidence_score, p.validation_count, p.impact_score
+ORDER BY p.tier1_created_date ASC
+
+# Find data files eligible for deletion (no pattern dependencies)
+MATCH (f:DataFile)
+WHERE f.storage_tier = 'cold'
+  AND f.supports_pattern_count = 0
+  AND f.in_archive = false
+  AND f.created_date < datetime() - duration({years: 7})
+RETURN f.file_path, f.size_mb, f.created_date
+ORDER BY f.size_mb DESC
+
+# Check if file supports active patterns before deletion
+MATCH (f:DataFile)<-[:SUPPORTED_BY_FILE]-(p:Pattern)
+WHERE f.file_path = $file_path
+  AND p.status = 'active'
+RETURN COUNT(p) as active_pattern_count
+
+# Find patterns with evidence at risk of deletion
+MATCH (p:Pattern)-[:SUPPORTED_BY_FILE]->(f:DataFile)
+WHERE p.status = 'active'
+  AND p.archive_tier = 0
+  AND f.retention_expiry < datetime() + duration({months: 6})
+RETURN p.name, p.confidence_score, f.file_path, f.retention_expiry
+ORDER BY f.retention_expiry ASC
+
+# Calculate archive storage costs by tier
+MATCH (ad:ArchiveDirectory)
+RETURN ad.tier,
+       COUNT(*) as archive_count,
+       SUM(ad.size_mb) as total_size_mb,
+       AVG(ad.size_mb) as avg_size_mb
+GROUP BY ad.tier
+
+# Find patterns missing archives despite meeting criteria
+MATCH (p:Pattern)
+WHERE p.archive_tier = 0
+  AND p.used_in_investment_decision = true
+RETURN p.name, p.confidence_score, p.validation_count, p.tier1_created_date
+ORDER BY p.tier1_created_date ASC
+```
+
+**Storage Architecture**:
+
+```text
+/data/memory/pattern_archives/
+├── {pattern_id}/
+│   ├── tier1/
+│   │   ├── metadata.json
+│   │   ├── processed_summary.json
+│   │   └── analysis_snapshot.json
+│   ├── tier2/ (if critical)
+│   │   ├── all_tier1_content/
+│   │   ├── processed_data/
+│   │   │   ├── financial_statements/
+│   │   │   ├── ratios/
+│   │   │   └── peer_comparisons/
+│   │   ├── agent_analysis/
+│   │   └── validation_history/
+│   └── archive_metadata.json
+└── index.json (pattern_id → archive_tier mapping)
+```
+
+**Integration with Tiered Storage**:
+
+The archive system works in conjunction with tiered data storage:
+
+1. **Hot Tier** (0-2yr): Active analysis, $0.023/GB/mo, <10ms access
+2. **Warm Tier** (2-5yr): Recent history, $0.010/GB/mo, <100ms access
+3. **Cold Tier** (5-10yr): Historical data, $0.001/GB/mo, <3s access
+
+**Pattern-Aware Retention**:
+
+- Before migrating Cold → Delete, check `supports_pattern_count`
+- If any active patterns reference file, retain in Cold tier
+- If file archived for pattern, safe to delete from tiered storage
+- Estimated cost: ~$5/mo for 750GB tiered + $0.22/mo for archives
+
 ---
 
 ## Memory Synchronization Protocol

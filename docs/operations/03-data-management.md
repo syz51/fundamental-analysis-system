@@ -60,12 +60,12 @@ Secondary sources supplement but don't replace primary analysis. They provide:
 
 ```text
 /data
-├── /raw
+├── /raw (Tiered: Hot → Warm → Cold → Delete)
 │   ├── /sec_filings
 │   ├── /transcripts
 │   ├── /market_data
 │   └── /news_articles
-├── /processed
+├── /processed (Tiered: Hot → Warm → Cold → Delete)
 │   ├── /financial_statements
 │   ├── /ratios
 │   ├── /sentiment_scores
@@ -85,6 +85,19 @@ Secondary sources supplement but don't replace primary analysis. They provide:
 │   ├── /patterns
 │   │   ├── /validated
 │   │   └── /candidates
+│   ├── /pattern_archives           # NEW (DD-009)
+│   │   ├── /{pattern_id}/
+│   │   │   ├── /tier1              # Lightweight (1-5MB, 7yr)
+│   │   │   │   ├── metadata.json
+│   │   │   │   ├── processed_summary.json
+│   │   │   │   └── analysis_snapshot.json
+│   │   │   ├── /tier2              # Full (50-200MB, 10yr, if critical)
+│   │   │   │   ├── all_tier1_content/
+│   │   │   │   ├── processed_data/
+│   │   │   │   ├── agent_analysis/
+│   │   │   │   └── validation_history/
+│   │   │   └── archive_metadata.json
+│   │   └── index.json              # pattern_id → archive_tier mapping
 │   └── /outcomes
 │       ├── /predictions
 │       ├── /actuals
@@ -108,8 +121,12 @@ Unprocessed source data in original format.
 - **/market_data**: OHLCV data, corporate actions (CSV)
 - **/news_articles**: News feeds and articles (JSON)
 
-**Retention**: 5 years
-**Size Estimate**: ~500GB per year
+**Retention**: 7-10 years (tiered: Hot 0-2yr, Warm 2-5yr, Cold 5-10yr)
+
+- Pattern-aware: Files supporting active patterns retained up to 10yr
+- Non-pattern files: Eligible for deletion after 7yr
+  **Size Estimate**: ~50GB/year new data
+  **Storage Cost**: ~$5/mo for full 10yr retention (tiered)
 
 #### /processed
 
@@ -122,8 +139,12 @@ Cleaned, normalized, and structured data ready for analysis.
 - **/sentiment_scores**: NLP-derived sentiment (JSON)
 - **/peer_comparisons**: Comparative metrics across peers (parquet)
 
-**Retention**: 3 years
-**Size Estimate**: ~200GB per year
+**Retention**: 7-10 years (tiered: Hot 0-2yr, Warm 2-5yr, Cold 5-7yr)
+
+- Critical pattern evidence: Archived separately, retained 7-10yr
+- Non-critical files: Eligible for deletion after 7yr
+  **Size Estimate**: ~15GB/year new processed data
+  **Storage Cost**: Included in tiered storage (~$5/mo total)
 
 #### /models
 
@@ -177,6 +198,44 @@ Discovered patterns and their validation status.
 **Technology**: JSON with metadata
 **Retention**: Permanent (with status tracking)
 **Size Estimate**: ~5GB per year
+
+##### /pattern_archives (NEW - DD-009)
+
+Selective archiving of pattern evidence for re-validation and compliance.
+
+- **/{pattern_id}/tier1/**: Lightweight archives (metadata + processed summaries)
+
+  - Created: First validation pass
+  - Contents: metadata.json, processed_summary.json, analysis_snapshot.json
+  - Size: 1-5MB per pattern
+  - Retention: 7 years
+  - Coverage: 80% of validated patterns
+
+- **/{pattern_id}/tier2/**: Full archives (complete processed data + agent analysis)
+  - Created: Investment decision OR critical pattern (2-of-4 criteria)
+  - Contents: All tier1 + full processed data + agent analysis + validation history
+  - Size: 50-200MB per pattern
+  - Retention: 10 years
+  - Coverage: 10-20% of validated patterns (critical only)
+
+**Technology**: File storage with index.json mapping
+**Retention**: Tiered (7yr lightweight, 10yr full)
+**Size Estimate**: ~17GB Tier 1 + ~200GB Tier 2 at scale
+**Storage Cost**: ~$0.22/mo (Cold tier storage)
+
+**Critical Pattern Criteria** (2-of-4 triggers Tier 2):
+
+1. Used in investment decision
+2. Confidence score >0.7
+3. Impact score >0.5 (>$50K or >10% allocation)
+4. Validation count ≥3
+
+**Purpose**:
+
+- Enable pattern re-validation when evidence ages out of tiered storage
+- Regulatory compliance for investment decisions
+- Deep post-mortem failure investigation
+- Agent training on historical patterns
 
 ##### /outcomes
 
@@ -299,36 +358,117 @@ Final analysis products.
 
 ### Retention Policy
 
-#### Traditional Data
+#### Traditional Data with Tiered Storage
 
-- **Raw data**: 5 years
+The system uses graduated storage tiers to balance cost with accessibility ([DD-009](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)):
 
-  - Regulatory requirement compliance
-  - Historical research capability
-  - Automatic archival after 5 years
+**Storage Tiers**:
 
-- **Processed data**: 3 years
+| Tier     | Age Range  | Cost/GB/mo | Access Time | Use Case                 |
+| -------- | ---------- | ---------- | ----------- | ------------------------ |
+| **Hot**  | 0-2 years  | $0.023     | <10ms       | Active analysis          |
+| **Warm** | 2-5 years  | $0.010     | <100ms      | Recent history           |
+| **Cold** | 5-10 years | $0.001     | <3s         | Historical investigation |
 
-  - Supports re-analysis needs
-  - Balances storage costs with utility
-  - Regenerable from raw if needed
+**Raw Data** (tiered retention):
 
-- **Models**: All versions retained
+- **0-2 years (Hot)**: Active analysis period
 
-  - Track modeling evolution
-  - Enable backtest validation
-  - Support error analysis
+  - Full-speed access for ongoing research
+  - Regulatory compliance window
 
-- **Reports**: Permanent
+- **2-5 years (Warm)**: Historical reference
 
-  - Investment decision documentation
-  - Compliance requirements
-  - Historical reference
+  - Recent pattern validation
+  - Backtest verification
 
-- **Decision logs**: Permanent
-  - Audit trail maintenance
-  - Learning from outcomes
-  - Regulatory compliance
+- **5-10 years (Cold)**: Long-term archive
+  - **Pattern-aware retention**: Files supporting active patterns retained
+  - Files without pattern dependencies: Eligible for deletion
+  - Total retention: 7-10 years based on pattern dependencies
+
+**Processed Data** (tiered retention):
+
+- **0-2 years (Hot)**: Primary analysis period
+
+  - Normalized financial statements
+  - Calculated ratios and metrics
+
+- **2-5 years (Warm)**: Validation period
+
+  - Pattern re-validation
+  - Model backtesting
+
+- **5-7 years (Cold)**: Extended retention
+  - **Pattern-aware retention**: Critical pattern evidence retained 7-10 years
+  - Non-pattern files: Eligible for deletion after 7 years
+  - Regenerable from raw if needed (raw in Cold tier)
+
+**Models**: All versions retained permanently
+
+- Track modeling evolution
+- Enable backtest validation
+- Support error analysis
+
+**Reports**: Permanent
+
+- Investment decision documentation
+- Compliance requirements
+- Historical reference
+
+**Decision logs**: Permanent
+
+- Audit trail maintenance
+- Learning from outcomes
+- Regulatory compliance
+
+**Pattern Archives** (NEW):
+
+Two-tier selective archiving for critical pattern evidence:
+
+- **Tier 1 (Lightweight)**: Created at first validation
+
+  - Contents: Metadata, processed summaries (1-5MB)
+  - Retention: 7 years
+  - Triggers: Pattern passes validation (DD-007)
+  - Storage: `/data/memory/pattern_archives/{pattern_id}/tier1/`
+
+- **Tier 2 (Full)**: Created for critical patterns
+  - Contents: Complete processed data, agent analysis (50-200MB)
+  - Retention: 10 years
+  - Triggers: Investment decision OR 2-of-4 criteria:
+    1. Used in investment decision (auto-qualifies)
+    2. Confidence score >0.7
+    3. Impact score >0.5 (>$50K position or >10% allocation)
+    4. Validation count ≥3
+  - Storage: `/data/memory/pattern_archives/{pattern_id}/tier2/`
+
+**Pattern-Aware Retention Logic**:
+
+Before deleting files from Cold tier, system checks:
+
+1. Does file support any active patterns? (query knowledge graph)
+2. Is file already archived in pattern archive? (check archive index)
+3. If yes to either: Retain in Cold tier OR safe to delete (if archived)
+4. If no to both: Eligible for deletion
+
+**Cost Estimate** (at scale, 1000 stocks/year):
+
+```text
+Tiered Storage:
+  Hot (130GB):    $2.99/mo
+  Warm (195GB):   $1.95/mo
+  Cold (130GB):   $0.13/mo
+  Subtotal:       $5.07/mo
+
+Pattern Archives:
+  Tier 1 (17GB):  $0.02/mo
+  Tier 2 (200GB): $0.20/mo
+  Subtotal:       $0.22/mo
+
+Total:            $5.29/mo
+vs. All Hot:      $23/mo (77% savings)
+```
 
 #### Memory Data
 

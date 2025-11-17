@@ -277,6 +277,126 @@ Complete 3-tier validation architecture specified in [DD-007](../../design-decis
 
 **Implementation Phase**: Phase 3 (Months 5-6), estimated 6-8 weeks
 
+### Evidence Requirements for Pattern Validation
+
+Pattern validation and re-validation require access to supporting evidence over time ([DD-009](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)). The system implements tiered storage and selective archiving to ensure evidence availability:
+
+**Evidence Lifecycle**:
+
+1. **Pattern Discovery** (Year 0):
+
+   - Pattern identified from analysis of Company XYZ
+   - Evidence: SEC filings, processed financial statements, agent analysis
+   - Evidence stored in Hot tier (active analysis period)
+
+2. **Pattern Validation** (Year 0-1):
+
+   - Hold-out testing requires original evidence
+   - Blind testing tracks performance over 6 months
+   - **Tier 1 Archive Created**: Lightweight archive (1-5MB) captures:
+     - Pattern metadata and validation results
+     - Processed data summaries
+     - Agent analysis snapshots
+   - Purpose: Safety net if evidence ages out before investment decision
+
+3. **Pattern Usage** (Year 1-5):
+
+   - Pattern used in investment recommendations
+   - Evidence migrates through storage tiers (Hot → Warm)
+   - **Tier 2 Archive Created** (if critical): Full archive (50-200MB) captures:
+     - Complete processed financial data
+     - Full agent analysis and debate logs
+     - Complete validation history
+   - Trigger: Investment decision OR 2-of-4 criteria (confidence >0.7, impact >0.5, validations ≥3)
+
+4. **Pattern Re-Validation** (Year 2-7):
+
+   - Periodic re-validation requires evidence access
+   - Evidence in Warm/Cold tier (slower but accessible)
+   - Pattern archives ensure evidence available even if tiered storage expires
+   - Re-validation prevents pattern drift and degradation
+
+5. **Long-Term Retention** (Year 5-10):
+   - Original evidence in Cold tier or expired
+   - Pattern archives provide evidence for:
+     - Deep post-mortem failure investigations
+     - Regulatory compliance audits
+     - Agent training on historical patterns
+   - Critical patterns (Tier 2) retained 10 years
+   - Standard patterns (Tier 1) retained 7 years
+
+**Pattern-Aware Retention**:
+
+Before deleting aging evidence from Cold tier, system checks:
+
+- Does file support any active patterns? (query knowledge graph)
+- Is file already archived in pattern archive? (check index)
+- If yes: Retain in Cold OR safe to delete (if archived)
+
+**Evidence Requirements by Validation Stage**:
+
+| Stage              | Evidence Needed                    | Retention Strategy                      |
+| ------------------ | ---------------------------------- | --------------------------------------- |
+| **Discovery**      | Full raw + processed data          | Hot tier (0-2yr)                        |
+| **Hold-Out**       | Training, validation, test sets    | Hot tier + Tier 1 archive at validation |
+| **Blind Testing**  | 6-month performance tracking       | Warm tier (2-5yr)                       |
+| **Control Groups** | A/B comparison data                | Warm tier                               |
+| **Re-Validation**  | Historical evidence for re-testing | Cold tier (5-10yr) OR Tier 1/2 archive  |
+| **Post-Mortem**    | Complete evidence trail            | Tier 2 archive (critical patterns only) |
+
+**Archive Coverage**:
+
+- **Tier 1 (Lightweight)**: 80% of validated patterns
+
+  - Sufficient for most re-validation needs
+  - 7-year retention
+  - Cost: ~$0.02/mo for all archives
+
+- **Tier 2 (Full)**: 10-20% of patterns (critical only)
+  - Investment decisions, high-confidence, high-impact patterns
+  - 10-year retention
+  - Cost: ~$0.20/mo for all archives
+
+**Integration with Validation Pipeline**:
+
+```python
+# When pattern passes validation, create Tier 1 archive
+def on_pattern_validated(pattern):
+    archive_manager.create_tier1_archive(
+        pattern_id=pattern.id,
+        evidence_refs=pattern.evidence_files,
+        validation_results=pattern.validation_metadata
+    )
+
+    # Update pattern node in knowledge graph
+    pattern.archive_tier = 1
+    pattern.tier1_created_date = now()
+
+# When pattern used in investment decision, create Tier 2 archive
+def on_investment_decision(pattern, decision):
+    if not pattern.archive_tier == 2:
+        archive_manager.create_tier2_archive(
+            pattern_id=pattern.id,
+            evidence_refs=pattern.evidence_files,
+            agent_analysis=decision.analysis_logs,
+            validation_history=pattern.all_validations
+        )
+
+        # Mark as critical
+        pattern.archive_tier = 2
+        pattern.tier2_created_date = now()
+        pattern.is_critical = True
+        pattern.used_in_investment_decision = True
+```
+
+**Benefits**:
+
+- **Continuous Re-Validation**: Evidence available for periodic pattern testing
+- **Failure Investigation**: Post-mortems can review original evidence
+- **Regulatory Compliance**: Investment decisions have complete audit trail
+- **Agent Training**: New agents learn from historical pattern examples
+- **Cost-Effective**: Selective archiving (10-20%) vs archiving all evidence (100%)
+
 ### Anti-Confirmation Bias Mechanisms
 
 Multiple safeguards prevent false pattern acceptance (see [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md) for complete architecture):

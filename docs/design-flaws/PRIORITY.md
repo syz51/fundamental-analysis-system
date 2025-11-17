@@ -150,23 +150,30 @@ This document outlines the recommended sequence for addressing design flaws, wit
 
 **Documentation Updated**: 5 architecture docs + DD-008 + implementation spec
 
-### 🟡 Flaw #5: Data Retention Policy Conflict
+### ✅ Flaw #5: Data Retention Policy Conflict
 
 **Priority**: Medium
-**Status**: UNRESOLVED
+**Status**: RESOLVED (2025-11-17)
 **Rationale**: Prevents long-term pattern invalidation
 **Dependencies**: Pattern storage system operational
-**Effort**: 2 weeks
-**Impact**: Cannot re-validate old patterns or investigate anomalies
+**Effort**: 2 weeks (estimated) → 2 weeks (actual design, DD-009)
+**Impact**: Enables pattern re-validation, post-mortem investigation, regulatory compliance
+**Resolution**: [DD-009: Data Retention & Pattern Evidence Architecture](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)
 
 **Why Now**: Before first retention expiry (3 years), establish proper pattern-evidence linking.
 
-**Implementation Notes**:
+**Implementation Completed**:
 
-- Create pattern-evidence dependency tracking
-- Implement conditional retention (keep evidence if pattern active)
-- Add evidence summarization for expired data
-- Design pattern re-validation workflows
+- ✅ Tiered storage architecture (Hot → Warm → Cold, 7-10yr retention)
+- ✅ Pattern-aware retention logic (check dependencies before deletion)
+- ✅ Two-tier selective archiving (Tier 1: lightweight 1-5MB, Tier 2: full 50-200MB)
+- ✅ Multi-criteria critical pattern scoring (2-of-4: investment decision, confidence, impact, validations)
+- ✅ Archive triggers (Tier 1 at validation, Tier 2 at investment decision)
+- ✅ Knowledge graph extensions (evidence_refs, archive_tier, DataFile/ArchiveDirectory nodes)
+- ✅ Integration with validation pipeline (DD-007) and post-mortem system (DD-006)
+- ✅ Cost-effective solution (~$5.29/mo vs $23/mo all-hot storage, 77% savings)
+
+**Documentation Updated**: 6 docs (architecture, operations, learning, roadmap, flaw tracking)
 
 ---
 
@@ -209,7 +216,7 @@ Foundation (Phase 1)
     │               └── Phase 4: Optimization
     │                   ├── Flaw #9 ✅ → Negative Feedback (depends on #1, #3)
     │                   ├── Flaw #4 ✅ → Credibility Temporal Decay
-    │                   └── Flaw #5 🟡 → Data Retention
+    │                   └── Flaw #5 ✅ → Data Retention
     │                       │
     │                       └── Phase 5: Refinement
     │                           └── Flaw #6 🟢 → Dynamic Expertise Routing
@@ -223,7 +230,7 @@ Foundation (Phase 1)
 | #2 ✅ | -                      | #7, #8                             |
 | #3 ✅ | #1                     | #9                                 |
 | #4 ✅ | Operational agents     | -                                  |
-| #5 🟡 | Pattern storage        | -                                  |
+| #5 ✅ | Pattern storage        | -                                  |
 | #6 🟢 | Human gate data        | -                                  |
 | #7 ✅ | #2, operational agents | -                                  |
 | #8 ✅ | #2                     | ~~Core agent testing~~ (unblocked) |
@@ -238,7 +245,6 @@ _None - all high-risk flaws resolved_
 ### Can Defer Safely
 
 1. **Flaw #6** (Expertise Routing) - marginal improvement
-2. **Flaw #5** (Data Retention) - 3+ year timeline before impact
 
 ---
 
@@ -260,11 +266,12 @@ _None - all high-risk flaws resolved_
 - [ ] Implement Phase 3 benchmarking (Flaw #7 validation)
 - [ ] Begin code implementation for optimizations
 
-### Future (Month 6+)
+### Future (Month 7-8)
 
 - [x] ~~Plan Flaw #9 post-mortem process~~ ✅ COMPLETE
 - [x] ~~Design Flaw #4 temporal decay algorithm~~ ✅ COMPLETE
-- [ ] Spec Flaw #5 retention policies
+- [x] ~~Spec Flaw #5 retention policies~~ ✅ COMPLETE (DD-009)
+- [ ] Implement Flaw #5 tiered storage and archive system (Phase 4)
 - [ ] Research Flaw #6 expertise routing approaches
 
 ---

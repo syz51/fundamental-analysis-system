@@ -366,6 +366,47 @@ Critical testing required for debate deadlock resolution system:
   - Regime-dependent pattern activation
   - Network analysis for relationships
 
+#### Data Retention & Pattern Evidence (DD-009)
+
+- [ ] Implement tiered storage infrastructure
+  - Set up Hot/Warm/Cold storage tiers (S3 Standard/IA/Glacier or equivalent)
+  - Build automated tier migration service (age-based triggers)
+  - Configure storage class transitions
+  - Test access latency requirements (<10ms Hot, <100ms Warm, <3s Cold)
+  - Implement cost tracking and monitoring
+- [ ] Build pattern-aware retention system
+  - PatternAwareRetention service (checks pattern dependencies before deletion)
+  - File→Pattern dependency tracking in knowledge graph
+  - Retention policy enforcement (7yr standard, 10yr critical)
+  - Dry-run mode for validation before production
+- [ ] Implement pattern archive system
+  - PatternArchiveManager service
+  - Tier 1 archive creation (lightweight, at validation)
+  - Tier 2 archive creation (full, at investment decision)
+  - Archive directory structure and index.json management
+  - Multi-criteria critical pattern scoring (2-of-4 logic)
+- [ ] Integrate with validation pipeline
+  - Tier 1 archive trigger on pattern validation (DD-007)
+  - Tier 2 archive trigger on investment decision
+  - Knowledge graph schema updates (archive_tier, evidence_refs fields)
+  - Archive metadata tracking (creation dates, sizes, retention)
+- [ ] Testing and validation
+  - Test tier migrations at all thresholds
+  - Validate pattern-aware retention (don't delete files with dependencies)
+  - Test archive creation workflows (Tier 1 and Tier 2)
+  - Verify cost estimates (~$5/mo tiered + $0.22/mo archives)
+  - Test evidence retrieval from archives (post-mortem scenarios)
+  - Validate 7-10yr retention periods before first expirations
+
+**Estimated Effort**: 2 weeks
+**Target**: Complete before first 3-year retention expiry
+**Success Criteria**:
+
+- All validated patterns have Tier 1 archives
+- Critical patterns have Tier 2 archives
+- No evidence deletion for files supporting active patterns
+- Pattern re-validation succeeds with archived evidence
+
 #### Confidence & Calibration
 
 - [ ] Add predictive confidence scoring
