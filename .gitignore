@@ -1,10 +1,92 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+*.pyo
+*.pyd
+*.so
+*.dll
+*.dylib
 build/
 dist/
 wheels/
 *.egg-info
+*.egg
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets & API keys
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+config.py
+credentials.json
+.secrets/
+
+# Financial data & outputs
+data/raw/*
+data/processed/*
+data/models/*
+data/outputs/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/models/.gitkeep
+!data/outputs/.gitkeep
+*.csv
+*.xlsx
+*.xls
+*.parquet
+
+# IDE & editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Type checking & linting
+.mypy_cache/
+.pytype/
+.pyre/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Documentation builds
+docs/_build/
+site/
+
+# Logs
+*.log
+logs/
