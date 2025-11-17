@@ -28,7 +28,7 @@ Design issues identified in v2.0 architecture. Resolved issues moved to `resolve
 | --- | ----------------------------------------------------------------------------------------- | -------- | --------------------------- | --------------------------------------------------------------------------- |
 | 1   | [Missing Human Gate for Learning Validation](resolved/01-missing-human-gate.md)           | Critical | Gate 6 added                | [DD-001](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md)       |
 | 2   | [Memory Sync Timing Incompatible with Debate Protocol](resolved/02-memory-sync-timing.md) | Critical | Event-driven sync           | [DD-002](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)         |
-| 3   | [Pattern Validation Confirmation Bias Loop](03-pattern-validation.md)                      | High     | 3-tier validation pipeline  | [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)  |
+| 3   | [Pattern Validation Confirmation Bias Loop](resolved/03-pattern-validation.md)             | High     | 3-tier validation pipeline  | [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)  |
 | 8   | [Debate Resolution Deadlock Scenario](resolved/08-debate-deadlock.md)                     | Critical | 5-level tiered escalation   | [DD-003](../../design-decisions/DD-003_DEBATE_DEADLOCK_RESOLUTION.md)       |
 | 10  | [Gate 6 Parameter Optimization](resolved/10-gate-6-parameters.md)                         | Medium   | Parameter specs for scale   | [DD-004](../../design-decisions/DD-004_GATE_6_PARAMETER_OPTIMIZATION.md)    |
 
@@ -112,7 +112,7 @@ For complete documentation of resolved issues, see:
 
 - [Flaw #1: Missing Human Gate](resolved/01-missing-human-gate.md) → [DD-001: Gate 6](../../design-decisions/DD-001_GATE_6_LEARNING_VALIDATION.md)
 - [Flaw #2: Memory Sync Timing](resolved/02-memory-sync-timing.md) → [DD-002: Event-Driven Sync](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)
-- [Flaw #3: Pattern Validation](03-pattern-validation.md) → [DD-007: Pattern Validation Architecture](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)
+- [Flaw #3: Pattern Validation](resolved/03-pattern-validation.md) → [DD-007: Pattern Validation Architecture](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)
 - [Flaw #8: Debate Deadlock](resolved/08-debate-deadlock.md) → [DD-003: Debate Resolution](../../design-decisions/DD-003_DEBATE_DEADLOCK_RESOLUTION.md)
 - [Flaw #10: Gate 6 Parameters](resolved/10-gate-6-parameters.md) → [DD-004: Gate 6 Parameter Optimization](../../design-decisions/DD-004_GATE_6_PARAMETER_OPTIMIZATION.md)
 

@@ -143,7 +143,7 @@ Key capabilities include:
 2. Blind testing: Pattern helps >1.5x more than hurts when agents unaware
 3. Statistical significance: p < 0.05 improvement vs control group
 
-This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/03-pattern-validation.md)).
+This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/resolved/03-pattern-validation.md)).
 
 ---
 

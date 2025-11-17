@@ -457,7 +457,7 @@ All patterns undergo 3-tier validation before Gate 6 review:
 4. **Statistical Rigor**: Domain-specific p-value thresholds (p < 0.01 to p < 0.10 depending on domain)
 5. **Human Expert Review**: Domain experts validate causal mechanisms at Gate 6
 
-This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/03-pattern-validation.md)).
+This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw #3](../../docs/design-flaws/resolved/03-pattern-validation.md)).
 
 ---
 

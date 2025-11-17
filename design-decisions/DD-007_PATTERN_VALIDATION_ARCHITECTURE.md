@@ -310,7 +310,7 @@ None - specification complete, ready for implementation.
 
 ## References
 
-- [Flaw #3: Pattern Validation Confirmation Bias Loop](../docs/design-flaws/03-pattern-validation.md) - Original problem analysis
+- [Flaw #3: Pattern Validation Confirmation Bias Loop](../docs/design-flaws/resolved/03-pattern-validation.md) - Original problem analysis
 - [DD-001: Gate 6 Learning Validation](DD-001_GATE_6_LEARNING_VALIDATION.md) - Human oversight layer
 - [Learning Systems](../docs/learning/01-learning-systems.md) - Anti-confirmation bias mechanisms
 - [Knowledge Base Agent](../docs/architecture/04-agents-support.md) - Pattern storage and lifecycle
