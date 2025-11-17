@@ -94,6 +94,10 @@ python main.py
 - Complete audit trails
 - No material non-public info
 
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
 ---
 
 ## Disclaimer
