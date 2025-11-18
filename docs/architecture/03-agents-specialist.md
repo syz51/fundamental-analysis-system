@@ -64,7 +64,7 @@ screening_patterns:
   - pattern_id: 'value_trap_tech'
     description: 'Low P/E tech often value trap'
     success_rate: 0.23
-    learned_from: ['INTC_2020', 'IBM_2019']
+    learned_from: ['INTC_2020', 'IBM_2019', 'CSCO_2018', 'ORCL_2021', 'HPQ_2019']
     sectors: ['Technology']
 
 failed_screens:

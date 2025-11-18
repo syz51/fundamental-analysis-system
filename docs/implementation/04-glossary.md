@@ -98,6 +98,18 @@ Event-driven protocol for propagating discoveries from agent local memory (L1/L2
 
 _Trigger: Event-driven based on message type and importance, plus periodic 5-minute normal sync._
 
+### Cache Hit Rate
+
+Percentage of data queries successfully served from L1/L2 memory tiers without requiring L3 (Neo4j) access. Measured per-item basis across all agent queries.
+
+**Calculation**: `(L1 hits + L2 hits) / Total queries × 100%`
+
+**Target**: >80% hit rate by Phase 4 optimization
+
+**Excludes**: L3 queries are cache misses, not counted in hit rate
+
+_Purpose: Optimize memory tier sizing and caching strategies to reduce latency._
+
 ### Pattern
 
 Recognized recurring relationship between conditions and outcomes, stored in knowledge graph and used to inform future analyses.
@@ -418,7 +430,15 @@ _Target: >90% memory utilization in analyses._
 
 ### False Positive/Negative Rate
 
-Percentage of screening candidates that should have been rejected/accepted but weren't.
+Percentage of screening candidates that should have been rejected/accepted but weren't, determined at Gate 5 final decision.
+
+**False Positive**: Stock screened in by Screening Agent, later rejected at Gate 5 (failed final investment decision)
+
+**False Negative**: Stock screened out by Screening Agent, would have passed Gate 5 if analyzed (identified through post-hoc review of near-miss candidates)
+
+**Determination Point**: Gate 5 final decision (human approval/rejection)
+
+**Labeling**: Human decision at Gate 5 marks screening outcome as FP; periodic reviews identify FN
 
 _Monitoring: Track by pattern, learn root causes, update screening logic._
 

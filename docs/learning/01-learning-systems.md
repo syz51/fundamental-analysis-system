@@ -38,6 +38,154 @@ Patterns move through distinct validation stages:
 
 **Probation Details** (DD-004): Time-boxed by pattern frequency (monthly=90d, quarterly=180d, annual=365d). Requires 2-5 additional occurrences. Auto-evaluated at deadline: approve if correlation holds, reject if degrades. Max 2 extensions (90d each) if 50%+ progress.
 
+### Pattern State Transition Diagram
+
+Complete lifecycle with transition conditions:
+
+```text
+┌─────────────┐
+│  candidate  │ (Discovered, unvalidated)
+└──────┬──────┘
+       │
+       ├─(hold-out validation passes: correlation >0.65, 3+ instances)──────┐
+       │                                                                      │
+       ├─(statistical validation fails)────────────────────────────────────> rejected_statistical
+       │                                                                      │
+       ▼                                                                      │
+┌──────────────────────┐                                                     │
+│statistically_validated│ (Passed hold-out, blind, control tests)           │
+└──────────┬───────────┘                                                     │
+           │                                                                 │
+           ├─(Gate 6 human approval)─────────────────────────────────────┐  │
+           │                                                              │  │
+           ├─(Gate 6 rejection)───────────────────────────────────────> rejected_gate6
+           │                                                              │  │
+           ▼                                                              │  │
+    ┌────────────────┐                                                   │  │
+    │human_approved  │ (Passed Gate 6)                                   │  │
+    └────────┬───────┘                                                   │  │
+             │                                                           │  │
+             ├─(deployed to agents)──────────────────────────────────┐  │  │
+             │                                                        │  │  │
+             ▼                                                        │  │  │
+      ┌──────────┐                                                   │  │  │
+      │  active  │ (Used in decisions)                               │  │  │
+      └────┬─────┘                                                   │  │  │
+           │                                                         │  │  │
+           ├─(performance degradation <70%)────────────────┐        │  │  │
+           │                                                │        │  │  │
+           ├─(regime change detected)──────────────┐       │        │  │  │
+           │                                        │       │        │  │  │
+           ├─(needs more evidence)────────┐        │       │        │  │  │
+           │                               │        │       │        │  │  │
+           ▼                               ▼        ▼       ▼        │  │  │
+    ┌──────────────┐              ┌──────────────────────┐          │  │  │
+    │probationary  │◄─────────────│  active_from_archive │          │  │  │
+    └──────┬───────┘              └──────────────────────┘          │  │  │
+           │                       (Promoted from deprecated)        │  │  │
+           │                                                         │  │  │
+           ├─(correlation holds at deadline)────────────────────────┘  │  │
+           │                                                            │  │
+           ├─(correlation degrades)─────────────────────────────────> rejected_probation
+           │                                                            │  │
+           ├─(50%+ progress, <2 extensions)─────(extend 90d)───┐       │  │
+           │                                                    │       │  │
+           └─(insufficient progress OR ≥2 extensions)──────> rejected_probation
+                                                               │       │  │
+                                                               └───────┘  │
+                                                                          │
+┌───────────────────────────────────────────────────────────────────────┐ │
+│                        REJECTION SUBSTATES                            │ │
+├───────────────────────────────────────────────────────────────────────┤ │
+│                                                                       │ │
+│  rejected_statistical     - Failed hold-out validation               │ │
+│  rejected_holdout         - <0.65 correlation on validation set      │◄┘
+│  rejected_blind           - Failed blind testing (hurts >helps)      │
+│  rejected_control         - No improvement vs control group          │
+│  rejected_gate6           - Human rejected at Gate 6                 │
+│  rejected_probation       - Failed probation evaluation              │
+│  rejected_human_override  - Human manually deprecated pattern        │
+│  rejected_insufficient    - <5 occurrences or insufficient evidence  │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+
+    ┌────────────┐
+    │ deprecated │ (Previously valid, no longer applicable)
+    └──────┬─────┘
+           │
+           ├─(evidence retained 18 months)────────────────────────────────┐
+           │                                                               │
+           ├─(regime change detected)──────────────────────────────────┐  │
+           │                                                            │  │
+           ├─(accessed 3+ times in 30 days)────────────────────────┐   │  │
+           │                                                        │   │  │
+           ├─(post-mortem request)─────────────────────────────┐   │   │  │
+           │                                                    │   │   │  │
+           ▼                                                    ▼   ▼   ▼  │
+    (auto-promote from archive)────────────────────────> active_from_archive
+           ▲                                                               │
+           │                                                               │
+           └───(human override within 48hr: rejection)───────────────────┘
+                (cooldown: 6 months for pattern+trigger)
+
+
+TRANSITION CONDITIONS SUMMARY:
+
+candidate → statistically_validated
+  ✓ Hold-out correlation >0.65
+  ✓ ≥3 confirming instances on validation set
+  ✓ Performance within 20% of training accuracy
+
+statistically_validated → human_approved
+  ✓ Gate 6 human approval
+  ✓ Causal mechanism validated
+  ✓ No spurious correlation concerns
+
+human_approved → active
+  ✓ Deployed to agent memory (L2 caches)
+  ✓ Available for decision use
+
+active → probationary
+  ✗ Performance degradation <70%
+  ✗ Correlation declining but not failed
+  ⚠ Needs 2-5 additional occurrences
+  ⏱ Time-boxed: monthly=90d, quarterly=180d, annual=365d
+
+active → deprecated
+  ✗ Performance degradation >20%
+  ✗ Regime change invalidates pattern
+  ✗ Structural break detected
+  ⚠ Evidence retained 18 months
+
+probationary → active
+  ✓ Correlation holds at deadline
+  ✓ Required occurrences met
+
+probationary → rejected_probation
+  ✗ Correlation degrades at deadline
+  ✗ Insufficient progress (<50%) with ≥2 extensions
+  ✗ Deadline expired without validation
+
+deprecated → active_from_archive
+  ✓ Regime change detected (e.g., interest rate >2% in 6mo)
+  ✓ Accessed 3+ times in 30 days
+  ✓ Human post-mortem request
+  ⚠ Auto-promoted, human review 48hr window
+  ⚠ Enters probationary status (3-6mo, 2 validations required)
+
+active_from_archive → deprecated
+  ✗ Human override within 48hr
+  ⚠ Cooldown: 6 months for same trigger
+```
+
+**Key Design Principles**:
+
+1. **Progressive Validation**: Patterns advance through increasing rigor (statistical → human → active)
+2. **Probation Safety Net**: Degrading patterns get second chance rather than immediate rejection
+3. **Archive Promotion**: Historical knowledge reusable when conditions change
+4. **Rejection Granularity**: 8 rejection substates enable root cause analysis
+5. **Human Gates**: Gate 6 validates all promotions (candidate→active, archive→active)
+
 ## Outcome Tracking
 
 The system continuously monitors actual outcomes against predictions to measure accuracy and identify systematic errors.
