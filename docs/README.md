@@ -1,6 +1,6 @@
 # Multi-Agent Fundamental Analysis System - Documentation
 
-**Version 2.0** | **Last Updated:** 2025-11-17
+**Version 2.0** | **Last Updated:** 2025-11-18
 
 Comprehensive design documentation for the autonomous AI-powered stock analysis system.
 
@@ -50,7 +50,7 @@ Roadmap, technical requirements, and deployment considerations.
 
 Deep dives into specific complex architectural choices.
 
-- [Index of All Decisions](design-decisions/INDEX.md) - All design decisions with status (3 implemented)
+- [Index of All Decisions](design-decisions/INDEX.md) - All design decisions with status (21 approved)
 - [Template](design-decisions/TEMPLATE.md) - Standard format for documenting new decisions
 
 ### ⚠️ Design Flaws

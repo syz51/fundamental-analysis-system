@@ -2,14 +2,18 @@
 
 Autonomous AI agent system for stock fundamental analysis. Mimics human analyst teams through collaborative intelligence, parallel processing, and human-in-the-loop oversight.
 
+> **⚠️ Status: Design Phase Only**
+>
+> This repository contains comprehensive architectural documentation and design specifications. **No implementation code exists yet.** Implementation planned for Phases 1-4 (Months 1-8).
+
 ## Quick Start
 
 ```bash
 # Install dependencies
 uv sync
 
-# Run system
-python main.py
+# Run placeholder
+python main.py  # Currently prints "Hello from fundamental-analysis-system!"
 ```
 
 **Requirements**: Python 3.14+
@@ -103,4 +107,4 @@ Educational project demonstrating multi-agent systems architecture. Not financia
 
 ---
 
-**Status**: v2.0 Design | **Last Updated**: 2025-11-17
+**Status**: v2.0 Design Phase (Documentation Only - No Implementation) | **Last Updated**: 2025-11-18
