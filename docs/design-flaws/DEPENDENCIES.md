@@ -30,7 +30,7 @@ Foundation (Phase 1) ✅ COMPLETE
     │                   ├── Flaw #9 ✅ → Negative Feedback (depends on #1, #3)
     │                   ├── Flaw #4 ✅ → Credibility Temporal Decay
     │                   ├── Flaw #5 ✅ → Data Retention
-    │                   ├── Flaw #17 🔴 → Data Tier Management
+    │                   ├── Flaw #17 ✅ → Data Tier Management (RESOLVED 2025-11-18)
     │                   └── Flaw #21 🔴 → Scalability (CRITICAL - blocks 1000+ stocks)
     │                       │
     │                       └── Phase 5: Refinement
@@ -60,7 +60,7 @@ Foundation (Phase 1) ✅ COMPLETE
 | #14 ✅ | Agent perf data, debate protocol | ~~Auto-resolution~~ (unblocked)        | 2-3   | RESOLVED |
 | #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                     | 3     | ACTIVE   |
 | #16 ✅ | - (roadmap only)                 | ~~Phase 2 implementation~~ (unblocked) | 2     | RESOLVED |
-| #17 🔴 | DD-009, Neo4j                    | Production reliability                 | 4     | ACTIVE   |
+| #17 ✅ | DD-009, Neo4j, DD-019            | ~~Production reliability~~ (unblocked) | 4     | RESOLVED |
 | #18 🟢 | Human gate data, #6              | -                                      | 5     | DEFERRED |
 | #19 🔴 | Multi-agent workflows            | Multi-agent reliability                | 2     | ACTIVE   |
 | #20 🔴 | Memory system (L1/L2/L3)         | Production security                    | 3     | ACTIVE   |
@@ -79,13 +79,14 @@ Foundation (Phase 1) ✅ COMPLETE
 - **#11 (Algorithm Specs)** unblocked → Implementation of C1/M3/G5 algorithms (Phase 2+)
 - **#12 (Archive Lifecycle)** unblocked → Post-mortem investigation with full evidence, pattern re-validation with historical data
 - **#14 (Statistical Reliability)** unblocked → Auto-resolution implementation (Wilson score + n=15)
+- **#17 (Data Tier Management)** unblocked → Production reliability (access-based re-promotion + graph integrity monitoring)
 
 ### What Active Flaws Are Blocking
 
 - **#13** blocks → Auto-approval deployment (95% accuracy target)
 - **#15** blocks → Memory reliability (infinite recursion risk)
 - **#16** ~~blocks~~ → Phase 2 implementation START (RESOLVED - phased credibility)
-- **#17** blocks → Production reliability (corruption recovery missing)
+- **#17** ~~blocks~~ → Production reliability (RESOLVED - access re-promotion + graph integrity)
 - **#19** blocks → Multi-agent reliability (undefined failure behavior)
 - **#20** blocks → Production security (no access control)
 - **#21** blocks → Scale to 1000+ stocks (need 18 FTE without fix)
@@ -152,11 +153,11 @@ Foundation (Phase 1) ✅ COMPLETE
 ```text
 #7 (Memory Scalability) ✅
   → #12 (Archive Lifecycle) ✅
-    → #17 (Data Tier Mgmt) 🔴
+    → #17 (Data Tier Mgmt) ✅
       → #21 (Scalability Bottlenecks) 🔴
 ```
 
-**Status**: 2/4 complete, 2 active blockers in series (#17 → #21)
+**Status**: 3/4 complete, 1 active blocker (#21)
 
 ---
 
@@ -209,7 +210,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 **Weeks 18-21:**
 
-- [ ] #17 (Data Tier Mgmt) - 4w
+- [x] #17 (Data Tier Mgmt) - 4w ✅ RESOLVED 2025-11-18
 
 **Weeks 22-29:**
 
@@ -231,7 +232,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 ### Medium Risk (Fix Before Production)
 
-1. **Flaw #17** (Data Tier Management) - performance degradation, corruption recovery
+1. **Flaw #17** (Data Tier Management) - ~~performance degradation, corruption recovery~~ RESOLVED 2025-11-18
 2. **Flaw #20** (Access Control) - security/integrity risk
 
 ### Can Defer Safely

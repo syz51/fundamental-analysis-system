@@ -466,6 +466,42 @@ Before deleting files from Cold tier, system checks:
 3. Is pattern under post-mortem investigation? → RETAIN (override time limits)
 4. If all checks pass → Eligible for deletion
 
+**Access-Based Tier Re-Promotion** ([DD-019](../../design-decisions/DD-019_DATA_TIER_OPERATIONS.md)):
+
+While files auto-migrate Hot→Warm→Cold based on age, the system monitors access patterns and re-promotes frequently-accessed files to faster tiers:
+
+**Re-Promotion Triggers**:
+
+| From Tier | To Tier | Access Threshold | Recovery Time |
+| --------- | ------- | ---------------- | ------------- |
+| Warm      | Hot     | 10+ access/week  | <24hr         |
+| Cold      | Warm    | 3+ access/week   | <24hr         |
+
+**Access Tracking**:
+
+- PostgreSQL table logs all file accesses (`file_access_log`)
+- Weekly materialized view aggregates access counts per file
+- Daily re-promotion job identifies candidates exceeding thresholds
+- Manual tier override available via admin API (pin files to specific tier)
+
+**Use Cases**:
+
+- Pattern re-validation campaigns (DD-007) accessing historical data frequently
+- Post-mortem investigations (DD-006) requiring fast access to archived evidence
+- Seasonal analysis patterns (earnings seasons, industry cycles)
+
+**Safety Mechanisms**:
+
+- 7-day safety window: File kept in both tiers during migration
+- Manual override priority: Admin-pinned tiers block automatic migrations
+- Cost monitoring: Alerts if promotion costs exceed budget thresholds
+
+**Performance Impact**:
+
+- First few accesses: Slower tier latency (Warm: 100ms, Cold: 3s)
+- After 24hr: Promoted to faster tier if threshold met
+- Expected promotion rate: 10-15% of historical files
+
 **Cost Estimate** (at scale, 1000 stocks/year):
 
 ```text
@@ -486,10 +522,16 @@ DD-013 Additions (Archive Lifecycle):
   Cached index (in-memory, 50MB):            $0.01/mo
   Subtotal:                                  $1.13/mo
 
+DD-019 Additions (Tier Re-Promotion):
+  Access tracking (PostgreSQL, 500MB):       $0.01/mo
+  Tier promotions (10% Cold→Warm, 5% Warm→Hot): $1.55/mo
+  Integrity monitoring (backup storage):     $0.27/mo
+  Subtotal:                                  $1.83/mo
+
 Note: In-memory storage tech TBD (see tech-requirements.md)
 
-Total:            $6.42/mo
-vs. All Hot:      $23/mo (77% savings)
+Total:            $8.25/mo
+vs. All Hot:      $23/mo (64% savings)
 ```
 
 #### Memory Data

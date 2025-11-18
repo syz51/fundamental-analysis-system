@@ -35,6 +35,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-016 | [L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md)                             | Approved    | 2025-11-18 | Memory Architecture, Operations      | [DD-011](DD-011_AGENT_CHECKPOINT_SYSTEM.md), [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [Memory System](../architecture/02-memory-system.md), [Flaw #25](../design-flaws/resolved/25-working-memory-durability.md)                                                                  |
 | DD-017 | [Failure Correlation System](DD-017_FAILURE_CORRELATION_SYSTEM.md)                  | Approved    | 2025-11-18 | Operations, Coordination             | [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [DD-015](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Flaw #26](../design-flaws/resolved/26-multi-stock-batching.md)                                                        |
 | DD-018 | [Memory System Failure Resilience](DD-018_MEMORY_FAILURE_RESILIENCE.md)            | Approved    | 2025-11-18 | Memory Architecture, Learning        | [DD-005](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md), [DD-002](DD-002_EVENT_DRIVEN_MEMORY_SYNC.md), [DD-008](DD-008_AGENT_CREDIBILITY_SYSTEM.md), [Memory System](../architecture/02-memory-system.md), [Credibility System](../implementation/05-credibility-system.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Analysis Pipeline](../operations/01-analysis-pipeline.md), [Flaw #15](../design-flaws/resolved/15-failure-modes.md) |
+| DD-019 | [Data Tier Management Operations](DD-019_DATA_TIER_OPERATIONS.md)                  | Approved    | 2025-11-18 | Data Management, Memory Architecture | [DD-009](DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md), [Memory System](../architecture/02-memory-system.md), [Data Management](../operations/03-data-management.md), [Tech Requirements](../implementation/02-tech-requirements.md), [Flaw #17](../design-flaws/resolved/17-data-tier-mgmt.md) |
 
 ---
 
@@ -63,6 +64,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-016**: L1 Memory Durability (dual-layer snapshots, hybrid triggers, <5s restore)
 - **DD-017**: Failure Correlation System (auto-correlation detection, error signatures, batch trigger)
 - **DD-018**: Memory System Failure Resilience (query recursion limits, sync backpressure, regime sequencing)
+- **DD-019**: Data Tier Management Operations (access-based re-promotion, graph integrity monitoring, PITR backups)
 
 ### 🟡 Under Review
 

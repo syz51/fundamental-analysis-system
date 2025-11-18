@@ -64,6 +64,7 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - `market_data`: Prices, volumes, events
   - `metadata`: Companies, sectors, peers
   - `workflow`: Pause/resume state, checkpoints, batch operations (DD-011, DD-012)
+  - `access_tracking`: File access logs, weekly aggregations, tier metadata (DD-019)
 
 #### MongoDB (Document Storage)
 
@@ -93,7 +94,10 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - Read replicas for query load
   - Full-text search plugin
   - Graph algorithms library (GDS)
-  - Automated backups (hourly)
+  - Automated backups (hourly incremental, daily full)
+  - PITR recovery capability (<1hr RTO/RPO)
+  - Cross-region backup replication (AWS us-west-2)
+  - Secondary backup provider (GCP Cloud Storage)
 - **Schemas**:
   - Nodes: Company, Analysis, Pattern, Decision, Agent, Outcome
   - Relationships: HAS_ANALYSIS, IDENTIFIED_PATTERN, LED_TO, PERFORMED, MADE, SIMILAR_TO, PEER_OF
@@ -416,6 +420,53 @@ CREATE INDEX idx_batch ON failure_correlations(batch_id) WHERE batch_id IS NOT N
 - Resolved: Archive after 90 days to cold storage
 - Archived: Purge after 1 year (keep audit log)
 
+#### Table 6: `file_access_log` (DD-019)
+
+**Purpose**: Track file access patterns for tier re-promotion decisions
+
+```sql
+-- Raw access log (append-only, partitioned by week)
+CREATE TABLE file_access_log (
+    id BIGSERIAL PRIMARY KEY,
+    file_id VARCHAR(255) NOT NULL,
+    access_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    access_type VARCHAR(50),  -- 'read', 'pattern_validation', 'post_mortem'
+    agent_id VARCHAR(100),
+    tier_at_access VARCHAR(10)  -- 'hot', 'warm', 'cold'
+) PARTITION BY RANGE (access_timestamp);
+
+-- Weekly aggregation (materialized view, refreshed daily)
+CREATE MATERIALIZED VIEW file_access_weekly AS
+SELECT
+    file_id,
+    COUNT(*) as access_count_7d,
+    MAX(access_timestamp) as last_access,
+    current_tier,
+    promotion_candidate
+FROM file_access_log
+WHERE access_timestamp > NOW() - INTERVAL '7 days'
+GROUP BY file_id, current_tier;
+
+-- Indexes for performance
+CREATE INDEX idx_file_access_timestamp ON file_access_log(access_timestamp);
+CREATE INDEX idx_file_id_timestamp ON file_access_log(file_id, access_timestamp DESC);
+CREATE INDEX idx_weekly_promotion ON file_access_weekly(promotion_candidate) WHERE promotion_candidate = true;
+```
+
+**Key Fields**:
+- `access_type`: Categorizes access reason (read, pattern_validation, post_mortem)
+- `tier_at_access`: Tier where file was stored when accessed (performance tracking)
+- `access_count_7d`: Aggregated 7-day access frequency for promotion thresholds
+
+**Re-Promotion Thresholds**:
+- Warm → Hot: 10+ accesses per 7-day window
+- Cold → Warm: 3+ accesses per 7-day window
+
+**Retention Policy**:
+- Raw logs: 30-day rolling window (partition-based cleanup)
+- Materialized view: Refreshed daily at 02:00 UTC
+- Historical aggregations: Archive after 90 days
+
 ### Archival Process
 
 **Monthly job** (runs on day 1 of each month):
@@ -449,6 +500,23 @@ WHERE resolved_at < NOW() - INTERVAL '90 days';
 
 DELETE FROM failure_correlations
 WHERE resolved_at < NOW() - INTERVAL '90 days';
+
+-- Clean up old file access logs (DD-019)
+-- Partition-based cleanup: Drop partitions older than 30 days
+DO $$
+DECLARE
+    partition_name TEXT;
+BEGIN
+    FOR partition_name IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'workflow'
+          AND tablename LIKE 'file_access_log_%'
+          AND tablename < 'file_access_log_' || to_char(NOW() - INTERVAL '30 days', 'YYYY_MM_DD')
+    LOOP
+        EXECUTE 'DROP TABLE IF EXISTS workflow.' || partition_name;
+    END LOOP;
+END $$;
 ```
 
 ---
@@ -661,6 +729,44 @@ WHERE resolved_at < NOW() - INTERVAL '90 days';
   - Full-text search
 - **Clustering**: 3+ core servers for HA
 
+**Backup & Recovery** ([DD-019](../design-decisions/DD-019_DATA_TIER_OPERATIONS.md)):
+
+- **Backup Strategy**:
+  - Hourly incremental backups
+  - Daily full backups at 02:00 UTC
+  - 30-day retention period
+  - Primary: Cross-region replication (AWS us-west-2)
+  - Secondary: Separate provider (GCP Cloud Storage)
+- **Recovery SLAs**:
+  - RTO (Recovery Time Objective): <1 hour
+  - RPO (Recovery Point Objective): <1 hour (hourly backup granularity)
+  - Minor corruption: <15min (automated repair)
+  - Catastrophic failure: <1hr (PITR restore from primary)
+  - Provider outage: <4hr (restore from secondary GCP)
+
+**Integrity Monitoring**:
+
+- **Real-Time** (Prometheus):
+  - Transaction failure rate monitoring (<1% threshold)
+  - Constraint violation alerts
+  - Replication lag monitoring (<30s threshold)
+- **Hourly Checks** (every :05):
+  - Relationship count anomaly detection (±20% from baseline)
+  - Index consistency verification
+  - Recent write failure detection
+- **Daily Comprehensive** (02:00 UTC):
+  - Orphaned relationship scan
+  - Missing required properties check
+  - Pattern evidence link validation
+  - Agent credibility score range validation
+  - Duplicate node detection
+  - Circular reference detection
+- **Automated Repair**:
+  - Orphaned relationship cleanup
+  - Missing property restoration (default values)
+  - Failed index rebuilding
+  - Duplicate node merging
+
 #### Graph Processing
 
 - **NetworkX** for algorithm prototyping
@@ -790,6 +896,26 @@ System automatically triggers appropriate sync level based on message type:
 - Memory utilization by agent
 - Pattern accuracy tracking
 - Learning rate monitoring
+
+**Graph Integrity Monitoring** ([DD-019](../design-decisions/DD-019_DATA_TIER_OPERATIONS.md)):
+
+- **Prometheus Metrics**:
+  - `neo4j_transaction_failures_total`: Transaction failure count
+  - `neo4j_constraint_violations_total`: Constraint violation count
+  - `neo4j_replication_lag_seconds`: Replication lag monitoring
+  - `neo4j_relationship_count_by_type`: Relationship counts for anomaly detection
+  - `neo4j_integrity_check_pass_rate`: Hourly/daily check success rate
+  - `neo4j_backup_success_total`: Backup completion status
+- **Grafana Dashboards**:
+  - Graph Health Overview (transaction throughput, failure rate, memory usage)
+  - Integrity Check Status (hourly/daily check results, repair actions)
+  - Backup & Recovery (backup status, retention compliance, RTO/RPO metrics)
+  - Relationship Trends (count by type, anomaly detection visualization)
+- **Alert Thresholds**:
+  - Transaction failure rate >1% (5min window) → Page on-call
+  - Integrity check failure → Slack ops channel + ticket
+  - Backup failure → Email data team + Slack alert
+  - Replication lag >30s → Warning alert
 
 #### Alerting
 

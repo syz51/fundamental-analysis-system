@@ -1,30 +1,64 @@
 ---
 flaw_id: 17
 title: Data Tier Management Gaps
-status: active
+status: resolved
 priority: high
 phase: 4
 effort_weeks: 4
 impact: Performance degradation, no corruption recovery
-blocks: ["Production reliability"]
-depends_on: ["DD-009 tiered storage", "Neo4j operational"]
-domain: ["data", "memory"]
+blocks:
+- Production reliability
+depends_on:
+- DD-009 tiered storage
+- Neo4j operational
+domain:
+- data
+- memory
 sub_issues:
-  - id: H3
-    severity: high
-    title: No storage tier migration rollback procedures
-  - id: G4
-    severity: medium
-    title: Knowledge graph corruption recovery missing
+- id: H3
+  severity: high
+  title: No storage tier migration rollback procedures
+- id: G4
+  severity: medium
+  title: Knowledge graph corruption recovery missing
 discovered: 2025-11-17
+resolved: '2025-11-18'
+resolution: 'DD-019: Data Tier Management Operations'
 ---
-
 # Flaw #17: Data Tier Management Gaps
 
-**Status**: 🔴 ACTIVE
-**Priority**: High
-**Impact**: Performance degradation from stale tier placement, no corruption recovery
+## Resolution Summary
+
+**Status**: RESOLVED ✅
+**Resolved Date**: 2025-11-18
+**Resolution**: [DD-019: Data Tier Management Operations](../../design-decisions/DD-019_DATA_TIER_OPERATIONS.md)
 **Phase**: Phase 4 (Months 7-8)
+
+### How DD-019 Resolves This Flaw
+
+DD-019 resolves both sub-issues identified in this flaw by implementing comprehensive operational procedures for DD-009's tiered storage system:
+
+**H3: Storage Tier Migration Rollback** - RESOLVED
+- **Access-Based Re-Promotion System**: PostgreSQL-based access tracking logs file accesses, enabling automatic re-promotion when usage patterns change
+- **Re-Promotion Thresholds**: Warm→Hot (10+ accesses/week), Cold→Warm (3+ accesses/week)
+- **Performance Recovery**: <24hr promotion time ensures frequently-accessed historical data returns to fast tiers
+- **Manual Override**: Admin API allows tier pinning for critical files or testing scenarios
+- **Cost Monitoring**: Tracks promotion costs to prevent budget overruns
+
+**G4: Knowledge Graph Corruption Recovery** - RESOLVED
+- **Hybrid Integrity Monitoring**: Three-tier approach (real-time alerts, hourly lightweight checks, daily comprehensive scans)
+- **Detection SLA**: <1hr for critical corruption via hourly checks
+- **Automated Repair**: Common issues (orphaned relationships, missing properties, index corruption) auto-fixed without human intervention
+- **PITR Backups**: Hourly incremental + daily full backups with 30-day retention
+- **Disaster Recovery**: Cross-region replication (primary) + separate provider backup (secondary) with <1hr RTO
+- **Recovery Procedures**: Documented procedures for minor corruption, moderate corruption, and catastrophic failure scenarios
+
+**Implementation Artifacts**:
+- Updated `docs/operations/03-data-management.md`: Added Access-Based Tier Re-Promotion section
+- Updated `docs/architecture/02-memory-system.md`: Added Graph Integrity Monitoring & Recovery section
+- Updated `docs/implementation/02-tech-requirements.md`: Added Neo4j backup/recovery specs, integrity monitoring requirements, PostgreSQL access tracking schema
+
+**Production Readiness**: Unblocks Phase 4 deployment with operational robustness for tiered storage and knowledge graph integrity
 
 ---
 

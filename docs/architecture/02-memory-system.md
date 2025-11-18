@@ -1020,6 +1020,166 @@ During Gate 3 (Assumption Validation), human reviews all provisional contradicti
 
 ---
 
+## Graph Integrity Monitoring & Recovery
+
+The central knowledge graph (Neo4j) is a critical system component requiring robust integrity monitoring and disaster recovery capabilities ([DD-019](../design-decisions/DD-019_DATA_TIER_OPERATIONS.md)).
+
+### Hybrid Integrity Monitoring Architecture
+
+**Three-Tier Monitoring**:
+
+| Tier          | Frequency | Checks                                                     | Detection SLA | Action                |
+| ------------- | --------- | ---------------------------------------------------------- | ------------- | --------------------- |
+| Real-time     | <5min     | Transaction failures, constraint violations                | <5min         | Immediate alert       |
+| Hourly        | Every :05 | Relationship counts, index consistency, write failures     | <1hr          | Auto-repair + alert   |
+| Comprehensive | Daily 2AM | Orphaned relationships, missing properties, circular refs  | 24hr          | Repair report + alert |
+
+### Integrity Check Types
+
+**Real-Time Alerts** (Prometheus metrics):
+
+- Transaction failure rate >1% (5min window)
+- Constraint violation detection
+- Replication lag >30 seconds
+- Memory pressure warnings
+
+**Hourly Lightweight Checks**:
+
+```cypher
+-- Relationship count anomaly detection
+MATCH ()-[r:SUPPORTED_BY_FILE]->()
+RETURN count(r) as current_count
+-- Alert if outside historical range (±20%)
+
+-- Index consistency check
+SHOW INDEXES
+-- Alert if any index in FAILED state
+
+-- Recent write failure check
+MATCH (n) WHERE n.created_at > timestamp() - 3600000
+RETURN count(n) as recent_writes
+-- Alert if unexpectedly low
+```
+
+**Daily Comprehensive Checks**:
+
+1. **Orphaned Relationships**: Relationships with missing start/end nodes
+2. **Missing Required Properties**: Pattern nodes without confidence_score, evidence_refs
+3. **Pattern Evidence Links**: Verify all Pattern→Evidence links resolve
+4. **Agent Credibility Scores**: Validate credibility scores in valid range (0-1)
+5. **Duplicate Nodes**: Detect duplicate entities by natural key
+6. **Circular References**: Detect infinite loops in relationship chains
+
+### Automated Repair Procedures
+
+**Auto-Fixable Issues** (no human intervention):
+
+- **Orphaned Relationships**: Delete relationships with missing nodes
+- **Missing Properties**: Restore with defaults (e.g., `confidence_score = 0.0`, `needs_revalidation = true`)
+- **Failed Indices**: Rebuild corrupted indices
+- **Duplicate Nodes**: Merge duplicates based on natural key
+
+**Manual Investigation Required**:
+
+- Circular reference chains (may be valid in some cases)
+- Unexplained relationship count drops >50%
+- Schema migration failures
+- Persistent replication lag
+
+### Backup & Disaster Recovery
+
+**PITR (Point-in-Time Recovery) Strategy**:
+
+```yaml
+Backup Schedule:
+  Frequency: Hourly incremental, daily full
+  Retention: 30 days
+  RTO Target: <1 hour
+  RPO Target: <1 hour (hourly backup granularity)
+
+Storage Strategy:
+  Primary: Cross-region replication (same provider)
+    - Production: AWS us-east-1
+    - Backup: AWS us-west-2
+    - Latency: <1hr recovery
+
+  Secondary: Separate provider (disaster recovery)
+    - Provider: GCP Cloud Storage
+    - Purpose: Provider outage protection
+    - Latency: <4hr recovery
+```
+
+**Recovery Procedures**:
+
+1. **Minor Corruption** (auto-fixable): Automated repair, no downtime
+2. **Moderate Corruption** (require investigation): Restore from latest hourly backup (<1hr RTO)
+3. **Catastrophic Failure** (full graph loss): Restore from cross-region backup (primary) or GCP (secondary)
+4. **Partial Write Failure**: Identify last known good state from integrity logs, rollback specific transactions
+
+**Recovery Validation**:
+
+After any restore operation, run:
+
+1. Full comprehensive integrity check suite
+2. Verify relationship counts match expected ranges
+3. Sample query validation (pattern retrieval, agent credibility lookup)
+4. Performance benchmark (query latency within SLA)
+
+### Monitoring Dashboards
+
+**Graph Health Dashboard** (Grafana):
+
+- Transaction throughput & failure rate
+- Memory usage & garbage collection
+- Relationship count trends by type
+- Index performance metrics
+- Backup success/failure status
+- Integrity check pass/fail history
+
+**Alert Routing**:
+
+- **Critical** (transaction failures, constraint violations): Page on-call engineer
+- **High** (hourly check failures): Slack ops channel + ticket
+- **Medium** (daily check issues): Email report to data team
+- **Low** (minor anomalies): Weekly digest
+
+### Integration with Memory Sync
+
+**Sync Integrity Validation**:
+
+- Before critical sync (debates, human gates): Run lightweight integrity check
+- If corruption detected: Block sync, trigger repair, alert ops
+- After repair: Re-run sync with validated graph state
+
+**Write Validation** (high-value operations):
+
+- Pattern creation: Verify all evidence refs exist
+- Agent credibility update: Validate score in range (0-1)
+- Memory sync: Validate relationship consistency after batch write
+
+### Performance Impact
+
+**Overhead Estimates**:
+
+- Real-time monitoring: <1% query overhead (Prometheus metrics collection)
+- Hourly checks: ~5min compute time (lightweight queries)
+- Daily checks: ~30min compute time (comprehensive scan)
+- Backup operations: ~10min (incremental), ~1hr (full backup)
+
+**Scalability Considerations**:
+
+- Graph <10GB: Single-instance monitoring sufficient
+- Graph 10-100GB: Add read replicas for integrity checks (offload from primary)
+- Graph >100GB: Shard checks by time period, parallel execution
+
+**Cross-References**:
+
+- See [DD-019](../design-decisions/DD-019_DATA_TIER_OPERATIONS.md) for complete design rationale
+- See [Tech Requirements](../implementation/02-tech-requirements.md) for Neo4j configuration
+- See [Data Management](../operations/03-data-management.md) for backup retention policies
+
+---
+
 ## Memory Synchronization Protocol
 
 **Note**: Code samples referenced here have been omitted from architecture docs. See `/examples/` directory for implementation examples.
