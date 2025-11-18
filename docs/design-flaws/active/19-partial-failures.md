@@ -6,9 +6,9 @@ priority: high
 phase: 2
 effort_weeks: 4
 impact: Undefined behavior when subset of agents fail
-blocks: ["Multi-agent reliability"]
-depends_on: ["Multi-agent workflows operational"]
-domain: ["agents", "architecture"]
+blocks: ['Multi-agent reliability']
+depends_on: ['Multi-agent workflows operational']
+domain: ['agents', 'architecture']
 sub_issues:
   - id: G1
     severity: high
@@ -46,6 +46,7 @@ No specification for handling partial agent failures in multi-agent workflows:
 **Problem**: If 4 of 5 specialist agents complete, should analysis proceed or retry?
 
 **Undefined Scenario**:
+
 ```text
 Parallel Analysis Phase (5 agents):
   ✅ Business Research: SUCCESS
@@ -63,6 +64,7 @@ Questions:
 ```
 
 **Missing Specifications**:
+
 - Minimum quorum (3 of 5? 4 of 5?)
 - Partial completion handling
 - Confidence adjustment formulas
@@ -76,6 +78,7 @@ Questions:
 **Problem**: Message JSON structure defined but no implementation details.
 
 **Current State**: Structure shown but missing:
+
 - Message queue technology (RabbitMQ? Redis? Kafka?)
 - Message ordering guarantees
 - Retry policy for failed deliveries
@@ -90,6 +93,7 @@ Questions:
 **Problem**: Contradiction resolution process has human arbitration but no timeout/fallback.
 
 **Current Contradiction Flow**:
+
 ```yaml
 1. Detect contradiction
 2. Evaluate evidence quality
@@ -104,78 +108,121 @@ Questions:
 
 ## Recommended Solution
 
-### G1: Agent Failure Quorum System
+**Design Decision**: Reject quorum-based approach. For investment decisions, incomplete analysis is unacceptable.
+
+### G1: Checkpoint-Based Hard Stop (Replaces Quorum System)
+
+**Principle**: Any agent failure triggers human-alerted pause. All required agents must complete.
 
 ```python
-class PartialFailureHandler:
-    """Handle partial agent failures in parallel workflows"""
+class AgentFailureHandler:
+    """Handle agent failures with checkpoint-based resumption"""
 
-    QUORUM_REQUIREMENTS = {
-        'parallel_analysis': {
-            'minimum_agents': 3,  # of 5 total
-            'critical_agents': ['financial', 'business'],  # Must succeed
-            'confidence_penalty': 0.10  # per missing agent
-        },
-        'debate_phase': {
-            'minimum_agents': 2,  # of 3 participants
-            'critical_agents': [],
-            'confidence_penalty': 0.20
-        }
-    }
+    def on_agent_failure(self, agent_failure_event):
+        """Hard stop on any agent failure - no partial proceed"""
 
-    def check_quorum(self, workflow, completed_agents, failed_agents):
-        """Determine if quorum met"""
-
-        req = self.QUORUM_REQUIREMENTS[workflow]
-
-        # Check minimum count
-        if len(completed_agents) < req['minimum_agents']:
-            return QuorumResult(
-                met=False,
-                reason='insufficient_agents',
-                action='retry_failed'
-            )
-
-        # Check critical agents
-        critical_failed = [
-            a for a in failed_agents
-            if a.agent_type in req['critical_agents']
-        ]
-
-        if critical_failed:
-            return QuorumResult(
-                met=False,
-                reason=f'critical_agent_failed: {critical_failed[0].agent_type}',
-                action='retry_critical'
-            )
-
-        # Quorum met, adjust confidence
-        confidence_penalty = len(failed_agents) * req['confidence_penalty']
-
-        return QuorumResult(
-            met=True,
-            confidence_adjustment=-confidence_penalty,
-            action='proceed_with_penalty',
-            missing_agents=failed_agents
+        # 1. Save checkpoint (Flaw #22)
+        checkpoint = self.checkpointer.save_checkpoint(
+            agent=agent_failure_event.agent,
+            subtask_completed=agent_failure_event.last_completed_subtask,
+            progress_pct=agent_failure_event.progress_pct,
+            failure_reason=agent_failure_event.error
         )
 
+        # 2. Pause analysis for this stock (Flaw #23)
+        pause_record = self.pause_manager.pause_analysis(
+            stock_ticker=agent_failure_event.stock_ticker,
+            reason='agent_failure',
+            failed_agent=agent_failure_event.agent_type
+        )
+
+        # 3. Alert human (Flaw #24)
+        alert = self.alert_manager.send_agent_failure_alert(
+            stock_ticker=agent_failure_event.stock_ticker,
+            agent_type=agent_failure_event.agent_type,
+            error=agent_failure_event.error,
+            checkpoint_progress=checkpoint.progress_pct,
+            phase=pause_record.phase,
+            day=pause_record.day
+        )
+
+        logger.critical(
+            f"Analysis PAUSED: {agent_failure_event.stock_ticker} - "
+            f"{agent_failure_event.agent_type} failed at {checkpoint.progress_pct}%"
+        )
+
+        # 4. Wait for human resolution (NO auto-proceed, NO timeout)
+        # Human must explicitly:
+        #   - Resolve root cause (infrastructure/API/data issue)
+        #   - Click "Resume Analysis" button
+        #   - OR click "Cancel Analysis" button
+
+        return {
+            'action': 'hard_stop',
+            'checkpoint_id': checkpoint.id,
+            'pause_id': pause_record.id,
+            'alert_id': alert.id,
+            'awaiting_human': True
+        }
+
+    def on_human_resolution(self, stock_ticker, resolution_action):
+        """Human resolved issue - resume from checkpoint"""
+
+        if resolution_action == 'resume':
+            # Resume from checkpoint (Flaw #22 + #23)
+            resume_plan = self.pause_manager.resume_analysis(stock_ticker)
+
+            logger.info(f"Analysis RESUMED: {stock_ticker} - {resume_plan.summary()}")
+
+            return resume_plan
+
+        elif resolution_action == 'cancel':
+            # Human decided to cancel analysis
+            self.analysis_manager.cancel_analysis(
+                stock_ticker=stock_ticker,
+                reason='human_cancelled_after_failure'
+            )
+
+            logger.info(f"Analysis CANCELLED: {stock_ticker} by human decision")
+
+            return {'action': 'cancelled'}
+
     def handle_partial_completion(self, analysis, partial_results):
-        """Handle agents that partially completed"""
+        """Reject partial completions - all agents must finish"""
+
+        # NO 70% threshold - this is removed
+        # Partial completion = failure, not success with penalty
 
         for result in partial_results:
             if result.status == 'partial':
-                # Determine if partial sufficient
-                completeness = self._assess_completeness(result)
+                # Treat as failure - save checkpoint and pause
+                self.on_agent_failure(
+                    AgentFailureEvent(
+                        agent=result.agent,
+                        stock_ticker=analysis.stock_ticker,
+                        error='Partial completion - insufficient for analysis',
+                        progress_pct=result.completeness * 100,
+                        last_completed_subtask=result.last_subtask
+                    )
+                )
 
-                if completeness > 0.70:
-                    # Treat as success with confidence penalty
-                    result.status = 'success'
-                    result.confidence *= 0.90
-                else:
-                    # Treat as failure, retry
-                    result.status = 'failed'
-                    self.retry_agent(result.agent_id, analysis)
+        # Analysis does NOT proceed with partial results
+        return {'action': 'paused', 'reason': 'partial_completion_rejected'}
 ```
+
+**Key Changes from Original Proposal**:
+
+- ❌ **REMOVED**: Quorum requirements (minimum 3 of 5 agents)
+- ❌ **REMOVED**: Critical agent designation (all agents now critical)
+- ❌ **REMOVED**: Confidence penalties for missing agents
+- ❌ **REMOVED**: "Proceed with penalty" logic
+- ❌ **REMOVED**: 70% partial completion threshold
+- ✅ **ADDED**: Hard stop on ANY agent failure
+- ✅ **ADDED**: Human alert with AGENT_FAILURE priority
+- ✅ **ADDED**: Checkpoint-based resumption (no duplicate work)
+- ✅ **ADDED**: No timeout - always wait for human
+
+**Rationale**: For fundamental investment analysis, incomplete data can lead to incorrect decisions. Better to pause and complete properly than proceed with partial information and arbitrary confidence penalties.
 
 ### G2: Message Queue Specification
 
@@ -256,8 +303,10 @@ class ContradictionResolver:
 
 ## Implementation Plan
 
-**Week 1**: G1 quorum system
-**Week 2**: G1 retry logic & notifications
+**Prerequisites**: Resolve Flaws #22, #23, #24 first (checkpoint/pause/alert infrastructure)
+
+**Week 1**: G1 hard stop integration, checkpoint triggers on failure
+**Week 2**: G1 human alert integration, resume from checkpoint testing
 **Week 3**: G2 RabbitMQ setup & config
 **Week 4**: M6 contradiction fallback
 
@@ -265,8 +314,9 @@ class ContradictionResolver:
 
 ## Success Criteria
 
-- ✅ G1: Zero blocked analyses from partial failures (100 tests)
-- ✅ G1: Confidence penalties validated (±10% of expected)
+- ✅ G1: Zero incomplete analyses proceed (100% hard stop on any failure)
+- ✅ G1: Human alerted <30s on agent failure (SMS/push/email)
+- ✅ G1: Resume from checkpoint preserves completed work (no duplicate work in 100 tests)
 - ✅ G2: Message delivery 99.9% success rate
 - ✅ M6: Contradictions resolved <6hr (95th percentile)
 
@@ -275,5 +325,9 @@ class ContradictionResolver:
 ## Dependencies
 
 - **Blocks**: Production reliability, multi-agent workflows
-- **Depends On**: Agent framework operational
+- **Depends On**:
+  - Flaw #22 (agent checkpoints) - REQUIRED for G1
+  - Flaw #23 (workflow pause/resume) - REQUIRED for G1
+  - Flaw #24 (agent failure alerts) - REQUIRED for G1
+  - Agent framework operational
 - **Related**: Flaw #8 (Debate Resolution - RESOLVED), Data management
