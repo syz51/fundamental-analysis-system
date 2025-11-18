@@ -3,19 +3,18 @@
 ## At a Glance
 
 - **Total**: 26 flaws + 6 minor issues
-- **Active**: 4 (2 critical, 1 high, 1 medium, 2 deferred)
-- **Resolved**: 20
+- **Active**: 3 (1 critical, 1 high, 1 medium, 2 deferred)
+- **Resolved**: 21
 - **Deferred**: 2
 
 ---
 
-## 🚨 Critical Active Flaws (2)
+## 🚨 Critical Active Flaws (1)
 
 Blocks MVP or production deployment:
 
 | # | Flaw | Impact | Phase | Effort | Dependencies |
 |---|------|--------|-------|--------|--------------|
-| [15](active/15-failure-modes.md) | Query & Sync Failure Modes | System hangs from infinite recursion, memory overflow | 3 | 4w | DD-005 memory system, DD-002 event-driven sync |
 | [21](active/21-scalability.md) | Scalability Architecture Bottlenecks | Cannot scale to 1000+ stocks without redesign | 4 | 8w | Neo4j operational, DD-004 auto-approval |
 
 ---
@@ -60,7 +59,7 @@ Blocks MVP or production deployment:
 
 ---
 
-## ✅ Resolved Flaws by Phase (20)
+## ✅ Resolved Flaws by Phase (21)
 
 <details>
 <summary><b>Phase 1: Foundation (2 resolved)</b></summary>
@@ -99,13 +98,14 @@ Blocks MVP or production deployment:
 </details>
 
 <details>
-<summary><b>Phase 3: Quality & Learning (3 resolved)</b></summary>
+<summary><b>Phase 3: Quality & Learning (4 resolved)</b></summary>
 
 | # | Flaw | Resolution | Completed |
 |---|------|-----------|-----------|
 | [3](resolved/03-pattern-validation.md) | Pattern Validation Confirmation Bias Loop | DD-007 Pattern Validation Architecture | 2025-11-17 |
 | [7](resolved/07-memory-scalability.md) | Memory Scalability vs Performance Targets | DD-005 Memory Scalability Optimization | 2025-11-17 |
 | [13](resolved/13-validation-gaps.md) | Learning System Validation Gaps | N/A | N/A |
+| [15](resolved/15-failure-modes.md) | Query & Sync Failure Modes | DD-018: Memory System Failure Resilience | 2025-11-18 |
 
 </details>
 
@@ -137,10 +137,9 @@ Blocks MVP or production deployment:
 Navigate by system component:
 
 <details>
-<summary><b>Memory System (8 flaws: 3 active, 5 resolved)</b></summary>
+<summary><b>Memory System (8 flaws: 2 active, 6 resolved)</b></summary>
 
 **Active:**
-- [#15](active/15-failure-modes.md) - Query & Sync Failure Modes (C, Phase 3)
 - [#17](active/17-data-tier-mgmt.md) - Data Tier Management Gaps (H, Phase 4)
 - [#20](active/20-access-control.md) - Memory System Access Control Undefined (M, Phase 3)
 
@@ -149,6 +148,7 @@ Navigate by system component:
 - [#5](resolved/05-data-retention.md)✅ - Data Retention Policy Conflict
 - [#7](resolved/07-memory-scalability.md)✅ - Memory Scalability vs Performance Targets
 - [#12](resolved/12-archive-lifecycle.md)✅ - Pattern Archive Lifecycle Gaps
+- [#15](resolved/15-failure-modes.md)✅ - Query & Sync Failure Modes
 - [#25](resolved/25-working-memory-durability.md)✅ - Working Memory Insufficient for Long Pauses
 
 </details>
@@ -228,8 +228,7 @@ Navigate by system component:
 
 ### By Phase
 
-**Phase 3 (Months 5-6):** 2 active
-- [15](active/15-failure-modes.md) Query & Sync Failure Modes (C, 4w)
+**Phase 3 (Months 5-6):** 1 active
 - [20](active/20-access-control.md) Memory System Access Control Undefined (M, 4w)
 
 **Phase 4 (Months 7-8):** 2 active
@@ -240,8 +239,7 @@ Navigate by system component:
 
 **Quick wins (<3 weeks):** 0 flaws
 
-**Medium (3-5 weeks):** 3 flaws
-- [15](active/15-failure-modes.md) - 4w
+**Medium (3-5 weeks):** 2 flaws
 - [17](active/17-data-tier-mgmt.md) - 4w
 - [20](active/20-access-control.md) - 4w
 
@@ -255,8 +253,7 @@ Navigate by system component:
 **Waiting on 1 dependency:** 1 flaws
 - [20](active/20-access-control.md) - Memory system operational (L1/L2/L3)
 
-**Waiting on 2+ dependencies:** 3 flaws
-- [15](active/15-failure-modes.md) - DD-005 memory system, DD-002 event-driven sync
+**Waiting on 2+ dependencies:** 2 flaws
 - [17](active/17-data-tier-mgmt.md) - DD-009 tiered storage, Neo4j operational
 - [21](active/21-scalability.md) - Neo4j operational, DD-004 auto-approval
 

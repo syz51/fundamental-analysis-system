@@ -379,6 +379,116 @@ The Lead Coordinator integrates with three specialized components for workflow p
   - Sent by: FailureCorrelator (auto-trigger)
   - Recipient: BatchManager
 
+### Memory System Failure Alert Subscription
+
+**Purpose**: Subscribe to memory system failure alerts to enable proactive intervention and system health monitoring.
+
+The Lead Coordinator subscribes to three critical memory system failure types introduced in [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md):
+
+**Alert Types Subscribed**:
+
+| Alert | Severity | Trigger | Lead Coordinator Action |
+|-------|----------|---------|-------------------------|
+| **Query Timeout Exhausted** | WARNING | All fallback layers timeout (L1→L2→cached) | Monitor query timeout rate, trigger database performance investigation if >5% queries timeout |
+| **Sync Queue Overflow** | HIGH | Queue depth >50, backpressure active | Reduce sync event rate, scale agent capacity, trigger BatchManager to pause low-priority analyses |
+| **Sync Permanently Dropped** | WARNING/HIGH | Sync dropped after 5 retries (normal=WARNING, high=HIGH) | Re-request dropped syncs, investigate agent load, trigger human notification if high-priority sync dropped |
+| **Regime Cache Timeout** | HIGH | Cache flag not set within 60s | Investigate regime detection hang, trigger manual regime update, alert human |
+| **Regime Staleness SLA Miss** | WARNING | 99th percentile regime update >5min | Optimize regime detection algorithm, monitor credibility system health |
+
+**Subscription Implementation**:
+
+```python
+class LeadCoordinator:
+    def __init__(self):
+        # Subscribe to memory failure alerts
+        self.alert_manager.subscribe(
+            alert_types=[
+                'QUERY_TIMEOUT_EXHAUSTED',
+                'SYNC_QUEUE_OVERFLOW',
+                'SYNC_PERMANENTLY_DROPPED',
+                'REGIME_CACHE_TIMEOUT',
+                'REGIME_STALENESS_SLA_MISS'
+            ],
+            handler=self.on_memory_failure_alert
+        )
+
+    async def on_memory_failure_alert(self, alert: MemoryFailureAlert):
+        """Handle memory system failure alerts"""
+
+        if alert.type == 'QUERY_TIMEOUT_EXHAUSTED':
+            # Monitor query timeout rate
+            timeout_rate = self.metrics.get_timeout_rate(window_minutes=5)
+            if timeout_rate > 0.05:  # >5% queries timing out
+                await self.trigger_database_investigation(
+                    severity='HIGH',
+                    context=f'Query timeout rate: {timeout_rate:.1%}'
+                )
+
+        elif alert.type == 'SYNC_QUEUE_OVERFLOW':
+            # Reduce sync rate, scale capacity
+            affected_agent = alert.metadata['agent_id']
+            await self.reduce_sync_event_rate(affected_agent)
+            await self.batch_manager.pause_low_priority_analyses(
+                reason='Memory queue overflow',
+                max_active=10  # Reduce from default 50
+            )
+
+        elif alert.type == 'SYNC_PERMANENTLY_DROPPED':
+            # Re-request critical dropped syncs
+            if alert.severity == 'HIGH':  # High-priority sync dropped
+                await self.request_sync_replay(
+                    from_agent=alert.metadata['from_agent'],
+                    to_agent=alert.metadata['agent_id'],
+                    priority='critical'
+                )
+                await self.alert_manager.notify_human(
+                    severity='HIGH',
+                    message=f"High-priority sync dropped after 5 retries",
+                    context=alert.metadata
+                )
+
+        elif alert.type == 'REGIME_CACHE_TIMEOUT':
+            # Investigate regime detection hang
+            regime_id = alert.metadata['regime_id']
+            await self.trigger_manual_regime_update(regime_id)
+            await self.alert_manager.notify_human(
+                severity='HIGH',
+                message=f"Regime detection timeout: {regime_id}",
+                action_required='Investigate regime detection system'
+            )
+
+        elif alert.type == 'REGIME_STALENESS_SLA_MISS':
+            # Log performance degradation, monitor
+            p99_duration = alert.metadata['p99_duration_min']
+            self.metrics.record_regime_performance_degradation(p99_duration)
+            if p99_duration > 10:  # >10min is severe
+                await self.alert_manager.notify_human(
+                    severity='WARNING',
+                    message=f"Regime update took {p99_duration:.1f}min (target <5min)"
+                )
+```
+
+**Integration Points**:
+
+- **MemorySystem**: Publishes query timeout exhausted alerts (C5 failure mode)
+- **SyncBackpressureManager**: Publishes queue overflow and sync dropped alerts (A4 failure mode)
+- **RegimeSequencer**: Publishes cache timeout and staleness SLA miss alerts (M5 failure mode)
+- **AlertManager**: Routes memory failure alerts to Lead Coordinator
+- **BatchManager**: Receives pause triggers from Lead Coordinator during memory overflow
+- **Human Interface**: Displays high-severity memory failure alerts requiring investigation
+
+**Monitoring Dashboard**:
+
+The Lead Coordinator exposes memory system health metrics:
+
+- Query timeout rate (target <5%)
+- Sync queue depth by agent (target <50, alert >50)
+- Sync backpressure events (count/hour)
+- Regime update duration p99 (target <5min)
+- Memory failure alert count by type (hourly breakdown)
+
+See [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md) for complete failure mode design.
+
 ---
 
 ## 2. Debate Facilitator Agent

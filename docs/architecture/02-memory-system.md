@@ -1169,6 +1169,167 @@ The system implements comprehensive optimization strategies to maintain performa
 - Alert if >5% queries timeout (indicates optimization needed)
 - Log slow queries for investigation
 
+### Query Fallback Recursion Protection (C5)
+
+**Purpose**: Prevent infinite fallback loops during query timeouts, ensure <2s worst-case response.
+
+Without recursion limits, query timeout fallback chains can recurse infinitely: L1 timeout → L2 timeout → L3 timeout → cached timeout → system hangs. The `QueryFallbackGuard` enforces hard recursion limits and timeout reduction to guarantee bounded response time.
+
+**QueryFallbackGuard Mechanism**:
+
+- **MAX_FALLBACK_DEPTH=2**: Allows only 2 fallback attempts (L1 → L2 → cached → done)
+- **Timeout Reduction**: Each level reduces timeout by 0.4× (500ms → 200ms → 100ms)
+- **Worst-Case Guarantee**: <2s total (500ms + 200ms + 100ms + 100ms ultimate fallback)
+- **Ultimate Fallback**: Returns empty result + error flag + triggers alert (severity: WARNING)
+
+**Fallback Chain**:
+
+```text
+Level 0: L1 query (timeout: 500ms)
+  ↓ TimeoutError
+Level 1: L2 query (timeout: 200ms, depth check: 1 < 2 ✓)
+  ↓ TimeoutError
+Level 2: Cached approximation (timeout: 100ms, depth check: 2 < 2 ✗)
+  ↓ No more fallbacks allowed
+Ultimate: Empty result + QueryError(code='QUERY_TIMEOUT_EXHAUSTED') + alert
+```
+
+**Implementation**:
+
+```python
+class QueryFallbackGuard:
+    MAX_FALLBACK_DEPTH = 2
+    TIMEOUT_REDUCTION_FACTOR = 0.4
+
+    def can_fallback(self) -> bool:
+        return self.current_depth < self.MAX_FALLBACK_DEPTH
+
+    def next_timeout_ms(self) -> int:
+        timeout = int(self.initial_timeout_ms * (self.TIMEOUT_REDUCTION_FACTOR ** self.current_depth))
+        return max(timeout, 100)  # Minimum 100ms
+
+    def ultimate_fallback(self) -> QueryResult:
+        return QueryResult(
+            data=[],
+            error=QueryError(code='QUERY_TIMEOUT_EXHAUSTED'),
+            metadata={'fallback_exhausted': True}
+        )
+```
+
+**Alert Triggers**:
+
+- Trigger alert when all fallback layers exhausted
+- Severity: WARNING (query returned empty safely, not critical)
+- Includes: fallback chain, total time, query type
+
+**Performance Characteristics**:
+
+- Zero infinite recursion (hard depth limit)
+- Worst-case response: <2s (vs potential infinite hang)
+- Query returns empty result (not hang) when exhausted
+- Alert rate: <5% queries should exhaust fallbacks (if higher, indicates database performance issue)
+
+See [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md) for complete design.
+
+### Event-Driven Sync Backpressure (A4)
+
+**Purpose**: Prevent memory queue overflow during high-priority sync bursts (debates, human gates, alert storms).
+
+Without backpressure, event-driven sync can overwhelm agent L1 memory queues: debate generates 10 critical findings → 50 concurrent syncs (10 × 5 agents) → agent at 95/100 capacity → overflow, memory leak, crashes. The `SyncBackpressureManager` enforces queue limits and graceful degradation.
+
+**SyncBackpressureManager Mechanism**:
+
+- **Queue Limits**: `MAX_QUEUE_DEPTH=50` (total), `CRITICAL_QUEUE_DEPTH=10` (during backpressure)
+- **Backpressure Signaling**: Reject non-critical syncs when queue full, signal sender to retry with exponential backoff
+- **Priority-Based Eviction**: Drop normal/high priority syncs before critical syncs when queue overflow
+- **Exponential Backoff**: 100ms → 200ms → 400ms → 800ms (max 5 retries), then permanent drop + alert
+
+**Backpressure Flow**:
+
+```text
+Sender: Push sync (priority: high, queue depth: 52/50)
+  ↓
+Receiver: Queue full, backpressure active
+  ↓ Can accept? priority == 'critical' → NO (high)
+Receiver: Apply backpressure → SyncResult(backpressure=True, retry_after_ms=200ms)
+  ↓
+Sender: Receives backpressure signal, waits 200ms, retries
+  ↓ Retry #2 fails
+Sender: Waits 400ms, retries
+  ↓ Retry #5 fails (max retries exceeded)
+Receiver: Permanent drop + alert (severity: WARNING for normal, HIGH for high priority)
+```
+
+**Priority-Based Eviction** (when critical sync arrives to full queue):
+
+```text
+Queue: [normal, high, high, critical, critical, ...] (50/50 full)
+  ↓ New critical sync arrives
+Evict: Drop oldest 'normal' sync to make room
+  ↓ If no normal exists
+Evict: Drop oldest 'high' sync
+  ↓ Queue now: [high, high, critical, critical, ..., new_critical] (50/50)
+```
+
+**Implementation**:
+
+```python
+class SyncBackpressureManager:
+    MAX_QUEUE_DEPTH = 50
+    CRITICAL_QUEUE_DEPTH = 10
+    BACKOFF_INITIAL_MS = 100
+    BACKOFF_MAX_MS = 800
+    BACKOFF_MAX_RETRIES = 5
+
+    def can_accept_sync(self, priority: str) -> bool:
+        current_depth = len(self.queue)
+        if current_depth < self.MAX_QUEUE_DEPTH:
+            return True
+        # Backpressure: only accept critical
+        self.backpressure_active = True
+        return priority == 'critical'
+
+    def push_sync_event(self, from_agent: str, message: dict, priority: str) -> SyncResult:
+        if not self.can_accept_sync(priority):
+            if priority != 'critical':
+                return self._apply_backpressure(from_agent, priority)
+            # Critical sync + full queue: evict lowest priority
+            self._evict_lowest_priority()
+
+        self.queue.append((priority, message, datetime.now()))
+        return SyncResult(accepted=True, queue_depth=len(self.queue))
+
+    def _apply_backpressure(self, from_agent: str, priority: str) -> SyncResult:
+        retry_count = self.dropped_stats[priority]
+        retry_delay_ms = min(self.BACKOFF_INITIAL_MS * (2 ** retry_count), self.BACKOFF_MAX_MS)
+
+        if retry_count >= self.BACKOFF_MAX_RETRIES:
+            self._trigger_sync_drop_alert(from_agent, priority, retry_count)
+            return SyncResult(accepted=False, backpressure=True, dropped=True)
+
+        return SyncResult(accepted=False, backpressure=True, retry_after_ms=retry_delay_ms)
+```
+
+**Alert Triggers**:
+
+| Alert | Severity | Condition |
+|-------|----------|-----------|
+| Sync Queue Overflow | HIGH | Queue depth >50, backpressure active |
+| Sync Permanently Dropped | WARNING (normal), HIGH (high priority) | Sync dropped after 5 retries |
+
+**Performance Characteristics**:
+
+- Graceful degradation under load (no crashes, no memory leaks)
+- Critical syncs preserved (never dropped, evict lower priority to make room)
+- Normal/high syncs may be dropped during sustained overflow (alerting enabled)
+- Exponential backoff prevents retry storms
+
+**Integration with Base Agent**:
+
+All agents receive `SyncBackpressureManager` instance, handle `BackpressureError` in memory sync handlers, send backpressure signals to sender agents when queue full.
+
+See [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md) for complete design.
+
 ### Incremental Credibility Updates
 
 **Agent Credibility Optimization**:

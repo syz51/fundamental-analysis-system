@@ -300,6 +300,114 @@ def calculate_regime_adjusted_credibility(
         return regime_accuracy * 0.30 + overall_accuracy * 0.70
 ```
 
+**Regime Detection Sequencing (M5)**:
+
+To prevent credibility score staleness, regime detection must be sequenced correctly: **detection → cache update → credibility recalculation**. Without sequencing, race conditions cause >2hr staleness (credibility recalc starts before regime detection completes, uses yesterday's stale regime data).
+
+**RegimeSequencer Implementation** (Hybrid Parallelism):
+
+```python
+class RegimeSequencer:
+    """
+    Orchestrate regime detection with hybrid parallelism
+    - Parallel: Multiple regimes processed simultaneously (maximize throughput)
+    - Serial: Within each regime, steps run in order (prevent staleness)
+    """
+
+    STALENESS_TARGET_MIN = 5  # 99th percentile staleness target
+
+    async def run_daily_regime_update(self, regime_ids: List[str]):
+        """
+        Run daily regime update with hybrid parallelism
+        """
+        # Reset dependency flags for today
+        for regime_id in regime_ids:
+            self.regime_flags[regime_id] = {
+                'detected_today': False,
+                'cache_updated': False,
+                'credibility_ready': False
+            }
+
+        # Launch parallel regime updates (one per regime)
+        tasks = [self._update_regime_sequential(regime_id) for regime_id in regime_ids]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Check staleness SLA
+        self._check_staleness_sla(results)
+
+    async def _update_regime_sequential(self, regime_id: str):
+        """
+        Update single regime sequentially: detect → cache → credibility
+        """
+        start_time = datetime.now()
+
+        # Step 1: Regime detection
+        regime_data = await self._detect_regime(regime_id)
+        self.regime_flags[regime_id]['detected_today'] = True
+
+        # Step 2: Cache update (wait for detection)
+        await self._update_cache(regime_id, regime_data)
+        self.regime_flags[regime_id]['cache_updated'] = True
+
+        # Set dependency flag for credibility recalc
+        flag_key = f'regime_{regime_id}_updated_today'
+        await self.cache_manager.set(flag_key, True, ttl_hours=24)
+
+        # Step 3: Credibility recalculation (wait for cache)
+        await self._recalculate_credibility(regime_id)
+        self.regime_flags[regime_id]['credibility_ready'] = True
+
+        duration_min = (datetime.now() - start_time).total_seconds() / 60
+        return {'regime_id': regime_id, 'duration_min': duration_min, 'success': True}
+
+    async def _recalculate_credibility(self, regime_id: str):
+        """Recalculate credibility scores for regime"""
+        # Defensive check: wait for cache flag
+        flag_key = f'regime_{regime_id}_updated_today'
+        cache_ready = await self.cache_manager.get(flag_key)
+
+        if not cache_ready:
+            logger.warning(f'Regime {regime_id} cache not ready, waiting...')
+            await self._wait_for_cache_flag(flag_key, timeout_sec=60)
+
+        # Run credibility recalc (uses fresh regime data)
+        await self.credibility_engine.recalculate_for_regime(regime_id)
+
+    def _check_staleness_sla(self, results: List[dict]):
+        """Check if staleness SLA met (99th percentile <5min)"""
+        durations = [r['duration_min'] for r in results if r.get('success')]
+        if not durations:
+            return
+
+        p99_duration = sorted(durations)[int(len(durations) * 0.99)]
+
+        if p99_duration > self.STALENESS_TARGET_MIN:
+            self.alert_manager.on_regime_staleness_sla_miss(
+                p99_duration_min=p99_duration,
+                target_min=self.STALENESS_TARGET_MIN,
+                severity='WARNING'
+            )
+```
+
+**Staleness Characteristics**:
+
+- **Without sequencing**: >2hr staleness (regime detection at 00:00 → completes at 02:00, credibility recalc at 01:00 uses yesterday's data)
+- **With sequencing**: <5min staleness (99th percentile, hybrid parallelism maintains throughput)
+- **Parallel throughput**: 5+ regimes complete in ~5min (not 25min serial)
+- **Dependency flags**: `regime_{id}_updated_today` prevents credibility recalc on stale data
+
+**Daily Batch Schedule**:
+
+```python
+# Replaces independent cron jobs with sequenced batch
+async def run_daily_batch(self):
+    """Run daily credibility batch at 00:00 UTC"""
+    regime_ids = await self.get_active_regime_ids()  # ['BULL_LOW_RATES', 'BEAR_HIGH_RATES', ...]
+    await self.regime_sequencer.run_daily_regime_update(regime_ids)
+```
+
+See [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md) for complete M5 resolution design.
+
 ---
 
 ### 3. AgentTrendAnalysis

@@ -33,6 +33,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-014 | [Learning System Validation Gaps Resolution](DD-014_VALIDATION_GAPS_RESOLUTION.md)  | Approved    | 2025-11-18 | Learning, Quality Assurance          | [DD-001](DD-001_GATE_6_LEARNING_VALIDATION.md), [DD-004](DD-004_GATE_6_PARAMETER_OPTIMIZATION.md), [DD-007](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md), [Flaw #13](../design-flaws/resolved/13-validation-gaps.md)                                                                   |
 | DD-015 | [Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md)                 | Approved    | 2025-11-18 | Operations, Human Integration        | [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [Human Integration](../operations/02-human-integration.md), [Flaw #24](../design-flaws/resolved/24-agent-failure-alerts.md)                                                                                                              |
 | DD-016 | [L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md)                             | Approved    | 2025-11-18 | Memory Architecture, Operations      | [DD-011](DD-011_AGENT_CHECKPOINT_SYSTEM.md), [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [Memory System](../architecture/02-memory-system.md), [Flaw #25](../design-flaws/resolved/25-working-memory-durability.md)                                                                  |
+| DD-017 | [Failure Correlation System](DD-017_FAILURE_CORRELATION_SYSTEM.md)                  | Approved    | 2025-11-18 | Operations, Coordination             | [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [DD-015](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Flaw #26](../design-flaws/resolved/26-multi-stock-batching.md)                                                        |
+| DD-018 | [Memory System Failure Resilience](DD-018_MEMORY_FAILURE_RESILIENCE.md)            | Approved    | 2025-11-18 | Memory Architecture, Learning        | [DD-005](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md), [DD-002](DD-002_EVENT_DRIVEN_MEMORY_SYNC.md), [DD-008](DD-008_AGENT_CREDIBILITY_SYSTEM.md), [Memory System](../architecture/02-memory-system.md), [Credibility System](../implementation/05-credibility-system.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Analysis Pipeline](../operations/01-analysis-pipeline.md), [Flaw #15](../design-flaws/resolved/15-failure-modes.md) |
 
 ---
 
@@ -59,6 +61,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-014**: Learning System Validation Gaps Resolution (shadow mode validation, blind test quarantine)
 - **DD-015**: Agent Failure Alert System (tiered alerts, pause/resume integration, multi-channel delivery)
 - **DD-016**: L1 Memory Durability (dual-layer snapshots, hybrid triggers, <5s restore)
+- **DD-017**: Failure Correlation System (auto-correlation detection, error signatures, batch trigger)
+- **DD-018**: Memory System Failure Resilience (query recursion limits, sync backpressure, regime sequencing)
 
 ### 🟡 Under Review
 
@@ -78,7 +82,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 ### Architecture
 
-- **Memory Architecture**: DD-002, DD-005, DD-013, DD-016
+- **Memory Architecture**: DD-002, DD-005, DD-013, DD-016, DD-018
 - **Agent Execution & Checkpoints**: DD-011
 - **Workflow Pause/Resume**: DD-012
 
@@ -86,14 +90,15 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 - **Collaboration & Debate Resolution**: DD-003
 - **Data Contradiction Resolution**: DD-010
-- **Failure Recovery & Workflow**: DD-011, DD-012, DD-015, DD-016
+- **Failure Recovery & Workflow**: DD-011, DD-012, DD-015, DD-016, DD-017
+- **Failure Correlation & Detection**: DD-017
 
 ### Learning & Feedback
 
 - **Human Integration & Learning Validation**: DD-001, DD-004
 - **Pattern Validation & Quality Assurance**: DD-007, DD-014
 - **Negative Feedback & Failure Analysis**: DD-006
-- **Agent Credibility & Performance Tracking**: DD-008
+- **Agent Credibility & Performance Tracking**: DD-008, DD-018
 - **Data Retention & Pattern Evidence**: DD-009
 
 ### Implementation
@@ -167,4 +172,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-18 (added DD-010 through DD-016; resolved Flaw #19-M6, Flaws #12, #13, #22, #23, #24, #25)
+**Last Updated**: 2025-11-18 (added DD-010 through DD-018; resolved Flaw #19-M6, Flaws #12, #13, #15, #22, #23, #24, #25, #26)

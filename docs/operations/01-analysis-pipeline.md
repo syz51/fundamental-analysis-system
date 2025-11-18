@@ -695,6 +695,181 @@ For existing watchlist positions:
 
 ---
 
+## Memory System Monitoring (DD-018)
+
+### Overview
+
+Memory system failure resilience ([DD-018](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md)) introduces three critical failure modes that require operational monitoring and alerting:
+
+- **C5**: Query fallback recursion protection (prevents infinite timeout loops)
+- **A4**: Event-driven sync backpressure (prevents queue overflow during debates)
+- **M5**: Regime detection sequencing (prevents credibility score staleness)
+
+### Monitoring Metrics
+
+**Query Performance (C5)**:
+
+| Metric | Target | Alert Threshold | Action |
+|--------|--------|-----------------|--------|
+| Query timeout rate | <5% | >5% in 5min window | Investigate database performance, check L1/L2/L3 response times |
+| Fallback depth distribution | 90% depth=0 (L1 hit) | >20% exhaust all fallbacks | Database optimization required, cache warming needed |
+| Query response time p99 | <500ms | >2s | Performance degradation, check query plans |
+
+**Sync Queue Health (A4)**:
+
+| Metric | Target | Alert Threshold | Action |
+|--------|--------|-----------------|--------|
+| Sync queue depth per agent | <30 messages | >50 messages (backpressure active) | Scale agent capacity, reduce sync event rate |
+| Backpressure events | 0/hour | >5/hour | Investigate sync burst sources (debates, human gates) |
+| Sync drop rate | 0% | >1% normal syncs dropped, >0% high/critical dropped | Agent load balancing, BatchManager pause trigger |
+
+**Regime Update Performance (M5)**:
+
+| Metric | Target | Alert Threshold | Action |
+|--------|--------|-----------------|--------|
+| Regime update duration p99 | <5min | >5min (staleness SLA miss) | Optimize regime detection algorithm |
+| Regime cache timeout events | 0/day | >1/day | Investigate regime detection hangs |
+| Credibility staleness | <5min | >10min | Manual regime update trigger, human notification |
+
+### Alert Handling Procedures
+
+**Query Timeout Exhausted (WARNING)**:
+
+1. **Detection**: All fallback layers timeout (L1 → L2 → cached)
+2. **Immediate action**: Query returns empty result + error flag to agent
+3. **Investigation**: Check database performance metrics (CPU, query queue, slow queries)
+4. **Escalation**: If timeout rate >5% for >10min, trigger HIGH alert and human notification
+5. **Resolution**: Database optimization, query plan review, cache warming
+
+**Sync Queue Overflow (HIGH)**:
+
+1. **Detection**: Queue depth >50 messages, backpressure active
+2. **Immediate action**: Lead Coordinator reduces sync event rate, BatchManager pauses low-priority analyses
+3. **Investigation**: Identify sync burst source (debate, human gate, alert storm)
+4. **Escalation**: If overflow persists >5min, scale agent capacity (spin up more instances)
+5. **Resolution**: Agent load balancing, sync priority tuning, concurrency limits
+
+**Sync Permanently Dropped (WARNING/HIGH)**:
+
+1. **Detection**: Sync dropped after 5 retries (exponential backoff exhausted)
+2. **Immediate action**:
+   - Normal priority: Log drop, continue
+   - High priority: Re-request sync with critical priority, notify human
+3. **Investigation**: Check receiving agent load, queue depth history
+4. **Resolution**: Agent capacity scaling, review sync priority assignment
+
+**Regime Cache Timeout (HIGH)**:
+
+1. **Detection**: Cache flag not set within 60s of regime detection start
+2. **Immediate action**: Trigger manual regime update, alert human
+3. **Investigation**: Check regime detection process logs, data source availability
+4. **Escalation**: If timeout persists, disable regime-specific credibility until resolved
+5. **Resolution**: Fix regime detection hang, validate data source connectivity
+
+**Regime Staleness SLA Miss (WARNING)**:
+
+1. **Detection**: 99th percentile regime update duration >5min
+2. **Immediate action**: Log performance degradation, monitor credibility system
+3. **Investigation**: Profile regime detection algorithm, check data source latency
+4. **Escalation**: If p99 >10min, trigger HIGH alert and optimization task
+5. **Resolution**: Optimize regime detection, reduce data source roundtrips
+
+### Monitoring Dashboard
+
+**Memory System Health (Real-Time)**:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ Memory System Health Dashboard                              │
+├─────────────────────────────────────────────────────────────┤
+│ Query Performance (C5)                                       │
+│   Timeout Rate: 2.3% ✓ (target <5%)                         │
+│   Fallback Depth: L1=85% L2=12% Cached=3% Exhausted=0% ✓    │
+│   Response Time p99: 420ms ✓ (target <500ms)                │
+├─────────────────────────────────────────────────────────────┤
+│ Sync Queue Health (A4)                                       │
+│   Queue Depth: Financial=12, Strategy=8, Valuation=5 ✓      │
+│   Backpressure Events: 0/hour ✓                             │
+│   Sync Drop Rate: 0.0% ✓                                    │
+├─────────────────────────────────────────────────────────────┤
+│ Regime Update (M5)                                           │
+│   Last Update: 4.2min ago ✓ (target <5min)                  │
+│   Update Duration p99: 4.8min ✓ (target <5min)              │
+│   Cache Timeouts: 0 today ✓                                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Alert History (Last 24h)**:
+
+| Time | Alert | Severity | Status | Resolution |
+|------|-------|----------|--------|------------|
+| 14:23 | Sync Queue Overflow (Financial Agent) | HIGH | RESOLVED | Paused 10 low-priority analyses, queue normalized |
+| 09:15 | Query Timeout Rate >5% | WARNING | RESOLVED | Database query plan optimized, timeout rate <2% |
+| 02:30 | Regime Staleness SLA Miss (p99=6.2min) | WARNING | ACKNOWLEDGED | Monitoring, no immediate action |
+
+### Integration with Existing Monitoring
+
+**Prometheus Metrics**:
+
+```yaml
+# Query performance (C5)
+memory_query_timeout_rate: gauge (0-1, alert >0.05)
+memory_query_fallback_depth: histogram (buckets: 0,1,2,exhausted)
+memory_query_response_time_ms: histogram (p99 target <500ms)
+
+# Sync queue health (A4)
+memory_sync_queue_depth: gauge per agent (alert >50)
+memory_sync_backpressure_active: gauge (0/1 boolean)
+memory_sync_dropped_total: counter by priority (alert >0 for critical)
+
+# Regime update (M5)
+memory_regime_update_duration_min: histogram (p99 target <5min)
+memory_regime_cache_timeouts_total: counter (alert >1/day)
+memory_regime_staleness_min: gauge (alert >5min)
+```
+
+**Grafana Dashboards**:
+
+- **Memory System Overview**: Query timeout rate, sync queue depth, regime update duration
+- **Failure Mode Alerts**: Alert history, resolution status, MTTR by alert type
+- **Agent Health**: Per-agent queue depth, backpressure events, sync drop rates
+
+**PagerDuty Integration**:
+
+- HIGH alerts: Immediate page to on-call engineer
+- WARNING alerts: Slack notification, email
+- Escalation: If HIGH alert unacknowledged for 15min, escalate to senior engineer
+
+### Operational Runbooks
+
+**Runbook: Query Timeout Rate >5%**:
+
+1. Check database CPU/memory utilization
+2. Review slow query logs (queries >500ms)
+3. Analyze query plans for inefficient scans
+4. Warm cache with preload queries
+5. If persists, scale database (vertical or horizontal)
+
+**Runbook: Sync Queue Overflow**:
+
+1. Identify receiving agent with overflow
+2. Check recent sync burst events (debates, human gates)
+3. Pause low-priority analyses via BatchManager
+4. Scale agent instances if persistent overflow
+5. Review sync priority assignment for optimization
+
+**Runbook: Regime Staleness >10min**:
+
+1. Check regime detection logs for errors
+2. Validate data source connectivity (FRED, CBOE APIs)
+3. Profile regime detection algorithm bottlenecks
+4. Trigger manual regime update
+5. Disable regime-specific credibility if unresolved
+
+See [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md) for complete failure mode design and implementation details.
+
+---
+
 ## Related Documentation
 
 ### Core Documentation

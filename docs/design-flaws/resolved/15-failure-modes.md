@@ -1,28 +1,70 @@
 ---
 flaw_id: 15
 title: Query & Sync Failure Modes
-status: active
+status: resolved
 priority: critical
 phase: 3
 effort_weeks: 4
 impact: System hangs from infinite recursion, memory overflow
-blocks: ["Memory reliability"]
-depends_on: ["DD-005 memory system", "DD-002 event-driven sync"]
-domain: ["memory"]
+blocks:
+- Memory reliability
+depends_on:
+- DD-005 memory system
+- DD-002 event-driven sync
+domain:
+- memory
 sub_issues:
-  - id: C5
-    severity: critical
-    title: Query timeout fallback infinite recursion risk
-  - id: A4
-    severity: high
-    title: Event-driven sync no backpressure mechanism
-  - id: M5
-    severity: medium
-    title: Regime detection/credibility recalc race condition
+- id: C5
+  severity: critical
+  title: Query timeout fallback infinite recursion risk
+- id: A4
+  severity: high
+  title: Event-driven sync no backpressure mechanism
+- id: M5
+  severity: medium
+  title: Regime detection/credibility recalc race condition
 discovered: 2025-11-17
+resolved: '2025-11-18'
+resolution: 'DD-018: Memory System Failure Resilience'
+---
+# Flaw #15: Query & Sync Failure Modes
+
+## Resolution Summary
+
+**Status**: RESOLVED ✅
+**Resolution**: DD-018 (see design decision document)
+**Reference**: [DD-018](../../design-decisions/DD-018_MEMORY_FAILURE_RESILIENCE.md)
+
+### How DD-018 Resolves This Flaw
+
+DD-018 (Memory System Failure Resilience) implements three comprehensive failure handling mechanisms that directly address all sub-issues:
+
+**C5: Query Timeout Recursion Protection**
+- Adds `QueryFallbackGuard` class with `MAX_FALLBACK_DEPTH=2` to prevent infinite loops
+- Implements timeout reduction strategy (500ms → 200ms → 100ms) for efficient fallback
+- Provides ultimate fallback (empty result + error flag + alert) to prevent system hangs
+- Guarantees <2s worst-case response time (500+200+100+100ms)
+- Zero infinite recursion achieved through strict depth tracking
+
+**A4: Event-Driven Sync Backpressure**
+- Adds `SyncBackpressureManager` class with queue limits (`MAX_QUEUE_DEPTH=50`, `CRITICAL_QUEUE_DEPTH=10`)
+- Implements exponential backoff for retry coordination (100ms → 200ms → 400ms → 800ms, max 5 retries)
+- Provides priority-based eviction (drops normal/high before critical) to preserve important syncs
+- Prevents memory overflow during high-volume sync bursts (e.g., debates generating 50 concurrent syncs)
+- Graceful degradation under load with automatic recovery
+
+**M5: Regime Detection Sequencing**
+- Adds `RegimeSequencer` class with hybrid parallelism approach
+- Parallel execution across multiple regimes for throughput
+- Serial execution within each regime (detection → cache update → credibility recalc) for correctness
+- Dependency flags (`regime_{id}_updated_today`) prevent stale data usage
+- Reduces staleness from 2+ hours to <5min (99th percentile)
+- Eliminates race conditions between regime detection and credibility calculations
+
+**Impact**: All three critical failure modes fully resolved, unblocks Phase 3 memory system deployment
+
 ---
 
-# Flaw #15: Query & Sync Failure Modes
 
 **Status**: 🔴 ACTIVE
 **Priority**: Critical
@@ -46,6 +88,7 @@ Memory system (DD-005, DD-002) lacks failure mode handling:
 **Problem**: Fallback strategies for timed-out queries may also timeout, causing recursion.
 
 **Current State**:
+
 ```yaml
 Fallback Strategies (when timeout exceeded):
   - Return approximate result (e.g., top-5 instead of top-10)
@@ -54,6 +97,7 @@ Fallback Strategies (when timeout exceeded):
 ```
 
 **Recursion Risk**:
+
 ```text
 Query times out (>500ms)
   → Fallback: Return cached result
@@ -74,6 +118,7 @@ MISSING: Max recursion depth, ultimate fallback
 **Problem**: Critical/high priority sync events push updates but no throttling if receiver overwhelmed.
 
 **Overflow Scenario**:
+
 ```text
 Debate generates 10 critical findings simultaneously
 Each triggers critical sync to 5 agents
@@ -93,12 +138,14 @@ MISSING: Backpressure signaling, queue depth limits, priority-based dropping
 ### Sub-Issue M5: Regime Detection Race Condition
 
 **Files**:
+
 - `docs/implementation/05-credibility-system.md:107-149`
 - `docs/learning/02-feedback-loops.md:296-309`
 
 **Problem**: Regime detection runs "daily" and credibility recalc "triggered daily" - no synchronization.
 
 **Race**:
+
 ```text
 00:00 - Regime detection starts
 01:00 - Credibility recalc triggered (uses yesterday's regime - stale)
