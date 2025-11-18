@@ -216,22 +216,22 @@ Following comprehensive documentation review, 11 new design flaws identified and
 
 ### Phase 2: Core Systems (Immediate - Months 3-4)
 
-### 🔴 Flaw #11: Missing Algorithm Specifications
+### ✅ Flaw #11: Missing Algorithm Specifications
 
 **Priority**: Critical
-**Status**: ACTIVE
+**Status**: RESOLVED (2025-11-17)
 **Rationale**: Blocks automation features implementation
 **Dependencies**: Debate protocol operational (Flaw #8)
-**Effort**: 5 weeks
-**Impact**: Debate override impact calculation, post-mortem prioritization, dependency resolution all undefined
+**Effort**: 5 weeks (design phase completed)
+**Impact**: Debate override impact calculation, post-mortem prioritization, dependency resolution all specified
 
-**Sub-Issues**:
+**Resolution**: All three algorithm specifications moved to main documentation:
 
-- C1: Downstream impact calculation missing (debate overrides)
-- M3: Post-mortem priority formula undefined
-- G5: Agent dependency resolution algorithm missing
+- ✅ C1: Downstream impact calculation → [collaboration-protocols.md](../architecture/07-collaboration-protocols.md#downstream-impact-calculation-algorithm)
+- ✅ M3: Post-mortem priority formula → [learning-systems.md](../learning/01-learning-systems.md#post-mortem-priority-algorithm-queue-management)
+- ✅ G5: Agent dependency resolution → [agents-coordination.md](../architecture/05-agents-coordination.md#dependency-resolution-and-parallel-scheduling)
 
-**Documentation**: [Flaw #11](./11-algorithm-specs.md)
+**Documentation**: [Flaw #11](./resolved/11-algorithm-specs.md) (historical reference)
 
 ### 🔴 Flaw #14: Statistical Reliability Issues
 
@@ -404,7 +404,7 @@ Foundation (Phase 1) ✅ COMPLETE
     │
     ├── Phase 2: Core Systems (CRITICAL - UNRESOLVED BLOCKERS)
     │   ├── Flaw #8 ✅ → Debate Deadlock Resolution
-    │   ├── Flaw #11 🔴 → Algorithm Specs (blocks #8 Level 4-5)
+    │   ├── Flaw #11 ✅ → Algorithm Specs (specs documented)
     │   ├── Flaw #14 🔴 → Statistical Reliability (blocks #8 auto-resolution)
     │   ├── Flaw #16 🔴 → Timeline Conflicts (restructure needed)
     │   └── Flaw #19 🔴 → Partial Failures (blocks multi-agent)
@@ -431,28 +431,28 @@ Foundation (Phase 1) ✅ COMPLETE
 
 ## Dependency Matrix (Updated 2025-11-17)
 
-| Flaw   | Depends On                        | Blocks                             | Phase |
-| ------ | --------------------------------- | ---------------------------------- | ----- |
-| #1 ✅  | -                                 | #3, #9                             | 1     |
-| #2 ✅  | -                                 | #7, #8                             | 1     |
-| #3 ✅  | #1                                | #9                                 | 3     |
-| #4 ✅  | Operational agents                | -                                  | 4     |
-| #5 ✅  | Pattern storage                   | -                                  | 4     |
-| #6 🟢  | Human gate data                   | -                                  | 5     |
-| #7 ✅  | #2, operational agents            | -                                  | 3     |
-| #8 ✅  | #2                                | ~~Core agent testing~~ (unblocked) | 2     |
-| #9 ✅  | #1, #3                            | -                                  | 4     |
-| #11 🔴 | #8 (debate protocol)              | Debate Level 4-5, post-mortem      | 2     |
-| #12 🔴 | DD-009, #9 (post-mortem)          | Post-mortem investigation          | 3     |
-| #13 🔴 | Gate 6, DD-007 (pattern val)      | Auto-approval deployment           | 3     |
-| #14 🔴 | Agent perf data, debate protocol  | Auto-resolution (#8)               | 2     |
-| #15 🔴 | Memory system (DD-005, DD-002)    | Memory reliability                 | 3     |
-| #16 🔴 | - (roadmap only)                  | Phase 2 implementation             | 2     |
-| #17 🔴 | DD-009, Neo4j                     | Production reliability             | 4     |
-| #18 🟢 | Human gate data, #6               | -                                  | 5     |
-| #19 🔴 | Multi-agent workflows             | Multi-agent reliability            | 2     |
-| #20 🔴 | Memory system (L1/L2/L3)          | Production security                | 3     |
-| #21 🔴 | Neo4j, DD-004 auto-approval       | Scale to 1000+ stocks              | 4     |
+| Flaw   | Depends On                       | Blocks                             | Phase |
+| ------ | -------------------------------- | ---------------------------------- | ----- |
+| #1 ✅  | -                                | #3, #9                             | 1     |
+| #2 ✅  | -                                | #7, #8                             | 1     |
+| #3 ✅  | #1                               | #9                                 | 3     |
+| #4 ✅  | Operational agents               | -                                  | 4     |
+| #5 ✅  | Pattern storage                  | -                                  | 4     |
+| #6 🟢  | Human gate data                  | -                                  | 5     |
+| #7 ✅  | #2, operational agents           | -                                  | 3     |
+| #8 ✅  | #2                               | ~~Core agent testing~~ (unblocked) | 2     |
+| #9 ✅  | #1, #3                           | -                                  | 4     |
+| #11 ✅ | #8 (debate protocol)             | ~~Implementation pending~~         | 2     |
+| #12 🔴 | DD-009, #9 (post-mortem)         | Post-mortem investigation          | 3     |
+| #13 🔴 | Gate 6, DD-007 (pattern val)     | Auto-approval deployment           | 3     |
+| #14 🔴 | Agent perf data, debate protocol | Auto-resolution (#8)               | 2     |
+| #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                 | 3     |
+| #16 🔴 | - (roadmap only)                 | Phase 2 implementation             | 2     |
+| #17 🔴 | DD-009, Neo4j                    | Production reliability             | 4     |
+| #18 🟢 | Human gate data, #6              | -                                  | 5     |
+| #19 🔴 | Multi-agent workflows            | Multi-agent reliability            | 2     |
+| #20 🔴 | Memory system (L1/L2/L3)         | Production security                | 3     |
+| #21 🔴 | Neo4j, DD-004 auto-approval      | Scale to 1000+ stocks              | 4     |
 
 ## Risk Assessment (Updated 2025-11-17)
 
@@ -460,8 +460,7 @@ Foundation (Phase 1) ✅ COMPLETE
 
 1. **Flaw #21** (Scalability Bottlenecks) - blocks 1000+ stock target, need 18 FTE without fix
 2. **Flaw #16** (Timeline Conflicts) - blocks Phase 2 implementation START
-3. **Flaw #11** (Algorithm Specs) - debate override automation blocked
-4. **Flaw #13** (Validation Gaps) - auto-approval accuracy unvalidated
+3. **Flaw #13** (Validation Gaps) - auto-approval accuracy unvalidated
 
 ### High Risk (Should Fix Before MVP)
 
@@ -504,10 +503,10 @@ Foundation (Phase 1) ✅ COMPLETE
 - [x] ~~Design escalation timeout mechanisms~~ ✅ COMPLETE
 - [x] ~~Identify proxy decision-makers~~ ✅ COMPLETE (conservative defaults)
 - [x] ~~Draft automated fallback protocols~~ ✅ COMPLETE
-- [ ] **Flaw #11: Implement algorithm specs** (5 weeks)
-  - [ ] Downstream impact calculation
-  - [ ] Post-mortem priority formula
-  - [ ] Dependency resolution algorithm
+- [x] ~~**Flaw #11: Document algorithm specs**~~ ✅ COMPLETE (5 weeks design)
+  - [x] ~~Downstream impact calculation~~ → collaboration-protocols.md
+  - [x] ~~Post-mortem priority formula~~ → learning-systems.md
+  - [x] ~~Dependency resolution algorithm~~ → agents-coordination.md
 - [ ] **Flaw #19: Partial failure handling** (4 weeks)
   - [ ] Agent quorum requirements
   - [ ] RabbitMQ message queue setup
@@ -564,27 +563,27 @@ Foundation (Phase 1) ✅ COMPLETE
 **Total Flaws Identified**: 21 + Minor Issues
 **Status Breakdown**:
 
-- ✅ Resolved: 9 (Flaws #1-5, #7-9 + Flaw #10 Gate params)
-- 🔴 Active: 11 (Flaws #11-17, #19-21)
+- ✅ Resolved: 10 (Flaws #1-5, #7-9, #11 + Flaw #10 Gate params)
+- 🔴 Active: 10 (Flaws #12-17, #19-21)
 - 🟢 Deferred: 2 (Flaws #6, #18)
 - 🟡 Low Priority: Minor Issues
 
 **By Priority**:
 
-- Critical: 4 (#11, #13, #15-C5, #21)
+- Critical: 3 (#13, #15-C5, #21)
 - High: 5 (#12-C2, #14, #16, #17, #19)
 - Medium: 3 (#12-A3, #15-A4/M5, #18, #20)
 - Low: Minor Issues
 
 **Implementation Effort**:
 
-- Phase 2 (Immediate): 2 + 5 + 4 + 4 = 15 weeks
+- Phase 2 (Immediate): 2 + 4 + 4 = 10 weeks (Flaw #11 design complete)
 - Phase 3: 7 + 6 + 4 + 4 = 21 weeks
 - Phase 4: 8 + 4 = 12 weeks
 - Phase 5: 3 weeks
-- **Total**: ~51 weeks additional (on top of original roadmap)
+- **Total**: ~46 weeks additional (on top of original roadmap)
 
-**Key Finding**: Phase 2 has 4 active blockers requiring ~15 weeks resolution before core implementation can proceed
+**Key Finding**: Phase 2 has 3 active blockers requiring ~10 weeks resolution before core implementation can proceed
 
 ---
 

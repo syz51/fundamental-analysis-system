@@ -199,6 +199,184 @@ The debate protocol uses a tiered escalation approach with timeouts and fallback
 - Re-run affected calculations if needed
 - Update confidence scores if cascading changes occur
 
+### Downstream Impact Calculation Algorithm
+
+When humans override provisional debate resolutions, the system must calculate downstream impact and re-run affected analyses. This algorithm specifies how to identify dependencies, estimate impact magnitude, and determine re-run requirements.
+
+#### Algorithm Components
+
+**1. Dependency Graph Construction**
+
+```python
+class DependencyGraph:
+    """Track analysis dependencies for impact calculation"""
+
+    def __init__(self):
+        self.graph = {}  # {node_id: [dependent_node_ids]}
+        self.assumptions = {}  # {node_id: {assumption_key: value}}
+
+    def add_dependency(self, parent_id, child_id, assumption_used):
+        """Record that child depends on parent's assumption"""
+        if parent_id not in self.graph:
+            self.graph[parent_id] = []
+        self.graph[parent_id].append({
+            'child': child_id,
+            'assumption': assumption_used
+        })
+
+    def find_affected_nodes(self, changed_assumption):
+        """Find all analyses using this assumption"""
+        affected = []
+        for node_id, deps in self.graph.items():
+            for dep in deps:
+                if dep['assumption'] == changed_assumption:
+                    affected.append(dep['child'])
+                    # Recursively find downstream
+                    affected.extend(
+                        self.find_affected_nodes(dep['child'])
+                    )
+        return list(set(affected))  # Deduplicate
+```
+
+**2. Impact Magnitude Calculation**
+
+```python
+class ImpactCalculator:
+    """Calculate downstream impact of assumption changes"""
+
+    IMPACT_THRESHOLDS = {
+        'target_price': 0.10,  # >10% change requires re-run
+        'confidence_score': 0.15,  # >0.15 change requires re-run
+        'rating': 1,  # Any rating change requires re-run
+        'risk_score': 0.10,  # >0.10 change requires re-run
+    }
+
+    def calculate_impact(self,
+                         old_assumption,
+                         new_assumption,
+                         affected_analyses):
+        """Calculate impact of assumption change"""
+
+        impacts = []
+        for analysis_id in affected_analyses:
+            # Get analysis type
+            analysis = self.get_analysis(analysis_id)
+
+            # Calculate impact based on type
+            if analysis.type == 'valuation':
+                impact = self._valuation_impact(
+                    analysis, old_assumption, new_assumption
+                )
+            elif analysis.type == 'risk_assessment':
+                impact = self._risk_impact(
+                    analysis, old_assumption, new_assumption
+                )
+
+            impacts.append({
+                'analysis_id': analysis_id,
+                'type': analysis.type,
+                'old_value': analysis.current_result,
+                'estimated_new_value': impact.estimated_result,
+                'delta': impact.delta,
+                'requires_rerun': impact.delta > self.IMPACT_THRESHOLDS.get(
+                    analysis.output_metric, 0.10
+                )
+            })
+
+        return ImpactReport(
+            changed_assumption=new_assumption,
+            affected_count=len(impacts),
+            impacts=impacts,
+            total_rerun_time=self._estimate_rerun_time(impacts),
+            high_impact_count=sum(1 for i in impacts if i['requires_rerun'])
+        )
+
+    def _valuation_impact(self, analysis, old_val, new_val):
+        """Estimate valuation impact (linear approximation)"""
+        # For margin changes, use DCF sensitivity
+        if old_val.metric == 'operating_margin':
+            # Typical sensitivity: 1% margin → 8-12% price change
+            margin_delta = new_val.value - old_val.value
+            price_delta_pct = margin_delta * 10  # 10x multiplier
+
+            return ImpactEstimate(
+                estimated_result=analysis.result * (1 + price_delta_pct/100),
+                delta=abs(price_delta_pct/100),
+                confidence=0.70  # Linear approximation has limitations
+            )
+```
+
+**3. Re-Run Strategy Determination**
+
+```python
+class RerunScheduler:
+    """Decide what to re-run and when"""
+
+    def plan_reruns(self, impact_report):
+        """Create re-run plan based on impact"""
+
+        # Separate required vs optional
+        required = [i for i in impact_report.impacts if i['requires_rerun']]
+        optional = [i for i in impact_report.impacts if not i['requires_rerun']]
+
+        # Prioritize by impact magnitude
+        required.sort(key=lambda x: x['delta'], reverse=True)
+
+        # Build re-run plan
+        plan = RerunPlan(
+            required_reruns=required,
+            optional_updates=optional,
+            execution_strategy=self._determine_strategy(required),
+            estimated_time=impact_report.total_rerun_time,
+            blocking=len(required) > 0
+        )
+
+        return plan
+
+    def _determine_strategy(self, required_reruns):
+        """Choose serial vs parallel execution"""
+        if len(required_reruns) <= 2:
+            return 'serial'  # Fast enough sequentially
+        elif self._can_parallelize(required_reruns):
+            return 'parallel'  # Use multiple workers
+        else:
+            return 'serial'  # Dependencies prevent parallelization
+```
+
+#### Usage Example
+
+```text
+Debate: Financial Analyst vs Strategy Analyst on margin assumptions
+  Financial: "25% operating margin" (conservative)
+  Strategy: "30% operating margin" (optimistic)
+
+Provisional Resolution: 25% (conservative default)
+Pipeline continues with 25% → DCF model → Target price $85
+
+Human Override: "Use 28% based on management guidance"
+
+Downstream Impact Calculation:
+  1. Identify dependencies: Which analyses used 25% assumption?
+     - DCF valuation model
+     - Sensitivity analysis
+     - Risk assessment scoring
+     - Peer comparison context
+
+  2. Calculate impact magnitude:
+     - DCF: +12% target price ($85 → $95)
+     - Sensitivity: New base case scenario
+     - Risk: Confidence score +0.05
+
+  3. Determine re-run necessity:
+     - Target price delta >10% → Re-run REQUIRED
+     - Risk score delta <0.10 → Update only (no re-run)
+
+  4. Estimate time to re-run:
+     - DCF: 5 min (single model recalculation)
+     - Sensitivity: 10 min (6 scenarios)
+     - Total: 15 min
+```
+
 ### Escalation Timeouts Summary
 
 | Level             | Timeout                     | Action if Exceeded                 |

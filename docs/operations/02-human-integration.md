@@ -264,6 +264,9 @@ If Override Selected:
     - Risk assessment: Confidence score will adjust
     - Recommendation: May shift from Hold to Buy
 
+  Note: See full algorithm specification in
+  [Downstream Impact Calculation](../architecture/07-collaboration-protocols.md#downstream-impact-calculation-algorithm)
+
   Confirm Override? [Yes] [No]
 ```
 

@@ -106,16 +106,16 @@ graph TB
 
 The system ensures debates never block pipeline progress:
 
-**Path A: Direct Resolution (No Human Needed)**
+**_Path A: Direct Resolution (No Human Needed)_**
 
 - Agent consensus reached → Continue immediately
 - Credibility gap >0.25 → Facilitator auto-resolves → Continue immediately
 
-**Path B: Human Resolution (Standard)**
+**_Path B: Human Resolution (Standard)_**
 
 - Human arbitrates within 6 hours → Binding resolution → Continue
 
-**Path C: Provisional Resolution (Fallback)**
+**_Path C: Provisional Resolution (Fallback)_**
 
 - Human timeout after 6 hours → Conservative default applied → **Pipeline continues**
 - Resolution marked "provisional - awaiting review"

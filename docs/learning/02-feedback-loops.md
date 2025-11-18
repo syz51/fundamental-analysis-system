@@ -108,16 +108,19 @@ weight = 0.5^(age_years / decay_halflife_years)
 ```
 
 **Default Parameters**:
+
 - **Half-life**: 2 years (recent performance 2x weight of 2-year-old data)
 - **Configurable per agent type**: Faster decay for volatile domains (6 months for News Monitor), slower for stable domains (3 years for Financial Analyst)
 
 **Example**:
+
 - 3-month-old prediction: weight = 0.93 (93% of max weight)
 - 1-year-old prediction: weight = 0.71 (71% of max weight)
 - 2-year-old prediction: weight = 0.50 (50% of max weight)
 - 4-year-old prediction: weight = 0.25 (25% of max weight)
 
 Benefits over fixed time buckets:
+
 - Smooth continuous decay (no artificial cliff effects at bucket boundaries)
 - Mathematically principled (half-life has clear interpretation)
 - Tunable per agent based on domain stability
@@ -136,6 +139,7 @@ Agent credibility tracked separately for different market regimes to capture env
 6. **NORMAL**: Default classification when no other regime applies
 
 **Regime Detection Logic**:
+
 - Daily market data monitoring
 - Trailing 12-month performance assessment
 - Current interest rate levels (FRED API)
@@ -155,6 +159,7 @@ final_credibility = regime_accuracy * 0.30 + overall_accuracy * 0.70
 ```
 
 **Example**:
+
 - Financial Analyst: 92% accuracy in BULL_LOW_RATES (2019-2021), 68% accuracy in BEAR_HIGH_RATES (2022-2023)
 - If analyzing in 2025 BEAR_HIGH_RATES environment → credibility weighted toward 68%, not 80% overall average
 - Prevents overestimation of capability based on stale favorable regime performance
@@ -164,6 +169,7 @@ final_credibility = regime_accuracy * 0.30 + overall_accuracy * 0.70
 Linear regression on rolling accuracy identifies improving/degrading agents:
 
 **Trend Calculation**:
+
 ```python
 # Last 12 months of weekly accuracy measurements (52 data points)
 slope, intercept, r_value = linear_regression(timestamps, accuracy_scores)
@@ -175,6 +181,7 @@ trend_direction = "improving" if slope > 0 else "degrading"
 **Trend Adjustment**:
 
 If trend is statistically significant (R² > 0.3):
+
 ```python
 # Extrapolate 6 months forward
 extrapolated_accuracy = current_accuracy + (slope * 0.5_years)
@@ -184,14 +191,16 @@ adjusted_credibility = current_accuracy * 0.70 + extrapolated_accuracy * 0.30
 ```
 
 **Example**:
+
 - Strategy Analyst improving from 65% (Jan 2024) to 89% (Dec 2024)
 - Slope = +24% per year, R² = 0.81 (strong trend)
-- Extrapolated 6mo = 89% + (24% * 0.5) = 101% → capped at 95%
-- Adjusted credibility = 0.70 * 89% + 0.30 * 95% = 90.8%
+- Extrapolated 6mo = 89% + (24% \* 0.5) = 101% → capped at 95%
+- Adjusted credibility = 0.70 _89% + 0.30_ 95% = 90.8%
 
 Without trend detection, would use 79% average (underestimates current capability by 11.8%).
 
 **Trend Monitoring**:
+
 - Flagged for review if trend_strength > 0.5
 - Improving agents: Expand responsibilities
 - Degrading agents: Investigate root cause, potential model drift
@@ -207,6 +216,7 @@ override_rate = human_overrides / total_recommendations
 ```
 
 Tracked dimensions:
+
 - **Overall override rate** (across all contexts)
 - **Context-specific override rate** (by sector, metric, regime)
 - **Override outcome accuracy** (was human right to override?)
@@ -230,13 +240,15 @@ else:
 ```
 
 **Example**:
+
 - Valuation Agent: 78% base accuracy, but 45% of recommendations overridden by humans
 - Override outcome: 82% of human overrides proved correct
 - Interpretation: Agent has systematic blind spot (humans add value in 45% of cases)
-- Adjusted credibility: 78% * 0.70 = 54.6%
+- Adjusted credibility: 78% \* 0.70 = 54.6%
 - Triggers investigation: Why are humans overriding so frequently?
 
 **Root Cause Analysis Triggers**:
+
 - Override rate >30% for 3 consecutive months
 - Overrides clustered in specific context (e.g., 60% override rate in tech sector)
 - Human override accuracy >75% (humans consistently adding value)
@@ -284,17 +296,19 @@ credibility = (
 ```
 
 **Example**:
+
 - Current analysis: Tech sector, Revenue growth, 3-year horizon, NORMAL regime, Large-cap, Growth stage
 - Agent history: 120 predictions in Tech sector, 80 with Revenue focus, 45 at 3Y horizon
 - Context match: 5/6 dimensions (sector, metric, horizon, size, stage)
 - Context-specific accuracy: 86% vs. 78% overall
-- Credibility = (0.86 * 0.70 + 0.78 * 0.30) * temporal_weight = 83.6%
+- Credibility = (0.86 _0.70 + 0.78_ 0.30) \* temporal_weight = 83.6%
 
 Without context matching, would use 78% overall accuracy (undervalues domain expertise by 5.6%).
 
 #### Credibility Recalculation Schedule
 
 **Triggers**:
+
 - **Immediate** (within 1 hour): Major errors, human override, challenge lost in debate
 - **Daily**: Regime detection, new outcomes recorded
 - **Weekly**: Trend analysis updated (52-week rolling regression)
@@ -302,6 +316,7 @@ Without context matching, would use 78% overall accuracy (undervalues domain exp
 - **Quarterly**: Override rate analysis, blind spot investigation
 
 **Computation Optimization**:
+
 - Incremental updates (don't recalculate from scratch)
 - Cached context-specific scores (invalidate on new data only)
 - Batch processing for non-urgent recalculations

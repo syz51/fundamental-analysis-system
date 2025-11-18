@@ -153,6 +153,131 @@ Classification:
 
 Complete specification: [DD-006: Negative Feedback System](../../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)
 
+### Post-Mortem Priority Algorithm (Queue Management)
+
+When multiple post-mortems are triggered simultaneously, the system uses a weighted priority formula to determine investigation order. This ensures the most impactful failures are analyzed first while balancing percentage deviation, absolute financial loss, portfolio impact, and systemic risk factors.
+
+#### Priority Calculation Formula
+
+```python
+class PostMortemPriority:
+    """Calculate priority for post-mortem queue"""
+
+    WEIGHTS = {
+        'deviation_pct': 0.25,      # Prediction accuracy miss
+        'absolute_loss': 0.35,      # Dollar impact (highest weight)
+        'portfolio_impact': 0.30,   # % of total portfolio
+        'systemic_risk': 0.10       # Sector/pattern failure indicator
+    }
+
+    def calculate_priority(self, outcome):
+        """Compute priority score (0-100)"""
+
+        # Normalize each factor to 0-100
+        factors = {
+            'deviation_pct': self._normalize_deviation(
+                outcome.deviation_pct
+            ),
+            'absolute_loss': self._normalize_loss(
+                outcome.absolute_loss
+            ),
+            'portfolio_impact': self._normalize_portfolio(
+                outcome.portfolio_pct
+            ),
+            'systemic_risk': self._assess_systemic(
+                outcome
+            )
+        }
+
+        # Weighted sum
+        priority = sum(
+            factors[key] * self.WEIGHTS[key] * 100
+            for key in factors
+        )
+
+        return PostMortemQueueEntry(
+            stock_id=outcome.stock_id,
+            priority=priority,
+            factors=factors,
+            queued_at=datetime.now()
+        )
+
+    def _normalize_deviation(self, deviation_pct):
+        """Sigmoid normalization for deviation %"""
+        # 50% deviation → 0.50, 100% → 0.75, 300% → 0.95
+        return 1 / (1 + math.exp(-0.02 * (deviation_pct - 50)))
+
+    def _normalize_loss(self, absolute_loss):
+        """Log scale for absolute loss"""
+        # $1K → 0.30, $10K → 0.60, $100K → 0.90
+        if absolute_loss <= 0:
+            return 0
+        return min(math.log10(absolute_loss / 1000) / 3, 1.0)
+
+    def _normalize_portfolio(self, portfolio_pct):
+        """Linear normalization for portfolio impact"""
+        # 1% → 0.20, 5% → 1.0 (capped)
+        return min(portfolio_pct / 5.0, 1.0)
+
+    def _assess_systemic(self, outcome):
+        """Check if failure indicates systemic issue"""
+        # High if multiple stocks in same sector failed
+        sector_failures = self.count_sector_failures(
+            outcome.sector,
+            lookback_days=90
+        )
+        return min(sector_failures / 5, 1.0)  # Max at 5 failures
+```
+
+#### Priority Calculation Example
+
+```text
+Queue at Year-End Checkpoint:
+
+Stock A (MSFT):
+  Predicted: +20% return, Actual: -50%
+  Deviation: |(-50 - 20)|/20 = 350%
+  Investment: $100K position → Lost $50K
+  Portfolio: 5% of total
+
+  Factors:
+    - deviation_pct: 0.95 (very high)
+    - absolute_loss: 0.85 ($50K significant)
+    - portfolio_impact: 1.0 (5% is high)
+    - systemic_risk: 0.20 (tech sector has 1 other failure)
+
+  Priority = 0.95*25 + 0.85*35 + 1.0*30 + 0.20*10
+           = 23.75 + 29.75 + 30 + 2
+           = 85.5 (HIGH PRIORITY)
+
+Stock B (Small cap):
+  Predicted: +5% return, Actual: -30%
+  Deviation: |(-30 - 5)|/5 = 700%
+  Investment: $10K position → Lost $3K
+  Portfolio: 0.5% of total
+
+  Factors:
+    - deviation_pct: 0.98 (extremely high)
+    - absolute_loss: 0.48 ($3K moderate)
+    - portfolio_impact: 0.10 (0.5% is small)
+    - systemic_risk: 0.0 (no other failures in sector)
+
+  Priority = 0.98*25 + 0.48*35 + 0.10*30 + 0.0*10
+           = 24.5 + 16.8 + 3 + 0
+           = 44.3 (MEDIUM PRIORITY)
+
+Result: Stock A investigated first despite lower % deviation
+        (absolute loss and portfolio impact dominate)
+```
+
+#### Queue Management Rules
+
+- **Max concurrent**: 5 post-mortems (per DD-006)
+- **Overflow handling**: Queue additional by priority, process when slots free
+- **Re-prioritization**: Daily recalculation as new failures added
+- **Timeout**: 48 hours for human response (per DD-006)
+- **Systemic escalation**: If systemic_risk factor >0.60, flag for immediate review
+
 ## Pattern Discovery and Validation
 
 The system continuously mines historical data to identify recurring patterns while preventing confirmation bias through rigorous statistical validation.

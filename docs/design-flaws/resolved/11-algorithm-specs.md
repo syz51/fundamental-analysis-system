@@ -1,9 +1,16 @@
 # Flaw #11: Missing Algorithm Specifications
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED
 **Priority**: Critical
 **Impact**: Blocks implementation of key automation features
 **Phase**: Phase 2 (Months 3-4)
+**Resolution**: All three algorithm specifications have been moved to main documentation. Pseudocode preserved in this document as historical reference. Implementation pending Phase 2.
+
+**Algorithm Locations**:
+
+- **C1 (Downstream Impact)**: [docs/architecture/07-collaboration-protocols.md](../architecture/07-collaboration-protocols.md#downstream-impact-calculation-algorithm)
+- **M3 (Post-Mortem Priority)**: [docs/learning/01-learning-systems.md](../learning/01-learning-systems.md#post-mortem-priority-algorithm-queue-management)
+- **G5 (Dependency Resolution)**: [docs/architecture/05-agents-coordination.md](../architecture/05-agents-coordination.md#dependency-resolution-and-parallel-scheduling)
 
 ---
 
@@ -11,29 +18,32 @@
 
 Three critical algorithms described in design docs but lack complete specifications, preventing implementation:
 
-1. **Downstream Impact Calculation** (debate overrides)
-2. **Post-Mortem Priority Formula** (failure analysis queue)
-3. **Agent Dependency Resolution** (parallel execution scheduling)
+1. **Downstream Impact Calculation** (debate overrides) - ✅ RESOLVED
+2. **Post-Mortem Priority Formula** (failure analysis queue) - ✅ RESOLVED
+3. **Agent Dependency Resolution** (parallel execution scheduling) - ✅ RESOLVED
 
 ### Sub-Issue C1: Downstream Impact Calculation Missing
 
 **Files**:
+
 - `docs/operations/02-human-integration.md:266-269`
 - `docs/operations/01-analysis-pipeline.md:147-150`
 
 **Problem**: When humans override provisional debate resolutions, system should calculate "downstream impact" and re-run affected analyses. No algorithm specified.
 
 **Current State**:
+
 ```yaml
 # human-integration.md L266-269
 If Override Selected:
   Downstream Impact Analysis:
     - Valuation model: Re-run required (5min)
-    - Target price: Will increase ~$12-15  # HOW CALCULATED?
-    - Risk assessment: Confidence score will adjust  # WHAT FORMULA?
+    - Target price: Will increase ~$12-15 # HOW CALCULATED?
+    - Risk assessment: Confidence score will adjust # WHAT FORMULA?
 ```
 
 **Missing Specifications**:
+
 - Dependency graph construction algorithm
 - Impact propagation calculation methodology
 - Threshold for "required" vs "optional" re-run
@@ -41,6 +51,7 @@ If Override Selected:
 - Price impact calculation formula
 
 **Example Scenario**:
+
 ```text
 Debate: Financial Analyst vs Strategy Analyst on margin assumptions
   Financial: "25% operating margin" (conservative)
@@ -76,12 +87,14 @@ Downstream Impact Calculation NEEDED:
 ### Sub-Issue M3: Post-Mortem Priority Formula Undefined
 
 **Files**:
+
 - `docs/learning/01-learning-systems.md:87-115`
 - `design-decisions/DD-006`
 
 **Problem**: Post-mortems "prioritized by deviation severity" but no formula for calculating priority when multiple post-mortems queued.
 
 **Current State**:
+
 ```yaml
 # DD-006: "max 5 concurrent, prioritized by deviation severity"
 # learning-systems.md L84-86
@@ -91,6 +104,7 @@ Trigger: abs(actual - predicted) / predicted > 0.30
 **Missing Specification**: Priority calculation when multiple triggered
 
 **Example Ambiguity**:
+
 ```text
 Queue at Year-End Checkpoint:
 
@@ -111,6 +125,7 @@ Which has priority?
 ```
 
 **Needed**: Priority formula considering:
+
 - Percentage deviation
 - Absolute financial impact
 - Portfolio weight
@@ -125,6 +140,7 @@ Which has priority?
 **Current State**: Pipeline diagram shows dependencies but no scheduling logic
 
 **Missing Specifications**:
+
 - Dependency graph construction
 - Critical path calculation
 - Parallel execution optimizer
@@ -132,6 +148,7 @@ Which has priority?
 - Deadlock detection
 
 **Example Scenario**:
+
 ```text
 Analysis A (AAPL):
   Screening ─→ Business ──┐
@@ -169,13 +186,14 @@ MISSING: Algorithm to compute this schedule automatically
 
 ## Impact Assessment
 
-| Sub-Issue | Severity | Blocks                           | Workaround   |
-| --------- | -------- | -------------------------------- | ------------ |
-| C1        | CRITICAL | Debate override automation       | Manual calc  |
-| M3        | MEDIUM   | Post-mortem queue optimization   | FIFO queue   |
-| G5        | MEDIUM   | Parallel execution optimization  | Serial runs  |
+| Sub-Issue | Severity | Blocks                          | Workaround  |
+| --------- | -------- | ------------------------------- | ----------- |
+| C1        | CRITICAL | Debate override automation      | Manual calc |
+| M3        | MEDIUM   | Post-mortem queue optimization  | FIFO queue  |
+| G5        | MEDIUM   | Parallel execution optimization | Serial runs |
 
 **Aggregate Impact**:
+
 - C1 blocks Phase 2 debate resolution Level 4-5 implementation
 - Manual workarounds defeat automation purpose
 - Suboptimal performance (serial vs parallel execution)
@@ -516,18 +534,21 @@ class DependencyResolver:
 ## Success Criteria
 
 ### C1: Downstream Impact
+
 - ✅ Correctly identifies all dependent analyses
 - ✅ Impact estimation within 20% of actual (validated over 50 overrides)
 - ✅ Re-run strategy completes within estimated time ±25%
 - ✅ Zero missed dependencies (100% recall)
 
 ### M3: Post-Mortem Priority
+
 - ✅ Highest absolute losses prioritized consistently
 - ✅ Systemic failures identified (sector clustering detected)
 - ✅ Queue processing order aligns with human judgment in >80% cases
 - ✅ All post-mortems completed within SLA
 
 ### G5: Dependency Resolution
+
 - ✅ Parallel execution achieves >2x speedup vs serial (5+ analyses)
 - ✅ No deadlocks (100% successful completions)
 - ✅ Critical path identified correctly (validated manually)

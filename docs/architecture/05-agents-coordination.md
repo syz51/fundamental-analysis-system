@@ -56,6 +56,162 @@ Orchestrate overall workflow
 - Manage information flow
 - Ensure critical findings propagate
 
+### Dependency Resolution and Parallel Scheduling
+
+The Lead Coordinator uses a sophisticated dependency resolution algorithm to optimize parallel agent execution while respecting resource constraints and dependencies. This enables efficient processing of multiple stock analyses simultaneously without deadlocks or resource contention.
+
+#### Algorithm Overview
+
+The scheduler performs four key operations:
+
+1. **Dependency graph construction** - Build DAG of analysis task dependencies
+2. **Critical path calculation** - Identify longest execution path
+3. **Topological sorting** - Determine valid execution order
+4. **Capacity-aware scheduling** - Assign tasks to time slots respecting agent capacity limits
+
+#### Implementation Specification
+
+```python
+class DependencyResolver:
+    """Schedule parallel agent execution with dependencies"""
+
+    def __init__(self):
+        self.dependency_graph = nx.DiGraph()  # NetworkX directed graph
+        self.agent_capacity = {
+            'screening': 5,      # Can handle 5 concurrent stocks
+            'business': 3,       # Can handle 3 concurrent analyses
+            'financial': 2,      # Can handle 2 concurrent analyses
+            'strategy': 3,       # Can handle 3 concurrent analyses
+            'valuation': 1       # Bottleneck - 1 at a time
+        }
+
+    def build_schedule(self, analyses):
+        """Create optimal execution schedule"""
+
+        # Build dependency graph for all analyses
+        for analysis in analyses:
+            self._add_analysis_deps(analysis)
+
+        # Find critical path (longest path in DAG)
+        critical_path = self._find_critical_path()
+
+        # Topological sort for execution order
+        execution_order = list(nx.topological_sort(self.dependency_graph))
+
+        # Schedule tasks respecting dependencies and capacity
+        schedule = self._schedule_with_capacity(
+            execution_order,
+            critical_path
+        )
+
+        return ExecutionSchedule(
+            tasks=schedule,
+            critical_path=critical_path,
+            estimated_completion=self._estimate_completion(schedule),
+            parallelism_factor=self._calc_parallelism(schedule)
+        )
+
+    def _find_critical_path(self):
+        """Find longest path (critical path) in DAG"""
+        # Use dynamic programming to find critical path
+        return nx.dag_longest_path(
+            self.dependency_graph,
+            weight='duration'
+        )
+
+    def _schedule_with_capacity(self, tasks, critical_path):
+        """Assign tasks to time slots respecting capacity"""
+        schedule = []
+        time = 0
+        active_tasks = defaultdict(int)  # {agent_type: count}
+
+        while tasks:
+            # Find tasks ready to execute (dependencies met)
+            ready = [t for t in tasks if self._deps_met(t, schedule)]
+
+            # Prioritize critical path tasks
+            ready.sort(
+                key=lambda t: t in critical_path,
+                reverse=True
+            )
+
+            # Assign tasks up to capacity
+            for task in ready:
+                agent = task.agent_type
+                if active_tasks[agent] < self.agent_capacity[agent]:
+                    schedule.append(TaskExecution(
+                        task=task,
+                        start_time=time,
+                        agent=agent
+                    ))
+                    active_tasks[agent] += 1
+                    tasks.remove(task)
+
+            # Advance time to next completion
+            time = self._next_completion_time(schedule, time)
+            active_tasks = self._update_active(schedule, time)
+
+        return schedule
+
+    def _deps_met(self, task, schedule):
+        """Check if task dependencies are satisfied"""
+        completed = {t.task.id for t in schedule if t.is_complete()}
+        return all(dep in completed for dep in task.dependencies)
+```
+
+#### Scheduling Example
+
+```text
+Scenario: Two stocks (AAPL, MSFT) analyzed in parallel
+
+Analysis Dependencies (per stock):
+  Screening ──→ Business ──┐
+           └──→ Financial ─┼──→ Valuation ──→ Report
+                └──→ Strategy ┘
+
+Agent Capacity Constraints:
+  - Financial Analyst: 2 concurrent (can handle both stocks)
+  - Valuation Agent: 1 concurrent (bottleneck - sequential only)
+
+Optimal Schedule:
+
+  T0-T2: AAPL Screening + MSFT Screening (parallel)
+  T2-T4: AAPL Business + MSFT Business (parallel, no resource conflict)
+  T4-T6: AAPL Financial + MSFT Financial (parallel, within capacity=2)
+         AAPL Strategy + MSFT Strategy (parallel, within capacity=3)
+  T6-T7: AAPL Valuation (sequential - MSFT must wait)
+  T7-T8: MSFT Valuation (after AAPL completes)
+  T8-T9: AAPL Report + MSFT Report (parallel)
+
+Critical Path: Screening → Business → Financial → Valuation → Report
+Total Time: 9 time units (vs 18 if purely sequential)
+Parallelism Factor: 2.0x speedup
+
+Bottleneck Analysis:
+  - Valuation agent is bottleneck (capacity=1)
+  - Other agents underutilized during valuation phase
+  - Scaling valuation capacity to 2 would improve throughput
+```
+
+#### Deadlock Prevention
+
+The algorithm prevents deadlocks through:
+
+1. **DAG constraint** - Circular dependencies rejected during graph construction
+2. **Topological ordering** - Ensures valid execution sequence exists
+3. **Progress guarantee** - At least one task always schedulable if resources available
+4. **Timeout detection** - Tasks exceeding expected duration flagged for intervention
+
+#### Performance Optimization
+
+**Critical Path Prioritization**: Tasks on critical path scheduled first when multiple ready
+
+**Resource Balancing**: Agents with higher capacity allocated more work upfront
+
+**Look-ahead Scheduling**: Consider next 3 time slots when assigning tasks to prevent local optima
+
+**Dynamic Re-scheduling**: If agent becomes unavailable, re-run scheduler for remaining tasks
+
 **Human Gate Preparation**:
 
 - Package information for human review
