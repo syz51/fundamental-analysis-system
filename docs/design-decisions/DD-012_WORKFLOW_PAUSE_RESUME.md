@@ -507,6 +507,8 @@ Resume:
 - On resume: Rehydrate L1 from checkpoint if expired
 - On expire: L1 purged, resume from L2/L3 only
 
+**L1 Persistence**: TTL extension (24h→14d) is part of broader L1 durability system including snapshot/restore and consistency verification. See [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) for complete L1 memory durability design.
+
 **L2 Cache (30d, unaffected)**:
 
 - Continues normal 30d retention during pause
@@ -624,7 +626,8 @@ If pause/resume system has critical bugs:
 - [Flaw #23: Workflow Pause/Resume Infrastructure](../design-flaws/resolved/23-workflow-pause-resume.md) - resolved by DD-012
 - [Flaw #19: Partial Failures](../design-flaws/active/19-partial-failures.md) - enabled by pause/resume
 - [DD-015: Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md) - integrates with pause alerts, resolves Flaw #24
-- [Flaw #25: Working Memory Durability](../design-flaws/active/25-working-memory-durability.md) - extends L1 TTL during pause
+- [Flaw #25: Working Memory Durability](../design-flaws/resolved/25-working-memory-durability.md) - extends L1 TTL during pause
+- [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) - implements L1 snapshot/restore on pause/resume
 - [Flaw #26: Multi-Stock Batching](../design-flaws/active/26-multi-stock-batching.md) - uses BatchManager
 - [DD-011: Agent Checkpoint System](DD-011_AGENT_CHECKPOINT_SYSTEM.md) - prerequisite for pause/resume
 

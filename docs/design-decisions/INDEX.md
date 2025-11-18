@@ -31,6 +31,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-012 | [Workflow Pause/Resume Infrastructure](DD-012_WORKFLOW_PAUSE_RESUME.md)           | Approved    | 2025-11-18 | Architecture, Operations             | [Analysis Pipeline](../operations/01-analysis-pipeline.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Memory System](../architecture/02-memory-system.md), [Flaw #23](../design-flaws/resolved/23-workflow-pause-resume.md), Enables [#19](../design-flaws/active/19-partial-failures.md) [#24](../design-flaws/active/24-agent-failure-alerts.md) [#25](../design-flaws/active/25-working-memory-durability.md) [#26](../design-flaws/active/26-multi-stock-batching.md) |
 | DD-013 | [Pattern Archive Lifecycle Management](DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md)      | Approved    | 2025-11-18 | Memory Architecture, Data Management | [Memory System](../architecture/02-memory-system.md), [Learning Systems](../learning/01-learning-systems.md), [DD-005](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md), [DD-009](DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md), [Flaw #12](../design-flaws/resolved/12-archive-lifecycle.md) |
 | DD-014 | [Learning System Validation Gaps Resolution](DD-014_VALIDATION_GAPS_RESOLUTION.md)  | Approved    | 2025-11-18 | Learning, Quality Assurance          | [DD-001](DD-001_GATE_6_LEARNING_VALIDATION.md), [DD-004](DD-004_GATE_6_PARAMETER_OPTIMIZATION.md), [DD-007](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md), [Flaw #13](../design-flaws/resolved/13-validation-gaps.md)                                                                   |
+| DD-015 | [Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md)                 | Approved    | 2025-11-18 | Operations, Human Integration        | [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [Human Integration](../operations/02-human-integration.md), [Flaw #24](../design-flaws/resolved/24-agent-failure-alerts.md)                                                                                                              |
+| DD-016 | [L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md)                             | Approved    | 2025-11-18 | Memory Architecture, Operations      | [DD-011](DD-011_AGENT_CHECKPOINT_SYSTEM.md), [DD-012](DD-012_WORKFLOW_PAUSE_RESUME.md), [Memory System](../architecture/02-memory-system.md), [Flaw #25](../design-flaws/resolved/25-working-memory-durability.md)                                                                  |
 
 ---
 
@@ -55,6 +57,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-012**: Workflow Pause/Resume Infrastructure (3-component architecture, 3-tier failure classification, 14-day timeout)
 - **DD-013**: Pattern Archive Lifecycle Management (status-aware retention, auto-promote archives)
 - **DD-014**: Learning System Validation Gaps Resolution (shadow mode validation, blind test quarantine)
+- **DD-015**: Agent Failure Alert System (tiered alerts, pause/resume integration, multi-channel delivery)
+- **DD-016**: L1 Memory Durability (dual-layer snapshots, hybrid triggers, <5s restore)
 
 ### 🟡 Under Review
 
@@ -74,7 +78,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 ### Architecture
 
-- **Memory Architecture**: DD-002, DD-005, DD-013
+- **Memory Architecture**: DD-002, DD-005, DD-013, DD-016
 - **Agent Execution & Checkpoints**: DD-011
 - **Workflow Pause/Resume**: DD-012
 
@@ -82,7 +86,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 
 - **Collaboration & Debate Resolution**: DD-003
 - **Data Contradiction Resolution**: DD-010
-- **Failure Recovery & Workflow**: DD-011, DD-012
+- **Failure Recovery & Workflow**: DD-011, DD-012, DD-015, DD-016
 
 ### Learning & Feedback
 
@@ -163,4 +167,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-18 (added DD-010, DD-011, DD-012, DD-013, DD-014; resolved Flaw #19-M6, Flaws #12, #13, #22, #23)
+**Last Updated**: 2025-11-18 (added DD-010 through DD-016; resolved Flaw #19-M6, Flaws #12, #13, #22, #23, #24, #25)

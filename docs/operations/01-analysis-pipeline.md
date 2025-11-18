@@ -409,8 +409,14 @@ RUNNING ──────► PAUSING ──────► PAUSED
    - **Restart**: Failed agent + downstream dependents
    - **Continue**: Independent parallel agents (if checkpoint exists)
 3. Checkpoint loaded via DD-011
-4. Agents resume per plan
-5. Pipeline continues from pause point
+4. **L1 working memory restored via DD-016**:
+   - DualRecoveryStrategy attempts 3-tier fallback (L1 existing → Redis secondary → PostgreSQL)
+   - Type preservation ensures all Redis types (string, list, hash, set, zset) restored correctly
+   - ConsistencyVerifier runs SHA256 hash validation (fail-fast on mismatch)
+   - TTL restored to 24h for active analysis
+   - Zero duplicate work: agents continue from exact memory state
+5. Agents resume per plan
+6. Pipeline continues from pause point
 
 **Dependency Resolution Example**:
 

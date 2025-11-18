@@ -494,9 +494,10 @@ vs. All Hot:      $23/mo (77% savings)
 
 #### Memory Data
 
-- **Working Memory**: 24 hours
+- **Working Memory**: 24 hours (active), 14 days (paused)
 
   - Agent L1 cache for active analysis
+  - Extended to 14d during pause ([DD-016](../../design-decisions/DD-016_L1_MEMORY_DURABILITY.md)), dual snapshot to Redis + PostgreSQL
   - Cleared after analysis completion
   - Critical items promoted to L2
 

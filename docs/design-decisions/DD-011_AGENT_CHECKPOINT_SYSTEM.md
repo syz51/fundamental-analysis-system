@@ -356,6 +356,8 @@ def migrate_v1_0_to_v1_1(checkpoint):
 
 ### Integration Points
 
+**Integration with L1 Memory**: When checkpoint is saved, L1 working memory is snapshotted to Redis secondary for crash recovery. See [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) for details.
+
 1. **Base Agent Class**: Add checkpoint hook called after each subtask completes
 2. **Lead Coordinator**: On analysis resume, check for checkpoint; restore if exists
 3. **L1 Cache**: Implement `dump()` and `restore()` methods for working memory snapshot
@@ -405,10 +407,11 @@ If checkpoint system has critical bugs:
 
 ## References
 
-- [Flaw #22: Agent Checkpoint System Missing](../design-flaws/active/22-agent-checkpoints.md)
+- [Flaw #22: Agent Checkpoint System Missing](../design-flaws/resolved/22-agent-checkpoints.md)
 - [Flaw #19: Partial Failures](../design-flaws/active/19-partial-failures.md) - requires checkpoints for resumption
-- [Flaw #23: Workflow Pause/Resume](../design-flaws/active/23-workflow-pause-resume.md) - depends on checkpoints
-- [Flaw #25: Working Memory Durability](../design-flaws/active/25-working-memory-durability.md) - extends checkpoints for overnight pauses
+- [Flaw #23: Workflow Pause/Resume](../design-flaws/resolved/23-workflow-pause-resume.md) - depends on checkpoints
+- [Flaw #25: Working Memory Durability](../design-flaws/resolved/25-working-memory-durability.md) - extends checkpoints for overnight pauses
+- [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) - implements L1 snapshot/restore on checkpoint events
 - PostgreSQL JSONB Documentation: <https://www.postgresql.org/docs/current/datatype-json.html>
 - Redis TTL Documentation: <https://redis.io/commands/setex/>
 

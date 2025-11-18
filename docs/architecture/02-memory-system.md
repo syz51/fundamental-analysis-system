@@ -34,7 +34,7 @@ The system implements a four-tier hybrid memory architecture combining centraliz
 - **Purpose**: Immediate context for current analysis
 - **Contents**: Active calculations, current company data, debate context
 - **Size**: ~100 items per agent
-- **TTL**: Hours
+- **TTL**: 24h (active), 14d (paused, [DD-016](../design-decisions/DD-016_L1_MEMORY_DURABILITY.md))
 - **Access Time**: <10ms
 
 ### L2: Agent Specialized Cache (Local Database)
@@ -68,6 +68,73 @@ The system implements a four-tier hybrid memory architecture combining centraliz
 - **Retention**: Delete on analysis success, 30-day retention for failures
 
 See [DD-011 Agent Checkpoint System](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md) for complete design.
+
+### L1 Durability & Recovery
+
+**Purpose**: Preserve agent working memory across multi-day pauses and failures without duplicate work.
+
+L1 working memory (Redis) uses dual-layer snapshot system to survive pauses and crashes. Without durability, agents must re-fetch API data (wasting quota), re-parse documents (wasting time), and re-calculate interim results on resume.
+
+**5-Component Architecture**:
+
+1. **L1TTLManager**: Dynamic TTL management
+   - Active analysis: 24h TTL (normal working memory)
+   - Paused analysis: 14d TTL (extended for multi-day pauses)
+   - Auto-restore to 24h on resume
+
+2. **L1CacheSnapshotter**: Per-agent snapshots with hybrid triggers
+   - **During analysis**: Piggyback on checkpoint events → Redis secondary only (fast ~100ms)
+   - **On pause**: Force dual snapshot → Redis secondary + PostgreSQL (durability)
+   - Type preservation: All Redis types (string, list, hash, set, zset) preserved
+
+3. **L1CacheRestorer**: Restore from snapshot with type preservation
+   - Restore performance: <5s (Redis secondary), <30s (PostgreSQL fallback)
+   - Clears stale L1 keys before restore to avoid conflicts
+   - Restores active 24h TTL on resume
+
+4. **ConsistencyVerifier**: Hash-based validation on restore
+   - SHA256 hash of sorted L1 keys + values
+   - Detects partial restore failures, stale data, corruption
+   - Fail-fast on mismatch
+
+5. **DualRecoveryStrategy**: 3-tier fallback chain
+   - Tier 1: L1 still exists (fastest, just restore TTL)
+   - Tier 2: Redis secondary snapshot (fast <5s)
+   - Tier 3: PostgreSQL checkpoint (durable <30s)
+
+**Redis Data Structures**:
+
+```
+# Per-agent snapshot keys
+fas:l1_snapshot:{agent_id} = <JSONB snapshot with type metadata>
+fas:l1_snapshot_meta:{agent_id} = {timestamp, hash, checkpoint_id, key_count}
+
+# Agent L1 working memory keys
+L1:{agent_id}:working:* = <agent-specific working memory>
+```
+
+**PostgreSQL Schema Extension**:
+
+```sql
+-- Extends agent_checkpoints table from DD-011
+ALTER TABLE agent_checkpoints ADD COLUMN l1_snapshot JSONB;
+ALTER TABLE agent_checkpoints ADD COLUMN l1_snapshot_hash TEXT;
+```
+
+**Integration with Checkpoint & Pause Systems**:
+
+- **DD-011 Checkpoint**: Hooks snapshot on checkpoint save (Redis secondary only during analysis)
+- **DD-012 Pause**: Triggers TTL extension + full dual snapshot on pause, restore + verification on resume
+- **AgentMemory**: Per-agent L1 key namespacing ensures isolation
+
+**Performance Characteristics**:
+
+- Snapshot overhead: ~100ms (Redis-to-Redis copy)
+- Restore latency: <5s typical, <30s worst-case
+- Storage overhead: ~100 KB per agent × 5 agents/stock × 200 stocks = 100 MB total
+- Zero duplicate work on resume (API quota savings, time savings)
+
+See [DD-016 L1 Memory Durability](../design-decisions/DD-016_L1_MEMORY_DURABILITY.md) for complete design, rollback strategy, and testing requirements.
 
 ---
 

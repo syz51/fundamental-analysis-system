@@ -1,7 +1,7 @@
 ---
 flaw_id: 25
 title: Working Memory Insufficient for Long Pauses
-status: active
+status: resolved
 priority: medium
 phase: 2
 effort_weeks: 2
@@ -20,11 +20,19 @@ sub_issues:
     severity: low
     title: L1/checkpoint consistency verification undefined
 discovered: 2025-11-18
+resolved_by: DD-016
+resolved_date: 2025-11-18
+resolution_summary: |
+  Implemented dual-layer L1 snapshot system with hybrid triggers.
+  All 3 sub-issues addressed:
+  - D1: L1TTLManager extends TTL 24h→14d during pause
+  - D2: L1CacheRestorer with <5s Redis/<30s PostgreSQL restore
+  - D3: ConsistencyVerifier with hash-based validation
 ---
 
 # Flaw #25: Working Memory Insufficient for Long Pauses
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED
 **Priority**: Medium
 **Impact**: Agent context lost if pause overnight, may duplicate work on resume
 **Phase**: Phase 2 (Months 3-4)

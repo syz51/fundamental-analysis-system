@@ -3,8 +3,8 @@
 ## At a Glance
 
 - **Total**: 26 flaws + 6 minor issues
-- **Active**: 10 (2 critical, 7 high, 1 medium, 2 deferred)
-- **Resolved**: 14
+- **Active**: 9 (2 critical, 6 high, 1 medium, 2 deferred)
+- **Resolved**: 15
 - **Deferred**: 2
 
 ---
@@ -32,7 +32,6 @@ Blocks MVP or production deployment:
 | [22](active/22-agent-checkpoints.md) | Agent Checkpoint System Missing | Failed agents restart from scratch, wasting completed work | 2 | 3w | PostgreSQL/Redis infrastructure |
 | [23](active/23-workflow-pause-resume.md) | Workflow Pause/Resume Infrastructure Undefined | Cannot safely stop analysis mid-pipeline when failures occur | 2 | 4w | Flaw #22 |
 | [24](active/24-agent-failure-alerts.md) | Agent Failure Human Alerts Missing | Infrastructure failures go unnoticed, analyses silently fail | 2 | 2w | Flaw #23 |
-| [25](active/25-working-memory-durability.md) | Working Memory Insufficient for Long Pauses | Agent context lost if pause overnight, may duplicate work | 2 | 2w | Flaw #22 |
 | [26](active/26-multi-stock-batching.md) | Multi-Stock Failure Batching Undefined | Inefficient recovery when shared failures affect multiple stocks | 2 | 2w | Flaw #23, #24 |
 
 </details>
@@ -81,13 +80,14 @@ Note: Flaws #25 and #26 are listed as Medium priority but included in High Prior
 </details>
 
 <details>
-<summary><b>Phase 2: Core Systems (3 resolved)</b></summary>
+<summary><b>Phase 2: Core Systems (4 resolved)</b></summary>
 
 | # | Flaw | Resolution | Completed |
 |---|------|-----------|-----------|
 | [8](resolved/08-debate-deadlock.md) | Debate Resolution Deadlock Scenario | 5-level tiered escalation system | 2025-11-17 |
 | [11](resolved/11-algorithm-specs.md) | Missing Algorithm Specifications | All algorithms documented in main architecture docs | 2025-11-17 |
 | [16](resolved/16-timeline-conflicts.md) | Timeline & Dependency Conflicts | N/A | 2025-11-18 |
+| [25](resolved/25-working-memory-durability.md) | Working Memory Insufficient for Long Pauses | DD-016 L1 Memory Durability | 2025-11-18 |
 
 </details>
 
@@ -145,13 +145,13 @@ Navigate by system component:
 - [#15](active/15-failure-modes.md) - Query & Sync Failure Modes (C, Phase 3)
 - [#17](active/17-data-tier-mgmt.md) - Data Tier Management Gaps (H, Phase 4)
 - [#20](active/20-access-control.md) - Memory System Access Control Undefined (M, Phase 3)
-- [#25](active/25-working-memory-durability.md) - Working Memory Insufficient for Long Pauses (M, Phase 2)
 
 **Resolved:**
 - [#2](resolved/02-memory-sync-timing.md)✅ - Memory Sync Timing Incompatible with Debate Protocol
 - [#5](resolved/05-data-retention.md)✅ - Data Retention Policy Conflict
 - [#7](resolved/07-memory-scalability.md)✅ - Memory Scalability vs Performance Targets
 - [#12](resolved/12-archive-lifecycle.md)✅ - Pattern Archive Lifecycle Gaps
+- [#25](resolved/25-working-memory-durability.md)✅ - Working Memory Insufficient for Long Pauses
 
 </details>
 
@@ -235,12 +235,11 @@ Navigate by system component:
 
 ### By Phase
 
-**Phase 2 (Immediate - Months 3-4):** 6 active
+**Phase 2 (Immediate - Months 3-4):** 5 active
 - [19](active/19-partial-failures.md) Partial Failure Handling Undefined (H, 4w)
 - [22](active/22-agent-checkpoints.md) Agent Checkpoint System Missing (H, 3w)
 - [23](active/23-workflow-pause-resume.md) Workflow Pause/Resume Infrastructure Undefined (H, 4w)
 - [24](active/24-agent-failure-alerts.md) Agent Failure Human Alerts Missing (H, 2w)
-- [25](active/25-working-memory-durability.md) Working Memory Insufficient for Long Pauses (M, 2w)
 - [26](active/26-multi-stock-batching.md) Multi-Stock Failure Batching Undefined (M, 2w)
 
 **Phase 3 (Months 5-6):** 2 active
@@ -253,10 +252,9 @@ Navigate by system component:
 
 ### By Effort
 
-**Quick wins (<3 weeks):** 4 flaws
+**Quick wins (<3 weeks):** 3 flaws
 - [22](active/22-agent-checkpoints.md) - 3w
 - [24](active/24-agent-failure-alerts.md) - 2w
-- [25](active/25-working-memory-durability.md) - 2w
 - [26](active/26-multi-stock-batching.md) - 2w
 
 **Medium (3-5 weeks):** 5 flaws
@@ -275,10 +273,9 @@ Navigate by system component:
 - [22](active/22-agent-checkpoints.md) - PostgreSQL/Redis infrastructure (exists)
 - [20](active/20-access-control.md) - Memory system operational (L1/L2/L3)
 
-**Waiting on 1 dependency:** 3 flaws
+**Waiting on 1 dependency:** 2 flaws
 - [23](active/23-workflow-pause-resume.md) - Flaw #22
 - [24](active/24-agent-failure-alerts.md) - Flaw #23
-- [25](active/25-working-memory-durability.md) - Flaw #22
 
 **Waiting on 2+ dependencies:** 5 flaws
 - [15](active/15-failure-modes.md) - DD-005 memory system, DD-002 event-driven sync
