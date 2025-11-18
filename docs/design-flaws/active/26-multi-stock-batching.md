@@ -44,6 +44,7 @@ No specification for handling failures that affect multiple stocks simultaneousl
 **Problem**: When 5 stocks fail within minutes due to shared issue, system treats as 5 independent failures.
 
 **Example Scenario**:
+
 ```text
 2:47 PM - Koyfin API rate limit exceeded (quota: 100 req/hour)
 
@@ -68,6 +69,7 @@ Desired Behavior: Detect correlation
 ```
 
 **Correlation Signals**:
+
 - Same error type (API rate limit 429)
 - Same data source (Koyfin)
 - Same agent type (Strategy Analyst)
@@ -75,6 +77,7 @@ Desired Behavior: Detect correlation
 - Same error message substring
 
 **Missing**:
+
 - Correlation detection algorithm
 - Batch failure record (link 5 failures together)
 - Root cause inference (why did all 5 fail?)
@@ -88,6 +91,7 @@ Desired Behavior: Detect correlation
 **Batch Pause**: Uses BatchManager component from DD-012 for concurrent pause/resume operations (5 parallel default)
 
 **Current Pause API** (from DD-012):
+
 ```python
 # Individual pause only
 pause_analysis(stock_ticker='AAPL', reason='agent_failure')
@@ -99,6 +103,7 @@ pause_analysis(stock_ticker='GOOGL', reason='agent_failure')
 **User Requirement** (from discussion): Pause all affected stocks when correlation detected
 
 **Needed Batch Pause**:
+
 ```python
 # Batch pause
 pause_batch(
@@ -109,6 +114,7 @@ pause_batch(
 ```
 
 **Questions**:
+
 - Pause all simultaneously or sequential?
 - Single database transaction or individual?
 - Rollback if one pause fails?
@@ -123,6 +129,7 @@ pause_batch(
 **User Requirement** (from discussion): Allow parallel resume (no forced sequential)
 
 **Current Resume Challenges**:
+
 ```text
 Human upgrades Koyfin to paid tier at 3:15 PM.
 Clicks "Resume All" for 5 paused stocks.
@@ -145,6 +152,7 @@ Questions:
 ```
 
 **Missing Orchestration**:
+
 - Priority queue for batch resume
 - Concurrency limit enforcement
 - Individual failure handling
@@ -375,6 +383,7 @@ class BatchPauseManager:
 **User Requirement**: 5 separate cards (not grouped)
 
 **Implementation**:
+
 ```python
 class BatchAlertManager:
     """Manage alerts for batch failures"""
@@ -471,11 +480,13 @@ ADD COLUMN batch_id VARCHAR(50) REFERENCES batch_operations(batch_id);
 ## Files Affected
 
 **New Files**:
+
 - `src/coordination/failure_correlator.py` - Correlation detection
 - `src/coordination/batch_manager.py` - Batch pause/resume logic
 - `migrations/xxx_batch_operations.sql` - PostgreSQL schema
 
 **Modified Files**:
+
 - `src/coordination/pause_manager.py` - Add batch_id parameter
 - `src/alerts/agent_failure_alerts.py` - Add batch context to alerts
 - `src/dashboard/batch_summary_view.py` - Batch summary banner

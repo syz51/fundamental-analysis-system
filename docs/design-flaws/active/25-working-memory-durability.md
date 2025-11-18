@@ -67,6 +67,7 @@ L3 (Central Knowledge Graph):
 ```
 
 **Problem Scenario**:
+
 ```text
 Day 5, 2:47 PM - Strategy Analyst fails (Koyfin quota)
   → Analysis paused
@@ -95,6 +96,7 @@ Resume Consequences:
 **Current L1 TTL Setting**: Hours (exact duration undefined in docs)
 
 **Insufficient for**:
+
 - Overnight pauses (8+ hours)
 - Weekend pauses (48+ hours)
 - Extended human unavailability (vacation, emergency)
@@ -106,6 +108,7 @@ Resume Consequences:
 **Problem**: Checkpoint saves L1 dump to PostgreSQL, but no restore procedure specified.
 
 **Current Checkpoint Schema** (from Flaw #22):
+
 ```sql
 CREATE TABLE agent_checkpoints (
     ...
@@ -115,6 +118,7 @@ CREATE TABLE agent_checkpoints (
 ```
 
 **Missing Restore Logic**:
+
 ```python
 # On resume, how to restore L1 from checkpoint?
 
@@ -130,6 +134,7 @@ checkpoint = load_checkpoint(analysis_id, agent_type)
 ```
 
 **Example L1 Contents** (need restore format):
+
 ```python
 # L1 working memory for Strategy Analyst analyzing AAPL
 L1_keys = {
@@ -162,11 +167,13 @@ checkpoint['working_memory'] = {
 **Problem**: No validation that restored L1 matches checkpoint state.
 
 **Consistency Risks**:
+
 1. **Partial restore failure**: Some keys restored, others failed → inconsistent state
 2. **Stale L1 data**: L1 not fully expired, contains old data mixed with restored data
 3. **Checkpoint corruption**: JSONB blob corrupted, deserializes incorrectly
 
 **Example Inconsistency**:
+
 ```python
 # Checkpoint saved at 2:47 PM:
 checkpoint = {
@@ -194,6 +201,7 @@ L1_restored = {
 ```
 
 **Need**:
+
 - Pre-restore validation (checkpoint not corrupted)
 - Post-restore verification (all keys restored correctly)
 - Conflict resolution (overwrite existing vs. merge vs. fail)
@@ -377,11 +385,13 @@ class L1TTLManager:
 ### Checkpoint-L1 Dual Strategy
 
 **On Pause**:
+
 1. Save checkpoint to PostgreSQL (durable, long-term)
 2. Extend L1 TTL to 7 days (fast recovery if resume <7d)
 3. Also save to Redis checkpoint key (7-day TTL, backup)
 
 **On Resume**:
+
 1. Try L1 first (if keys still exist, TTL not expired)
 2. If L1 expired, restore from Redis checkpoint (fast, <5s)
 3. If Redis checkpoint expired, restore from PostgreSQL (slower, <30s)
@@ -447,10 +457,12 @@ class DualRecoveryStrategy:
 ## Files Affected
 
 **New Files**:
+
 - `src/memory/l1_snapshotter.py` - L1 snapshot/restore logic
 - `src/memory/l1_ttl_manager.py` - TTL extension on pause
 
 **Modified Files**:
+
 - `src/agents/checkpoint.py` - Add L1 snapshot to checkpoint save
 - `src/coordination/pause_manager.py` - Extend L1 TTL on pause, restore on resume
 - `docs/architecture/02-memory-system.md` - Document L1 TTL policies, restore procedure

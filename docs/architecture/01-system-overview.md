@@ -41,7 +41,7 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 ```text
 ┌─────────────────────────────────────────────────────────┐
 │                   Human Interface Layer                   │
-│    Dashboard | Notifications | Feedback Loop | Analytics  │
+│  Dashboard | AlertManager | Notifications | Feedback | Analytics│
 └─────────────────────────────────────────────────────────┘
                               ▲
                               ▼
@@ -81,7 +81,8 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 #### Human Interface Layer
 
 - Provides dashboard for monitoring pipeline, approvals, and decisions
-- Sends notifications for critical decision gates and alerts
+- **AlertManager** (DD-015): Event-driven alerts for agent failures (multi-channel delivery, acknowledgment tracking, retry mechanism)
+- Sends notifications for critical decision gates and scheduled alerts
 - Captures human feedback for system learning
 - Displays analytics and performance metrics
 

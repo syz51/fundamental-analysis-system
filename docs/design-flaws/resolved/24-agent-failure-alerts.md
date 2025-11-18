@@ -1,7 +1,7 @@
 ---
 flaw_id: 24
 title: Agent Failure Human Alerts Missing
-status: active
+status: resolved
 priority: high
 phase: 2
 effort_weeks: 2
@@ -13,21 +13,27 @@ sub_issues:
   - id: C1
     severity: high
     title: No event-driven alerts for agent failures
+    status: resolved
   - id: C2
     severity: medium
     title: Alert acknowledgment tracking missing
+    status: resolved
   - id: C3
     severity: medium
     title: Batch failure notification strategy undefined
+    status: resolved
 discovered: 2025-11-18
+resolved: 2025-11-18
+resolved_by: DD-015
 ---
 
 # Flaw #24: Agent Failure Human Alerts Missing
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED (DD-015)
 **Priority**: High
 **Impact**: Infrastructure failures go unnoticed, analyses silently fail
 **Phase**: Phase 2 (Months 3-4)
+**Resolution**: Event-driven alert system with multi-channel delivery, acknowledgment tracking, retry mechanism
 
 ---
 
@@ -46,6 +52,7 @@ No event-driven human alerts for agent failures - only 6 scheduled gates trigger
 **Problem**: Agent failures between gates go unnoticed until next gate (hours/days later)
 
 **Example**:
+
 ```text
 Phase 2 Day 5 (between Gate 2 and Gate 3):
   2:47 PM - Strategy Analyst fails (Koyfin rate limit)
@@ -61,6 +68,7 @@ Next Gate 3 (Valuation assumptions):
 **Current Alert System** (from `docs/operations/02-human-integration.md`):
 
 Only covers scheduled gates:
+
 - Gate 1 (24hr): Screening validation
 - Gate 2 (12hr): Research direction
 - Gate 3 (24hr): Valuation assumptions
@@ -69,6 +77,7 @@ Only covers scheduled gates:
 - Gate 6 (48hr): Learning validation
 
 **Missing**:
+
 - Infrastructure failure alerts (API quota, network, database)
 - Agent crash alerts (exception, timeout, OOM)
 - Data quality alerts (missing filings, corrupted data)
@@ -81,10 +90,12 @@ Only covers scheduled gates:
 **Problem**: No way to verify human received/responded to alert.
 
 **Current Gate Timeout Behavior**:
+
 - Gate times out → auto-action (conservative default)
 - But for agent failures, **human must respond** (no auto-action)
 
 **Missing Acknowledgment Flow**:
+
 ```text
 Agent failure detected → Alert sent
 
@@ -113,6 +124,7 @@ If no acknowledgment after 2hr:
 **User Requirement** (from discussion): Show 5 separate cards (not grouped)
 
 **Current Uncertainty**:
+
 ```text
 Koyfin rate limit affects 5 stocks at 2:47 PM:
   AAPL - Strategy Analyst failed
@@ -138,6 +150,7 @@ Notification Options:
 **User Decision**: Option A (5 separate cards)
 
 **Missing Details**:
+
 - Dashboard UI for multiple simultaneous alerts
 - "Resume All" batch action button
 - Per-stock vs. batch resolution tracking
@@ -490,11 +503,61 @@ CREATE TABLE alert_acknowledgments (
 ## Files Affected
 
 **New Files**:
+
 - `src/alerts/agent_failure_alerts.py` - Alert manager, acknowledgment tracker
 - `src/dashboard/alert_views.py` - Dashboard UI components
 - `migrations/xxx_agent_failure_alerts.sql` - PostgreSQL schema
 
 **Modified Files**:
+
 - `src/coordination/lead_coordinator.py` - Trigger alerts on agent failure
 - `docs/operations/02-human-integration.md` - Add AGENT_FAILURE priority
 - `docs/architecture/01-system-overview.md` - Update human interaction points
+
+---
+
+## Resolution Summary
+
+**Resolved By**: [DD-015: Agent Failure Alert System](../../design-decisions/DD-015_AGENT_FAILURE_ALERT_SYSTEM.md)
+**Resolution Date**: 2025-11-18
+
+### How All Sub-Issues Were Resolved
+
+**C1: Event-Driven Alerts** ✅
+- Implemented AgentFailureAlertManager with immediate (<30s) alert triggering
+- Multi-channel delivery (SMS + push + email + dashboard simultaneously)
+- Integrated with DD-012 pause/resume (pause events trigger alerts)
+- Alert types: Pause initiated, reminders Day 3/7, auto-resume success/failure
+
+**C2: Acknowledgment Tracking** ✅
+- AlertAcknowledgmentTracker tracks: sent → delivered → opened → acknowledged
+- Retry mechanism: Resend after 30min if unacknowledged (max 3 retries)
+- Escalation: After 90min (3 retries), log critical error
+- No auto-cancel policy: Must wait for human (user requirement)
+
+**C3: Batch Notification Strategy** ✅
+- Separate cards for shared-root-cause failures (user requirement, not grouped)
+- Summary banner if >3 alerts: "⚠️ N analyses paused due to failures"
+- "Resume All" button for batch resume operations
+- Per-stock resolution tracking via BatchManager (DD-012)
+
+### Key Design Decisions
+
+1. **AGENT_FAILURE Priority**: New priority level with no timeout (must wait for human)
+2. **Multi-Channel Redundancy**: All channels sent simultaneously (not sequential)
+3. **Acknowledgment Required**: Distinguishes delivery from action
+4. **Batch Strategy**: Separate cards (per user requirement) with summary banner if >3
+5. **DD-012 Integration**: Bidirectional dependency (pause triggers alert, alert references pause)
+
+### Documentation Updates
+
+- ✅ Created DD-015_AGENT_FAILURE_ALERT_SYSTEM.md
+- ✅ Updated DD-012 with bidirectional dependency note
+- ✅ Updated docs/operations/02-human-integration.md (AGENT_FAILURE priority)
+- ✅ Updated docs/architecture/01-system-overview.md (AlertManager in Human Interface layer)
+
+### Production Readiness
+
+All design gaps resolved. System ready for Phase 2 implementation (Month 3 Week 1-2).
+
+**Unblocks**: Production reliability, DD-012 pause/resume integration, Phase 2 completion

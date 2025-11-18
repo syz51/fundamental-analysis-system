@@ -4,7 +4,7 @@
 **Date**: 2025-11-18
 **Decider(s)**: System Architect
 **Related Docs**: [Analysis Pipeline](../operations/01-analysis-pipeline.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Memory System](../architecture/02-memory-system.md)
-**Related Decisions**: [DD-011 Agent Checkpoint System](DD-011_AGENT_CHECKPOINT_SYSTEM.md), [DD-002 Event-Driven Memory Sync](DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)
+**Related Decisions**: [DD-011 Agent Checkpoint System](DD-011_AGENT_CHECKPOINT_SYSTEM.md), [DD-002 Event-Driven Memory Sync](DD-002_EVENT_DRIVEN_MEMORY_SYNC.md), [DD-015 Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md)
 
 ---
 
@@ -30,6 +30,8 @@ Agent failures require graceful degradation without blocking parallel analyses. 
 - Builds on DD-011 checkpoint system (prerequisite complete)
 
 **Example Impact**: AAPL Strategy Analyst fails on Day 5 due to Koyfin quota. Current behavior: either halt all 4 concurrent analyses or continue AAPL incomplete (data integrity risk). Desired: pause AAPL only, continue MSFT/GOOGL/AMZN unaffected.
+
+**Bidirectional Dependency with DD-015**: Pause/resume infrastructure requires alert system for human notification. PauseManager calls AlertManager on pause triggers. Alert system (DD-015) integrates with pause events (pause initiated, reminders Day 3/7, auto-resume notifications). Both systems implemented together in Phase 2.
 
 ---
 
@@ -183,7 +185,7 @@ System provides:
 - `lead_coordinator.py`: Add pause/resume API integration
 - `base_agent.py`: Trigger pause on Tier 2 failures
 - `L1 cache`: Extend TTL from 24h → 14d during pause
-- `alert_system.py`: Add pause/resume alert types
+- `AgentFailureAlertManager` (DD-015): Integrates with pause triggers, sends alerts on pause events
 
 **Documentation Updates**:
 
@@ -577,7 +579,7 @@ class OrchestoratorAdapter:
 - DD-011 checkpoint system (prerequisite - implemented)
 - PostgreSQL infrastructure (exists)
 - Redis infrastructure (exists)
-- Alert system (to be implemented - Flaw #24)
+- DD-015 alert system (approved - implements Flaw #24)
 - Orchestrator selection (Airflow/Prefect/Temporal/custom)
 
 ### Testing Requirements
@@ -619,9 +621,9 @@ If pause/resume system has critical bugs:
 
 ## References
 
-- [Flaw #23: Workflow Pause/Resume Infrastructure](../design-flaws/resolved/23-workflow-pause-resume.md)
+- [Flaw #23: Workflow Pause/Resume Infrastructure](../design-flaws/resolved/23-workflow-pause-resume.md) - resolved by DD-012
 - [Flaw #19: Partial Failures](../design-flaws/active/19-partial-failures.md) - enabled by pause/resume
-- [Flaw #24: Agent Failure Alerts](../design-flaws/active/24-agent-failure-alerts.md) - integrates with pause alerts
+- [DD-015: Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md) - integrates with pause alerts, resolves Flaw #24
 - [Flaw #25: Working Memory Durability](../design-flaws/active/25-working-memory-durability.md) - extends L1 TTL during pause
 - [Flaw #26: Multi-Stock Batching](../design-flaws/active/26-multi-stock-batching.md) - uses BatchManager
 - [DD-011: Agent Checkpoint System](DD-011_AGENT_CHECKPOINT_SYSTEM.md) - prerequisite for pause/resume

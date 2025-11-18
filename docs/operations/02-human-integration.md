@@ -537,12 +537,13 @@ This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw 
 
 ### Request Prioritization
 
-| Priority | Description                    | Response Time | Auto-Action (After Timeout)          | Applies To                                  |
-| -------- | ------------------------------ | ------------- | ------------------------------------ | ------------------------------------------- |
-| CRITICAL | Blocks all analysis            | 2 hours       | Halt pipeline                        | System errors, data corruption              |
-| HIGH     | Critical-path blocking debates | 6 hours       | Conservative default (provisional)   | Debates blocking immediate progress         |
-| MEDIUM   | Valuation/model decisions      | 24 hours      | Conservative estimates (provisional) | Gate 3 assumptions, medium-priority debates |
-| LOW      | Nice-to-have                   | 48 hours      | Skip or defer to next gate           | Supporting analysis debates                 |
+| Priority       | Description                       | Response Time | Auto-Action (After Timeout)            | Applies To                                  |
+| -------------- | --------------------------------- | ------------- | -------------------------------------- | ------------------------------------------- |
+| AGENT_FAILURE  | Agent infrastructure failure      | None          | Block pipeline, await human (no auto)  | Agent crashes, API failures, data issues    |
+| CRITICAL       | Blocks all analysis               | 2 hours       | Halt pipeline                          | System errors, data corruption              |
+| HIGH           | Critical-path blocking debates    | 6 hours       | Conservative default (provisional)     | Debates blocking immediate progress         |
+| MEDIUM         | Valuation/model decisions         | 24 hours      | Conservative estimates (provisional)   | Gate 3 assumptions, medium-priority debates |
+| LOW            | Nice-to-have                      | 48 hours      | Skip or defer to next gate             | Supporting analysis debates                 |
 
 **Debate-Specific Priority Routing**:
 
@@ -557,17 +558,31 @@ All provisional resolutions remain reviewable until next gate, enabling human ov
 **Channels**:
 
 - Email for non-urgent gate notifications
-- SMS/push for critical decisions
+- SMS/push for critical decisions and agent failures
 - Dashboard alerts for real-time monitoring
 - Weekly summary reports
 
 **Notification Types**:
 
+- **Agent Failure Alerts** (DD-015): Event-driven alerts for infrastructure failures (SMS+push+email+dashboard, acknowledgment required, retry mechanism)
 - Gate ready for review
 - Analysis complete
 - Material event detected
+- Pause/resume notifications (DD-012): Pause initiated, reminders (Day 3/7), auto-resume success/failure
 - System learning update
 - Performance summary
+
+**Agent Failure Alert System** ([DD-015](../design-decisions/DD-015_AGENT_FAILURE_ALERT_SYSTEM.md)):
+
+Event-driven alerts for agent failures between scheduled gates, featuring:
+
+- **Multi-channel delivery**: SMS, push, email, dashboard (all channels sent simultaneously)
+- **Acknowledgment tracking**: Verifies human received/opened/acted on alert
+- **Retry mechanism**: Resend after 30min if unacknowledged (max 3 retries, escalation after 90min)
+- **Batch support**: Separate cards for shared-root-cause failures (user preference)
+- **No timeout**: Must wait for human action (no auto-cancel policy)
+
+Integrates with DD-012 pause/resume system: agent failure triggers pause, pause triggers alert.
 
 ---
 
