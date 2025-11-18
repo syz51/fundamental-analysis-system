@@ -112,18 +112,24 @@ The addition of memory and learning systems introduces unique risks around data 
 
 **Mitigation**:
 
-- **High availability**:
-  - Database replication (PostgreSQL, MongoDB, Neo4j)
+- **High availability** (Phase 4 implementation):
+  - **Neo4j Causal Clustering**: 3 core servers + 2 read replicas (DD-021)
+    - Automatic failover <10 seconds (Raft consensus)
+    - 99.95% availability target (vs 99.4% single instance)
+    - Cross-region backup: AWS S3 us-west-2 + GCP Cloud Storage (DR)
+    - RTO <1hr, RPO <1hr
+  - PostgreSQL & MongoDB replication
   - Redis clustering with failover
   - Multi-AZ deployment
   - Load balancing across instances
 - **Graceful degradation**: System operates at reduced capacity during partial outages
-- **Automated failover**: Sub-minute failover for critical services
-- **Backup systems**: Daily backups, hourly for memory systems
-- **Disaster recovery**: 1-hour RTO, 5-minute RPO
 - **Status page**: Real-time system health dashboard
 
-**Monitoring**: Uptime >99.5%, alert on any service degradation
+**Monitoring**: Uptime >99.95% (production target), alert on any service degradation
+
+**References**:
+- [DD-021: Neo4j High Availability](../design-decisions/DD-021_NEO4J_HA.md)
+- [Flaw #21: Scalability Architecture](../design-flaws/resolved/21-scalability.md)
 
 ---
 

@@ -62,8 +62,8 @@ The implementation follows an agile methodology with continuous integration of m
 
 ### Success Criteria
 
-- Data collection running for 100+ companies
-- Screening agent identifies 10+ candidates per week
+- Data collection operational for initial company set
+- Screening agent identifying viable candidates consistently
 - Knowledge graph storing basic company relationships
 - Dashboard displays current pipeline state
 
@@ -179,9 +179,9 @@ To prevent deadlocks and ensure proper integration, Phase 2 components implement
 ### Success Criteria
 
 - 3 specialist agents operational with memory
-- Knowledge Base Agent indexing 100+ analyses
+- Knowledge Base Agent indexing initial analysis set
 - Memory sync maintaining <100ms L1, <1s L3 latency
-- Human gates processing 10+ stocks with historical context
+- Human gates processing analyses with historical context
 - Gate 6 preventing >90% of false patterns from propagation
 - **Debate resolution system preventing pipeline deadlocks (zero blocking debates)**
 - **Fallback resolutions tested in all scenarios (human unavailable, concurrent overload, queue full)**
@@ -351,13 +351,13 @@ Critical testing required for debate deadlock resolution system:
 
 ### Success Criteria
 
-- Pattern discovery identifying 5+ validated patterns per month
-- Outcome tracking active for 50+ predictions
-- Agent accuracy improving 5%+ per quarter
+- Pattern discovery identifying validated patterns consistently
+- Outcome tracking active for prediction set
+- Agent accuracy improving measurably per quarter
 - Strategy and valuation agents operational with memory
 - Report writer generating memos with historical context
 - <10% false pattern rate (spurious correlations rejected)
-- Memory retrieval <200ms cached, <500ms uncached (p95) at beta scale
+- Memory retrieval <200ms cached, <500ms uncached (p95) at operational scale
 - Cache hit rate >80%
 - Query timeout rate <5%
 
@@ -402,6 +402,37 @@ Critical testing required for debate deadlock resolution system:
   - Temporal pattern evolution tracking
   - Regime-dependent pattern activation
   - Network analysis for relationships
+
+#### Neo4j High Availability Deployment (DD-021)
+
+- [ ] Deploy Neo4j Causal Cluster (3 core + 2 replica)
+  - Week 1-2: Provision infrastructure, configure Raft clustering
+  - Week 3: Data migration from single instance (maintenance window)
+  - Week 4: Failover testing, load testing, DNS cutover
+- [ ] Configure cross-region backup strategy
+  - Primary: AWS S3 us-west-2
+  - Secondary: GCP Cloud Storage us-central1 (DR)
+  - Hourly incremental + daily/weekly/monthly full backups
+- [ ] Implement cluster monitoring & alerts
+  - Prometheus metrics for cluster health
+  - Grafana dashboards (transaction throughput, replication lag)
+  - Alert routing (core node down, quorum lost, backup failures)
+- [ ] Test failover scenarios
+  - Leader failure: <10s election, zero data loss
+  - Follower failure: writes continue (2/3 quorum)
+  - Network partition: majority partition continues
+  - Replica lag: alerts trigger correctly
+  - Backup restore: <1hr RTO validation
+
+**Estimated Effort**: 4 weeks
+**Target**: Complete before production deployment
+**Success Criteria**:
+
+- Cluster operational (3 core + 2 replica)
+- Automatic failover <10s (measured)
+- 99.95% availability (30-day measurement)
+- Zero data loss in all test scenarios
+- Backup restoration <1hr RTO
 
 #### Data Retention & Pattern Evidence (DD-009)
 
@@ -490,7 +521,7 @@ Critical testing required for debate deadlock resolution system:
 - Incremental credibility updates <10ms
 - Pattern accuracy >70% on validation set
 - Confidence scores calibrated within 5% of actual
-- System processes 200 stocks in production
+- System processing production workload reliably
 - <24hr analysis turnaround
 - Zero critical memory corruption incidents
 
@@ -553,12 +584,12 @@ Critical testing required for debate deadlock resolution system:
 
 ### Success Criteria
 
-- 1000+ stocks analyzed continuously
+- Large-scale analysis operational continuously
 - Human intervention <10% of decisions
 - Memory utilization >80% of analyses
 - Pattern self-validation >90% accuracy
 - Learning rate sustained at 5%+ per quarter
-- System autonomously discovers 10+ validated patterns per quarter
+- System autonomously discovers validated patterns consistently
 
 ---
 
@@ -566,10 +597,10 @@ Critical testing required for debate deadlock resolution system:
 
 | Milestone             | Target   | Success Criteria                                                                                                                                                                                         |
 | --------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **MVP Launch**        | Month 4  | • Process 10 stocks end-to-end<br>• Memory baseline functional<br>• Gate 6 operational<br>• 3 specialist agents with memory<br>• Knowledge graph storing 100+ analyses                                   |
-| **Beta Release**      | Month 6  | • 50 stocks analyzed with memory<br>• 80% overall accuracy<br>• Pattern accuracy >70%<br>• <10% false pattern rate<br>• Outcome tracking active<br>• Agent learning loops operational                    |
-| **Production Launch** | Month 8  | • 200 stocks in production<br>• <24hr turnaround time<br>• Learning rate >5%/month<br>• Validated patterns only in use<br>• Full backtest validation<br>• Human override rate <20%                       |
-| **Scale-up**          | Month 12 | • 1000+ stocks coverage<br>• Minimal human input required<br>• Memory utilization 80%+<br>• Pattern self-validation 90%+<br>• Sustained learning rate 5%+/quarter<br>• Cross-market patterns operational |
+| **MVP Launch**        | Month 4  | • Process initial stocks end-to-end<br>• Memory baseline functional<br>• Gate 6 operational<br>• 3 specialist agents with memory<br>• Knowledge graph storing analyses                                   |
+| **Beta Release**      | Month 6  | • Beta workload analyzed with memory<br>• 80% overall accuracy<br>• Pattern accuracy >70%<br>• <10% false pattern rate<br>• Outcome tracking active<br>• Agent learning loops operational                    |
+| **Production Launch** | Month 8  | • Production workload operational<br>• <24hr turnaround time<br>• Learning rate >5%/month<br>• Validated patterns only in use<br>• Full backtest validation<br>• Human override rate <20%                       |
+| **Scale Phase**          | Month 12+ | • Large-scale coverage operational<br>• Minimal human input required<br>• Memory utilization 80%+<br>• Pattern self-validation 90%+<br>• Sustained learning rate 5%+/quarter<br>• Cross-market patterns operational |
 
 ---
 
@@ -577,22 +608,22 @@ Critical testing required for debate deadlock resolution system:
 
 ### Phase 1-2: Foundation
 
-- **Memory Coverage**: 100 companies in knowledge graph
-- **Pattern Count**: 10-20 manually seeded patterns
+- **Memory Coverage**: Initial company set in knowledge graph
+- **Pattern Count**: Manually seeded patterns
 - **Retrieval Speed**: <1s for L3 queries
 - **Validation**: Manual pattern validation only
 
 ### Phase 3-4: Learning
 
-- **Memory Coverage**: 500+ companies, 200+ analyses
-- **Pattern Count**: 50+ discovered patterns, 30+ validated
+- **Memory Coverage**: Expanded company set with analyses
+- **Pattern Count**: Discovered and validated patterns
 - **Retrieval Speed**: <500ms for L3, <100ms for L2
 - **Validation**: Automated hold-out + blind testing + Gate 6
 
 ### Phase 5: Scale
 
-- **Memory Coverage**: 2000+ companies, 1000+ analyses
-- **Pattern Count**: 200+ active patterns
+- **Memory Coverage**: Large-scale company and analysis coverage
+- **Pattern Count**: Active validated pattern library
 - **Retrieval Speed**: <200ms for L3, <50ms for L2
 - **Validation**: 90%+ self-validation rate
 

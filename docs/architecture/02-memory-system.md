@@ -1180,6 +1180,315 @@ After any restore operation, run:
 
 ---
 
+## Neo4j High Availability Architecture
+
+The central knowledge graph (Neo4j) requires high availability to support production-scale operations. Single-instance deployment creates unacceptable downtime risk (~50hrs annually, 99.4% uptime) for mission-critical investment decisions.
+
+See [DD-021: Neo4j High Availability](../design-decisions/DD-021_NEO4J_HA.md) for complete design rationale.
+
+### Cluster Architecture
+
+**Neo4j Causal Clustering (Core + Read Replicas)**:
+
+```yaml
+Core Servers (3 nodes - Quorum-based writes):
+  neo4j-core-1: Leader (elected via Raft)
+  neo4j-core-2: Follower
+  neo4j-core-3: Follower
+
+  Consensus: Raft protocol
+  Write Quorum: 2 of 3 (majority)
+  Automatic Failover: 5-10 seconds (leader election)
+  Zero Data Loss: Quorum writes guarantee durability
+
+Read Replicas (2 nodes - Scale reads):
+  neo4j-replica-1: Async replication from core
+  neo4j-replica-2: Async replication from core
+
+  Read Query Routing: 80% of queries (pattern retrieval, similarity search)
+  Replication Lag Target: <5 minutes
+  Load Balancing: Round-robin across replicas
+```
+
+**Architecture Diagram**:
+
+```text
+┌─────────────────────────────────────────────────────┐
+│               Load Balancer                          │
+│  Routes: Writes → Core Leader, Reads → Replicas      │
+└─────────────────────────────────────────────────────┘
+          │                           │
+          ▼ (writes)                  ▼ (reads)
+┌──────────────────────┐    ┌──────────────────────┐
+│   Core Cluster       │    │   Read Replicas      │
+│  ┌─────────────┐     │    │  ┌─────────────┐    │
+│  │ Core-1      │     │    │  │ Replica-1   │    │
+│  │ (Leader)    │◄────┼────┼─►│             │    │
+│  └─────────────┘     │    │  └─────────────┘    │
+│  ┌─────────────┐     │    │  ┌─────────────┐    │
+│  │ Core-2      │     │    │  │ Replica-2   │    │
+│  │ (Follower)  │◄────┼────┼─►│             │    │
+│  └─────────────┘     │    │  └─────────────┘    │
+│  ┌─────────────┐     │    │                      │
+│  │ Core-3      │     │    │  Async replication   │
+│  │ (Follower)  │     │    │  from core cluster   │
+│  └─────────────┘     │    └──────────────────────┘
+│                      │
+│  Raft consensus      │
+│  Quorum writes       │
+└──────────────────────┘
+```
+
+### Failover & Recovery
+
+**Automatic Leader Election**:
+
+- **Trigger**: Core leader failure detection (<10s via heartbeat)
+- **Process**: Remaining cores (2/3) vote for new leader via Raft
+- **Duration**: 5-10 seconds worst-case
+- **Client Impact**: Write queries retry automatically, read queries unaffected
+- **Data Consistency**: Zero data loss (quorum writes)
+
+**Split-Brain Prevention**:
+
+- Raft quorum (2/3) prevents split-brain scenarios
+- Network partition: Majority partition continues, minority partition blocks writes
+- Healing: Minority rejoins automatically when network restored
+
+**Replication Lag Monitoring**:
+
+```cypher
+// Check replication lag on read replicas
+CALL dbms.cluster.overview()
+YIELD id, addresses, role, database, lastAppliedRaftLogIndex
+WHERE role = 'READ_REPLICA'
+RETURN id, database,
+       (leader_raft_index - lastAppliedRaftLogIndex) as lag_operations
+// Alert if lag > 1000 operations or >5min time delta
+```
+
+### Backup Strategy
+
+**Multi-Tier Backup Architecture**:
+
+```yaml
+Backup Schedule:
+  Hourly Incremental: From core-1 (active leader)
+    - Retention: 24 hours (24 backups)
+    - Duration: ~5 minutes
+    - Storage: Local SSD + S3 cross-region
+
+  Daily Full: From core-1 (during low-usage window 2-4 AM)
+    - Retention: 30 days
+    - Duration: ~30 minutes
+    - Storage: S3 Standard (cross-region)
+
+  Weekly Full: From core-1
+    - Retention: 12 weeks (3 months)
+    - Storage: S3 Standard-IA
+
+  Monthly Full: From core-1
+    - Retention: 12 months
+    - Storage: S3 Glacier
+
+Backup Validation:
+  Weekly: Restore test to isolated instance, validate integrity
+  Monthly: Full restore drill with application integration test
+
+Recovery Objectives:
+  RTO (Recovery Time Objective): <1 hour
+  RPO (Recovery Point Objective): <1 hour (hourly incremental granularity)
+```
+
+**Backup Storage Strategy**:
+
+```yaml
+Primary Backup Location:
+  Provider: AWS S3
+  Region: us-west-2 (cross-region from production us-east-1)
+  Encryption: AES-256 (S3 server-side)
+  Versioning: Enabled (protect against accidental deletion)
+
+Secondary Backup Location (Disaster Recovery):
+  Provider: GCP Cloud Storage
+  Region: us-central1
+  Purpose: Provider-level disaster recovery
+  Sync: Daily (copy from AWS S3)
+  Recovery Latency: <4 hours
+```
+
+### Cluster Deployment Configuration
+
+**Infrastructure Requirements** (Phase 4):
+
+```yaml
+Core Servers (3 nodes):
+  Instance Type: r5.2xlarge (8 vCPU, 64GB RAM)
+  Storage: 1TB SSD (EBS gp3)
+  Cost: $500/mo × 3 = $1,500/mo
+
+Read Replicas (2 nodes):
+  Instance Type: r5.xlarge (4 vCPU, 32GB RAM)
+  Storage: 1TB SSD (EBS gp3)
+  Cost: $300/mo × 2 = $600/mo
+
+Total Infrastructure Cost: $2,100/mo
+Premium over Single Instance: $1,600/mo ($500 → $2,100)
+
+Availability Target: 99.95% (vs 99.4% single instance)
+Annual Downtime Reduction: ~50 hours → ~4 hours
+```
+
+**Network Configuration**:
+
+```yaml
+Internal Cluster Communication:
+  Protocol: Raft over TCP
+  Ports: 7687 (bolt), 7474 (http), 6000 (discovery), 7000 (transaction)
+  Network: Private VPC subnet (no internet exposure)
+  Security Groups: Core ↔ Core, Core → Replicas only
+
+Load Balancer Configuration:
+  Type: Application Load Balancer (Layer 7)
+  Health Check: /db/cluster/available (every 10s)
+  Routing:
+    - WRITE queries → Core leader (auto-detect via cluster API)
+    - READ queries → Read replicas (round-robin)
+    - Sticky sessions: Disabled (stateless queries)
+```
+
+### Monitoring & Alerts
+
+**Cluster Health Metrics** (Prometheus/Grafana):
+
+| Metric | Alert Threshold | Action |
+|--------|----------------|--------|
+| Core node down | Any core unreachable >30s | Page on-call |
+| Leader election | >2 elections/hour | Investigate network stability |
+| Replication lag | >5 minutes or >1000 ops | Alert ops team |
+| Quorum lost | <2 cores available | Critical: Page on-call |
+| Backup failure | Any backup job fails | High: Alert ops team |
+| Disk usage | >80% on any node | Warning: Plan capacity increase |
+
+**Cluster Topology Monitoring**:
+
+```cypher
+// Real-time cluster health dashboard
+CALL dbms.cluster.overview()
+YIELD id, addresses, role, database, lastAppliedRaftLogIndex
+RETURN id, role, database, addresses,
+       (now() - lastContactedTime) as seconds_since_contact
+ORDER BY role, id
+```
+
+**Integration with Existing Monitoring** (DD-019):
+
+- Cluster health checks integrated into hourly integrity monitoring
+- Backup validation integrated into weekly comprehensive checks
+- Replication lag alerts added to real-time alert routing
+
+### Migration Strategy (Phase 4)
+
+**Single Instance → Cluster Migration**:
+
+```yaml
+Week 1-2: Cluster Setup
+  - Provision 3 core servers + 2 read replicas
+  - Configure Raft clustering, validate internal communication
+  - Set up load balancer routing rules
+  - Configure backup pipelines
+
+Week 3: Data Migration (Maintenance Window)
+  - Take final full backup of single instance
+  - Restore to core-1, let Raft replicate to core-2/3
+  - Validate data consistency across cores
+  - Configure read replicas to follow core cluster
+  - Validate replication lag <1 minute
+
+Week 4: Testing & Cutover
+  - Failover testing (kill core-1, verify leader election)
+  - Load testing (read replica distribution, write quorum latency)
+  - Backup restore testing (verify hourly/daily backups functional)
+  - DNS cutover: Update application connection strings
+  - 24hr monitoring period (rollback plan: revert DNS to single instance)
+```
+
+**Rollback Plan**:
+
+- Keep single instance running (standby) for 7 days post-migration
+- If critical issues: Revert DNS to single instance (<5min switchover)
+- Cluster data can be exported back to single instance if needed
+
+### Performance Characteristics
+
+**Read/Write Latency**:
+
+```yaml
+Write Operations (Quorum 2/3):
+  Single Instance: ~10ms (local write)
+  Cluster: ~15ms (quorum coordination overhead)
+  Overhead: +5ms (+50%)
+
+Read Operations (from replicas):
+  Single Instance: ~10ms
+  Cluster: ~10ms (replica local read, no overhead)
+  Benefit: 2× read capacity (2 replicas)
+
+Memory Retrieval Impact:
+  Target: <500ms uncached, <200ms cached
+  Cluster Overhead: ~5ms per query
+  Impact: <1% of total budget (acceptable)
+```
+
+**Scaling Considerations**:
+
+- Read capacity scales linearly with replicas (2 replicas = 2× read throughput)
+- Write capacity fixed (single leader bottleneck)
+- For write-heavy workloads: Consider sharding or alternative architectures (not needed for this system - read-heavy 80/20)
+
+### Testing Requirements (Phase 4)
+
+**Failover Testing Scenarios**:
+
+1. **Leader Failure**: Kill core-1 (leader), verify 5-10s election, zero data loss
+2. **Follower Failure**: Kill core-2 (follower), verify writes continue (2/3 quorum)
+3. **Network Partition**: Simulate split (2 vs 1), verify majority continues, minority blocks
+4. **Replica Lag**: Introduce network delay, verify lag alerts, verify stale read detection
+5. **Backup Restore**: Restore from hourly backup, validate consistency, measure RTO
+
+**Success Criteria**:
+
+- All failover scenarios complete within SLA (10s leader election, <1hr RTO)
+- Zero data loss in all scenarios
+- Application connection resilience (automatic retry on failover)
+- Monitoring alerts trigger correctly
+- Backup validation passes (weekly restore test)
+
+### Implementation Phase
+
+**Phase 4 (Months 7-8)**: Deploy Neo4j HA before production launch
+
+**Rationale**:
+
+- Not needed for MVP/Beta (10-50 stocks, low concurrency)
+- Critical for Production (200+ stocks, 24/7 operation)
+- Cost justified by downtime risk reduction (50hr → 4hr annually)
+- Enables horizontal read scaling for future growth
+
+**Dependencies**:
+
+- Neo4j operational (Phase 1-2)
+- Production infrastructure provisioned (AWS/GCP)
+- Monitoring and alerting systems deployed (DD-019, Flaw #24)
+
+**Cross-References**:
+
+- See [DD-021: Neo4j High Availability](../design-decisions/DD-021_NEO4J_HA.md) for complete design rationale
+- See [Flaw #21: Scalability Architecture](../design-flaws/resolved/21-scalability.md) for problem context
+- See [Tech Requirements](../implementation/02-tech-requirements.md) for infrastructure specifications
+
+---
+
 ## Memory Synchronization Protocol
 
 **Note**: Code samples referenced here have been omitted from architecture docs. See `/examples/` directory for implementation examples.

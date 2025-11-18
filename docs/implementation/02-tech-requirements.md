@@ -105,6 +105,9 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - Composite indexes on frequently queried properties
   - Full-text indexes on text content
   - Graph algorithm projections
+- **High Availability Architecture** (Phase 4):
+  - See [DD-021: Neo4j High Availability](../design-decisions/DD-021_NEO4J_HA.md) for complete design
+  - Resolves [Flaw #21: Scalability Architecture](../design-flaws/resolved/21-scalability.md)
 
 #### In-Memory Cache & Storage - NEW
 

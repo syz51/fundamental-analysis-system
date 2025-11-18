@@ -92,6 +92,12 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 - Runs learning engine to improve agent accuracy over time
 - Identifies and validates recurring patterns across analyses
 - Synchronizes memories between agents and central storage
+- **Infrastructure Resilience** (Phase 4+):
+  - Neo4j high-availability cluster prevents single point of failure
+  - 99.95% uptime target (automatic failover <10s)
+  - Cross-region disaster recovery (<1hr RTO/RPO)
+  - Production-ready for 24/7 investment operations
+  - See [DD-021: Neo4j HA](../design-decisions/DD-021_NEO4J_HA.md) for complete architecture
 
 #### Coordination Layer
 

@@ -53,6 +53,17 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 
 See [Human Integration](docs/operations/02-human-integration.md) for details.
 
+### Infrastructure & Reliability (v2.0, Phase 4+)
+
+**Neo4j High Availability** (DD-021, resolves Flaw #21):
+- 3 core servers (Raft consensus) + 2 read replicas
+- Automatic failover <10s, zero data loss
+- 99.95% availability (46hr downtime reduction annually)
+- Cross-region backup (AWS S3 + GCP Cloud Storage)
+- Cost: $2,250/mo ($1,700 premium over single instance)
+- Implementation: Phase 4 (Months 7-8)
+- See [DD-021: Neo4j HA](docs/design-decisions/DD-021_NEO4J_HA.md)
+
 ## Tech Stack
 
 ### Required Components
@@ -186,10 +197,10 @@ Prevents deadlocks via fallbacks when human unavailable. Challenges include: cha
 
 ### Key Milestones
 
-- Month 4: MVP (10 stocks end-to-end)
-- Month 6: Beta (50 stocks, 80% accuracy)
-- Month 8: Production (200 stocks, <24hr)
-- Month 12: Scale (1000+ stocks)
+- Month 4: MVP (initial stocks end-to-end)
+- Month 6: Beta (expanded workload, 80% accuracy)
+- Month 8: Production (operational workload, <24hr)
+- Month 12+: Scale phase (large-scale coverage)
 
 ## Key Metrics & Ratios
 
