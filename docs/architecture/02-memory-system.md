@@ -999,6 +999,18 @@ new_score = (current_score * count * decay + new_accuracy) / (count * decay + 1)
 3. Archive full detail to cold storage (S3, data warehouse, or equivalent)
 4. Remove full detail from L3 graph
 
+**Archive Promotion** ([DD-013](../../design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md)):
+
+Archived patterns can be promoted back to active graph when needed:
+
+- **Triggers**: Regime change detection, high access frequency (3+ hits/30d), post-mortem requests
+- **Cached Index**: Redis/ElasticSearch index enables <100ms queries without S3 retrieval
+- **Auto-Promote**: Pattern re-hydrated immediately on trigger, human notified for 48hr override window
+- **Re-Hydration**: S3 → validation → L3 graph restoration with staleness metadata
+- **Probationary Status**: Promoted patterns require re-validation before investment use
+
+This enables multi-year learning evolution - system leverages historical patterns when market regimes change rather than re-learning from scratch.
+
 **Graph Size Management**:
 
 - Target: <50K active nodes in L3 graph

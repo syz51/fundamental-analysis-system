@@ -443,14 +443,20 @@ Two-tier selective archiving for critical pattern evidence:
     4. Validation count ≥3
   - Storage: `/data/memory/pattern_archives/{pattern_id}/tier2/`
 
-**Pattern-Aware Retention Logic**:
+**Pattern-Aware Retention Logic** ([DD-013](../../design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md) extends DD-009):
 
 Before deleting files from Cold tier, system checks:
 
-1. Does file support any active patterns? (query knowledge graph)
-2. Is file already archived in pattern archive? (check archive index)
-3. If yes to either: Retain in Cold tier OR safe to delete (if archived)
-4. If no to both: Eligible for deletion
+1. Does file support any active patterns? (query knowledge graph) → RETAIN
+2. Does file support deprecated patterns? (check status + deprecation date)
+   - If deprecated <18 months ago → RETAIN
+   - If deprecated ≥18 months ago → Check archive sufficiency:
+     - Late-stage deprecated (human_approved/active/probationary): Require Tier 2 archive
+     - Early-stage deprecated (candidate/statistically_validated): Require Tier 1 archive
+     - If required tier exists → Safe to delete
+     - If required tier missing → RETAIN + ALERT
+3. Is pattern under post-mortem investigation? → RETAIN (override time limits)
+4. If all checks pass → Eligible for deletion
 
 **Cost Estimate** (at scale, 1000 stocks/year):
 
@@ -461,12 +467,18 @@ Tiered Storage:
   Cold (130GB):   $0.13/mo
   Subtotal:       $5.07/mo
 
-Pattern Archives:
+Pattern Archives (DD-009):
   Tier 1 (17GB):  $0.02/mo
   Tier 2 (200GB): $0.20/mo
   Subtotal:       $0.22/mo
 
-Total:            $5.29/mo
+DD-013 Additions (Archive Lifecycle):
+  Deprecated pattern retention (18mo, 40GB): $0.72/mo
+  Late-stage Tier 2 archives (40 patterns):  $0.40/mo
+  Cached index (Redis, 50MB):                $0.01/mo
+  Subtotal:                                  $1.13/mo
+
+Total:            $6.42/mo
 vs. All Hot:      $23/mo (77% savings)
 ```
 
