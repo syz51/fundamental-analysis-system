@@ -44,6 +44,7 @@ Roadmap, technical requirements, and deployment considerations.
 - [02 - Technical Requirements](implementation/02-tech-requirements.md) - Tech stack, infrastructure, compute/storage needs
 - [03 - Risks & Compliance](implementation/03-risks-compliance.md) - Risk assessment, regulatory considerations
 - [04 - Glossary](implementation/04-glossary.md) - Terms and definitions
+- [05 - Credibility System](implementation/05-credibility-system.md) - Agent scoring for debates, temporal decay, regime adaptation
 
 ### 🔍 Design Decisions
 
@@ -56,8 +57,10 @@ Deep dives into specific complex architectural choices.
 
 Known design issues and resolutions tracked in `design-flaws/`:
 
-- [Summary](design-flaws/00-SUMMARY.md) - Active & resolved issues (7 active, 3 resolved)
-- [Priority Guide](design-flaws/PRIORITY.md) - Implementation order and dependencies
+- [Index](design-flaws/INDEX.md) - All flaws by priority/domain/phase
+- [Dependencies](design-flaws/DEPENDENCIES.md) - Dependency graph and critical path
+- [Roadmap](design-flaws/ROADMAP.md) - Phase timeline and implementation plan
+- [Navigation Guide](design-flaws/README.md) - How to use the design-flaws folder
 
 ---
 
@@ -80,12 +83,14 @@ Practical implementation samples are in `/examples`:
 ├── /architecture                 # System design (7 docs)
 ├── /operations                   # Day-to-day workflows (3 docs)
 ├── /learning                     # Learning systems (3 docs)
-├── /implementation               # Roadmap & tech specs (4 docs)
-└── /design-flaws                 # Critical issues (11 docs)
+├── /implementation               # Roadmap & tech specs (5 docs)
+├── /design-flaws                 # Design issues & resolutions
+└── /archive
+    ├── /historical-design        # Previous design versions
+    └── /design-flaws             # Archived design flaw docs
 
 /design-decisions                 # Design deep-dives
 /examples                         # Code samples
-/archive                          # Previous design versions
 ```
 
 ---
@@ -103,13 +108,15 @@ Practical implementation samples are in `/examples`:
 1. [Specialist Agents](architecture/03-agents-specialist.md) - Core analysis agents
 2. [Support Agents](architecture/04-agents-support.md) - Infrastructure agents
 3. [Collaboration Protocols](architecture/07-collaboration-protocols.md) - Inter-agent communication
-4. [Examples](../examples/agent-implementations/) - Sample code
+4. [Credibility System](implementation/05-credibility-system.md) - Agent scoring for debates
+5. [Examples](../examples/agent-implementations/) - Sample code
 
 **Working on memory systems?** Read:
 
 1. [Memory System](architecture/02-memory-system.md) - Architecture overview
-2. [Learning Systems](learning/01-learning-systems.md) - How memory improves over time
-3. [Design Flaws Summary](design-flaws/00-SUMMARY.md) - Known issues to address
+2. [Credibility System](implementation/05-credibility-system.md) - Agent credibility storage
+3. [Learning Systems](learning/01-learning-systems.md) - How memory improves over time
+4. [Design Flaws Index](design-flaws/INDEX.md) - Known issues to address
 
 **Planning integration?** Read:
 
@@ -124,7 +131,7 @@ Practical implementation samples are in `/examples`:
 - **v2.0** (2025-11-17) - Modular documentation restructure, added memory/learning systems
 - **v1.0** (2025-11) - Initial comprehensive design document
 
-See [/archive](../archive/) for previous versions.
+See [/archive](archive/historical-design/) for previous versions.
 
 ---
 
