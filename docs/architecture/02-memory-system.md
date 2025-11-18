@@ -1028,11 +1028,11 @@ The central knowledge graph (Neo4j) is a critical system component requiring rob
 
 **Three-Tier Monitoring**:
 
-| Tier          | Frequency | Checks                                                     | Detection SLA | Action                |
-| ------------- | --------- | ---------------------------------------------------------- | ------------- | --------------------- |
-| Real-time     | <5min     | Transaction failures, constraint violations                | <5min         | Immediate alert       |
-| Hourly        | Every :05 | Relationship counts, index consistency, write failures     | <1hr          | Auto-repair + alert   |
-| Comprehensive | Daily 2AM | Orphaned relationships, missing properties, circular refs  | 24hr          | Repair report + alert |
+| Tier          | Frequency | Checks                                                    | Detection SLA | Action                |
+| ------------- | --------- | --------------------------------------------------------- | ------------- | --------------------- |
+| Real-time     | <5min     | Transaction failures, constraint violations               | <5min         | Immediate alert       |
+| Hourly        | Every :05 | Relationship counts, index consistency, write failures    | <1hr          | Auto-repair + alert   |
+| Comprehensive | Daily 2AM | Orphaned relationships, missing properties, circular refs | 24hr          | Repair report + alert |
 
 ### Integrity Check Types
 
@@ -1361,14 +1361,14 @@ Load Balancer Configuration:
 
 **Cluster Health Metrics** (Prometheus/Grafana):
 
-| Metric | Alert Threshold | Action |
-|--------|----------------|--------|
-| Core node down | Any core unreachable >30s | Page on-call |
-| Leader election | >2 elections/hour | Investigate network stability |
-| Replication lag | >5 minutes or >1000 ops | Alert ops team |
-| Quorum lost | <2 cores available | Critical: Page on-call |
-| Backup failure | Any backup job fails | High: Alert ops team |
-| Disk usage | >80% on any node | Warning: Plan capacity increase |
+| Metric          | Alert Threshold           | Action                          |
+| --------------- | ------------------------- | ------------------------------- |
+| Core node down  | Any core unreachable >30s | Page on-call                    |
+| Leader election | >2 elections/hour         | Investigate network stability   |
+| Replication lag | >5 minutes or >1000 ops   | Alert ops team                  |
+| Quorum lost     | <2 cores available        | Critical: Page on-call          |
+| Backup failure  | Any backup job fails      | High: Alert ops team            |
+| Disk usage      | >80% on any node          | Warning: Plan capacity increase |
 
 **Cluster Topology Monitoring**:
 
@@ -1905,15 +1905,16 @@ See [DD-020: Memory Access Control](../design-decisions/DD-020_MEMORY_ACCESS_CON
 
 **5 Roles with Granular Access**:
 
-| Role | L1 Working Memory | L2 Agent Cache | L3 Central Graph | Pattern Lifecycle | Credibility Scores |
-|------|-------------------|----------------|------------------|-------------------|--------------------|
-| **agent** | read_write_own | read_write_own | read_all | propose_only | read_own |
-| **knowledge_base_agent** | read_write_own | read_write_own | read_write | validate | read_all |
-| **debate_facilitator** | read_write_own | read_all | read_all | read_all | read_all |
-| **learning_engine** | none | read_all | read_write | validate | read_write_all |
-| **human_admin** | read_all | read_all | read_write_delete | full_control | read_write_all |
+| Role                     | L1 Working Memory | L2 Agent Cache | L3 Central Graph  | Pattern Lifecycle | Credibility Scores |
+| ------------------------ | ----------------- | -------------- | ----------------- | ----------------- | ------------------ |
+| **agent**                | read_write_own    | read_write_own | read_all          | propose_only      | read_own           |
+| **knowledge_base_agent** | read_write_own    | read_write_own | read_write        | validate          | read_all           |
+| **debate_facilitator**   | read_write_own    | read_all       | read_all          | read_all          | read_all           |
+| **learning_engine**      | none              | read_all       | read_write        | validate          | read_write_all     |
+| **human_admin**          | read_all          | read_all       | read_write_delete | full_control      | read_write_all     |
 
 **Permission Semantics**:
+
 - **read_write_own**: Can read/write only own memory (agent isolation)
 - **read_all**: Can read all agents' memory (cross-agent visibility)
 - **read_write**: Can read/write shared memory (L3 graph)
@@ -1924,11 +1925,13 @@ See [DD-020: Memory Access Control](../design-decisions/DD-020_MEMORY_ACCESS_CON
 ### Agent Isolation
 
 **L1/L2 Isolation Guarantees**:
+
 - Agents cannot read other agents' L1 working memory
 - Agents cannot write to other agents' L2 caches
 - Exception: Debate Facilitator has `read_all` for L2 caches (cross-agent evidence review during mediation)
 
 **L3 Shared Access**:
+
 - All agents have `read_all` access to L3 central graph (institutional knowledge sharing)
 - Only Knowledge Base Agent + Learning Engine can write to L3 (data integrity)
 - Regular agents propose patterns via proposal queue, cannot write directly
@@ -1942,6 +1945,7 @@ PROPOSED → VALIDATED → APPROVED → ACTIVE → DEPRECATED → ARCHIVED
 ```
 
 **Transition Permissions**:
+
 - **PROPOSED → VALIDATED**: Knowledge Base Agent, Human Admin
 - **VALIDATED → APPROVED**: Human Admin only
 - **APPROVED → ACTIVE**: Knowledge Base Agent, Human Admin
@@ -1949,6 +1953,7 @@ PROPOSED → VALIDATED → APPROVED → ACTIVE → DEPRECATED → ARCHIVED
 - **DEPRECATED → ARCHIVED**: Human Admin only
 
 **Pattern Creation**:
+
 - Regular agents create patterns with `status=PROPOSED` (proposal queue)
 - Knowledge Base Agent validates proposals (evidence check, format validation)
 - Human approves validated patterns (Gate 6: Learning Validation)
@@ -1957,12 +1962,14 @@ PROPOSED → VALIDATED → APPROVED → ACTIVE → DEPRECATED → ARCHIVED
 ### Credibility Score Protection
 
 **Write Authority**:
+
 - Only Learning Engine can write credibility scores (prevents self-manipulation)
 - Learning Engine updates scores based on prediction accuracy, human feedback
 - All agents can read own credibility score (self-awareness)
 - Debate Facilitator can read all scores (auto-resolution threshold checks)
 
 **Self-Manipulation Prevention**:
+
 - Agents cannot boost own credibility after failures
 - Credibility updates logged in audit trail (accountability)
 - Human review required if score drops >0.2 in 7 days (alert for investigation)
@@ -1970,12 +1977,14 @@ PROPOSED → VALIDATED → APPROVED → ACTIVE → DEPRECATED → ARCHIVED
 ### Audit Trail
 
 **PostgreSQL Audit Log**:
+
 - All L3 writes logged: actor_id, resource_type, resource_id, action, old_value, new_value, reason
 - 5-year retention (regulatory compliance for investment decisions)
 - Query interface for incident investigation (filter by actor, resource, timerange)
 - Alert on unauthorized access attempts (>10/hour threshold)
 
 **Logged Operations**:
+
 - Pattern creation/modification/deletion
 - Credibility score updates
 - L3 graph node/relationship writes
@@ -1984,12 +1993,14 @@ PROPOSED → VALIDATED → APPROVED → ACTIVE → DEPRECATED → ARCHIVED
 ### Authorization Gateway
 
 **API Layer Enforcement**:
+
 - All memory operations pass through authorization gateway
 - Permission check: <1ms (in-memory lookup)
 - Audit log write: <4ms (async PostgreSQL insert)
 - Total overhead: <5ms per operation (5% of 100ms analysis latency budget)
 
 **Enforcement Flow**:
+
 ```python
 # Agent request → Authorization check → Execute if authorized → Log access
 gateway.authorize_and_execute(
@@ -2004,6 +2015,7 @@ gateway.authorize_and_execute(
 ### Integration with Memory Operations
 
 **Memory Write Example**:
+
 ```python
 # Before: Direct L3 write (no access control)
 neo4j.run("CREATE (p:Pattern {data: $data})", data=pattern_data)
@@ -2021,6 +2033,7 @@ gateway.authorize_and_execute(
 ```
 
 **Cross-Agent Cache Access** (Debate Facilitator only):
+
 ```python
 # Facilitator reading Financial Analyst's L2 cache during debate
 facilitator = Actor(id='debate_facilitator_1', role='debate_facilitator')
@@ -2042,12 +2055,14 @@ evidence = gateway.authorize_and_execute(
 ### Security Monitoring
 
 **Real-Time Alerts**:
+
 - Unauthorized access attempts: >10/hour → Alert ops team
 - Credibility score anomaly: >0.2 drop in 7 days → Human review
 - Pattern lifecycle violation: Direct status modification → Block + alert
 - Audit log query failures: PostgreSQL connection errors → Alert
 
 **Performance Monitoring**:
+
 - Authorization check latency: Target p95 <5ms
 - Audit log write latency: Target p95 <4ms
 - Permission denial rate: Target <1% (indicates misconfiguration if higher)
@@ -2055,6 +2070,7 @@ evidence = gateway.authorize_and_execute(
 ### Testing & Validation
 
 **Security Test Coverage**:
+
 - 30+ test cases for permission matrix (5 roles × 6 resources)
 - Agent isolation tests (cross-cache write attempts)
 - Pattern lifecycle tests (unauthorized status transitions)
@@ -2062,6 +2078,7 @@ evidence = gateway.authorize_and_execute(
 - Audit log capture tests (verify all writes logged)
 
 **Penetration Testing**:
+
 - Phase 4 production deployment requirement
 - Third-party security audit for RBAC implementation
 - Verify no bypass paths (direct database access, API vulnerabilities)

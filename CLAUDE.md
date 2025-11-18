@@ -56,6 +56,7 @@ See [Human Integration](docs/operations/02-human-integration.md) for details.
 ### Infrastructure & Reliability (v2.0, Phase 4+)
 
 **Neo4j High Availability** (DD-021, resolves Flaw #21):
+
 - 3 core servers (Raft consensus) + 2 read replicas
 - Automatic failover <10s, zero data loss
 - 99.95% availability (46hr downtime reduction annually)

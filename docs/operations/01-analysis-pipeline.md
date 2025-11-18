@@ -286,13 +286,14 @@ Each specialist agent saves execution state after completing each subtask:
 
 The system classifies failures into 3 tiers with different handling strategies:
 
-| Tier | Failure Type | Examples | Action | Rationale |
-|------|-------------|----------|--------|-----------|
-| 1 | Transient | Network timeout (<3x), rate limits (429), 5xx | Auto-retry | Self-resolving |
-| 2 | Recoverable | Agent crash, data quality, persistent API failure | Auto-pause | Needs investigation |
-| 3 | Irrecoverable | Data integrity violation, security breach, delisted ticker | Auto-fail | Not fixable |
+| Tier | Failure Type  | Examples                                                   | Action     | Rationale           |
+| ---- | ------------- | ---------------------------------------------------------- | ---------- | ------------------- |
+| 1    | Transient     | Network timeout (<3x), rate limits (429), 5xx              | Auto-retry | Self-resolving      |
+| 2    | Recoverable   | Agent crash, data quality, persistent API failure          | Auto-pause | Needs investigation |
+| 3    | Irrecoverable | Data integrity violation, security breach, delisted ticker | Auto-fail  | Not fixable         |
 
 **Tier 1 (Auto-Retry)**:
+
 - Network timeouts (< 3 consecutive failures)
 - Rate limit errors (HTTP 429) with exponential backoff
 - Transient API unavailability (5xx with retry-after header)
@@ -300,6 +301,7 @@ The system classifies failures into 3 tiers with different handling strategies:
 - **Rationale**: High probability of self-resolution, low cost to retry
 
 **Tier 2 (Auto-Pause)**:
+
 - Agent crashes/unhandled exceptions
 - Data quality failures (missing required SEC filings, corrupt data)
 - Dependency failures (upstream agent failed, cannot proceed)
@@ -309,6 +311,7 @@ The system classifies failures into 3 tiers with different handling strategies:
 - **Rationale**: Requires investigation or external fix, resumable after resolution
 
 **Tier 3 (Auto-Fail)**:
+
 - Data integrity violations (contradictory checkpoint data)
 - Security violations (unauthorized access attempts)
 - Configuration errors blocking entire pipeline
@@ -385,6 +388,7 @@ RUNNING ──────► PAUSING ──────► PAUSED
 ```
 
 **States**:
+
 - **RUNNING**: Normal analysis execution
 - **PAUSING**: Saving checkpoint, coordinating agent shutdown
 - **PAUSED**: Idle, awaiting manual/auto resume
@@ -467,15 +471,18 @@ The system automatically detects correlated failures across multiple stocks and 
 When an agent fails, the FailureCorrelator analyzes the failure for correlation with recent failures (5min window):
 
 1. **Error Signature Generation**:
+
    - Normalize error message: remove timestamps, UUIDs, request IDs
    - Extract semantic pattern: "Koyfin quota 1000/1000" → "api_quota_exceeded"
    - Generate hash: `hash(agent_type, error_type, data_source, pattern)`
 
 2. **Temporal Correlation Detection**:
+
    - Query failures with matching signature within 5min window
    - Check batch threshold: ≥3 correlated failures = batch trigger
 
 3. **Root Cause Inference**:
+
    - **API Quota**: 3+ stocks, same source, quota error → "{source} API quota exceeded"
    - **Network Outage**: 5+ stocks, same source, timeout → "{source} network connectivity"
    - **Data Unavailability**: 3+ stocks, 404 errors → "{source} data unavailable"
@@ -709,27 +716,27 @@ Memory system failure resilience ([DD-018](../design-decisions/DD-018_MEMORY_FAI
 
 **Query Performance (C5)**:
 
-| Metric | Target | Alert Threshold | Action |
-|--------|--------|-----------------|--------|
-| Query timeout rate | <5% | >5% in 5min window | Investigate database performance, check L1/L2/L3 response times |
-| Fallback depth distribution | 90% depth=0 (L1 hit) | >20% exhaust all fallbacks | Database optimization required, cache warming needed |
-| Query response time p99 | <500ms | >2s | Performance degradation, check query plans |
+| Metric                      | Target               | Alert Threshold            | Action                                                          |
+| --------------------------- | -------------------- | -------------------------- | --------------------------------------------------------------- |
+| Query timeout rate          | <5%                  | >5% in 5min window         | Investigate database performance, check L1/L2/L3 response times |
+| Fallback depth distribution | 90% depth=0 (L1 hit) | >20% exhaust all fallbacks | Database optimization required, cache warming needed            |
+| Query response time p99     | <500ms               | >2s                        | Performance degradation, check query plans                      |
 
 **Sync Queue Health (A4)**:
 
-| Metric | Target | Alert Threshold | Action |
-|--------|--------|-----------------|--------|
-| Sync queue depth per agent | <30 messages | >50 messages (backpressure active) | Scale agent capacity, reduce sync event rate |
-| Backpressure events | 0/hour | >5/hour | Investigate sync burst sources (debates, human gates) |
-| Sync drop rate | 0% | >1% normal syncs dropped, >0% high/critical dropped | Agent load balancing, BatchManager pause trigger |
+| Metric                     | Target       | Alert Threshold                                     | Action                                                |
+| -------------------------- | ------------ | --------------------------------------------------- | ----------------------------------------------------- |
+| Sync queue depth per agent | <30 messages | >50 messages (backpressure active)                  | Scale agent capacity, reduce sync event rate          |
+| Backpressure events        | 0/hour       | >5/hour                                             | Investigate sync burst sources (debates, human gates) |
+| Sync drop rate             | 0%           | >1% normal syncs dropped, >0% high/critical dropped | Agent load balancing, BatchManager pause trigger      |
 
 **Regime Update Performance (M5)**:
 
-| Metric | Target | Alert Threshold | Action |
-|--------|--------|-----------------|--------|
-| Regime update duration p99 | <5min | >5min (staleness SLA miss) | Optimize regime detection algorithm |
-| Regime cache timeout events | 0/day | >1/day | Investigate regime detection hangs |
-| Credibility staleness | <5min | >10min | Manual regime update trigger, human notification |
+| Metric                      | Target | Alert Threshold            | Action                                           |
+| --------------------------- | ------ | -------------------------- | ------------------------------------------------ |
+| Regime update duration p99  | <5min  | >5min (staleness SLA miss) | Optimize regime detection algorithm              |
+| Regime cache timeout events | 0/day  | >1/day                     | Investigate regime detection hangs               |
+| Credibility staleness       | <5min  | >10min                     | Manual regime update trigger, human notification |
 
 ### Alert Handling Procedures
 
@@ -801,11 +808,11 @@ Memory system failure resilience ([DD-018](../design-decisions/DD-018_MEMORY_FAI
 
 **Alert History (Last 24h)**:
 
-| Time | Alert | Severity | Status | Resolution |
-|------|-------|----------|--------|------------|
-| 14:23 | Sync Queue Overflow (Financial Agent) | HIGH | RESOLVED | Paused 10 low-priority analyses, queue normalized |
-| 09:15 | Query Timeout Rate >5% | WARNING | RESOLVED | Database query plan optimized, timeout rate <2% |
-| 02:30 | Regime Staleness SLA Miss (p99=6.2min) | WARNING | ACKNOWLEDGED | Monitoring, no immediate action |
+| Time  | Alert                                  | Severity | Status       | Resolution                                        |
+| ----- | -------------------------------------- | -------- | ------------ | ------------------------------------------------- |
+| 14:23 | Sync Queue Overflow (Financial Agent)  | HIGH     | RESOLVED     | Paused 10 low-priority analyses, queue normalized |
+| 09:15 | Query Timeout Rate >5%                 | WARNING  | RESOLVED     | Database query plan optimized, timeout rate <2%   |
+| 02:30 | Regime Staleness SLA Miss (p99=6.2min) | WARNING  | ACKNOWLEDGED | Monitoring, no immediate action                   |
 
 ### Integration with Existing Monitoring
 

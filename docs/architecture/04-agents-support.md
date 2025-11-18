@@ -200,6 +200,7 @@ The Knowledge Base Agent has elevated permissions for memory system access to pe
 **Role**: `knowledge_base_agent`
 
 **Permissions**:
+
 - **L1 Working Memory**: read_write_own (own L1 only)
 - **L2 Agent Cache**: read_write_own (own L2 only, cannot read other agents' caches)
 - **L3 Central Graph**: read_write (can write to shared knowledge graph)
@@ -208,12 +209,14 @@ The Knowledge Base Agent has elevated permissions for memory system access to pe
 - **Audit Log**: read_all (can query audit trail for investigations)
 
 **L3 Write Authority**:
+
 - One of only 2 roles with L3 write access (Knowledge Base Agent + Learning Engine)
 - Responsible for creating/updating Pattern nodes in Neo4j
 - Can advance pattern status from PROPOSED → VALIDATED → ACTIVE
 - Cannot delete patterns (Human Admin only)
 
 **Pattern Lifecycle Management**:
+
 - Regular agents propose patterns (create with status=PROPOSED)
 - Knowledge Base Agent validates proposals:
   - Evidence quality check (minimum 3 supporting analyses)
@@ -225,23 +228,27 @@ The Knowledge Base Agent has elevated permissions for memory system access to pe
 - Patterns become visible to all agents only when ACTIVE
 
 **Credibility Score Calculation**:
+
 - Knowledge Base Agent queries agent credibility scores (read_all)
 - Used for pattern validation (high-credibility agents' findings weighted more)
 - Cannot write credibility scores (Learning Engine exclusive)
 - Supports Debate Facilitator with credibility data for auto-resolution
 
 **Audit Trail Access**:
+
 - Can query PostgreSQL audit log for incident investigation
 - Used for post-mortem analysis (e.g., "Why did pattern X fail?")
 - Helps identify systematic issues (e.g., multiple agents making same error)
 - Cannot delete or modify audit log entries (Human Admin only)
 
 **Agent Isolation Enforcement**:
+
 - Cannot read other agents' L1/L2 caches (agent isolation)
 - Exception: Can read all agents' findings via L3 central graph (shared institutional knowledge)
 - Prevents cache pollution while maintaining cross-agent pattern recognition
 
 **Security Constraints**:
+
 - All L3 writes logged in audit trail (actor, resource, action, old/new values)
 - Cannot bypass authorization gateway (API enforcement layer)
 - Pattern lifecycle state machine enforced (cannot skip validation steps)

@@ -4,6 +4,7 @@
 **Date**: 2025-11-18
 **Decider(s)**: System Architect
 **Related Docs**:
+
 - [Memory System](../architecture/02-memory-system.md)
 - [Data Management](../operations/03-data-management.md)
 - [Tech Requirements](../implementation/02-tech-requirements.md)
@@ -26,6 +27,7 @@
 ### Concrete Examples
 
 **Example 1: Pattern Re-Validation Performance**
+
 ```text
 Year 2.0: Company XYZ financial data in Hot storage (<10ms access)
 Year 2.1: Auto-migrated Hot → Warm (age-based rule)
@@ -37,6 +39,7 @@ Result: Analysis timeouts, degraded user experience
 ```
 
 **Example 2: Graph Corruption Scenario**
+
 ```text
 Event: Memory sync interrupted during pattern evidence write
 Result: Orphaned relationship (Pattern → Evidence with missing Evidence node)
@@ -69,11 +72,13 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 **Description**: Admin manually promotes files when performance issues detected
 
 **Pros**:
+
 - Zero implementation cost
 - Full control over tier placement
 - Simple to understand
 
 **Cons**:
+
 - Reactive (performance already degraded when detected)
 - Requires constant monitoring
 - Doesn't scale (200-1000 stocks)
@@ -88,11 +93,13 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 **Description**: Machine learning model predicts future access patterns, proactively promotes files
 
 **Pros**:
+
 - Proactive (promotes before access spike)
 - Optimizes for predicted workload
 - Could reduce unnecessary promotions
 
 **Cons**:
+
 - Complex implementation (ML pipeline, training data)
 - Requires 6-12 months data for training
 - Prediction errors cause thrashing (promote/demote cycles)
@@ -107,6 +114,7 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 **Description**: Monitor actual file access frequency (7-day windows), promote when thresholds exceeded
 
 **Pros**:
+
 - Simple threshold-based logic (no ML complexity)
 - Proven in industry (CDN cache warming, database buffer pools)
 - Fast recovery (<24hr from access spike to promotion)
@@ -114,6 +122,7 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 - Scales well (PostgreSQL handles access log aggregation)
 
 **Cons**:
+
 - Reactive (first few accesses slow before promotion)
 - Requires access tracking infrastructure
 - Storage cost increases if many files promoted
@@ -127,12 +136,14 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 **Description**: Combine Option 3 automated re-promotion with manual tier pinning capability
 
 **Pros**:
+
 - All benefits of Option 3
 - Admin can pin critical files to Hot tier (testing, known workloads)
 - Emergency performance optimization capability
 - Testing flexibility
 
 **Cons**:
+
 - Slightly more complex (override logic)
 - Requires admin UI/API
 
@@ -143,10 +154,12 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 ### Graph Integrity: Option A vs. B
 
 **Option A: Daily Checks Only**
+
 - Pros: Simple, low overhead
 - Cons: 24hr detection window (too slow)
 
-**Option B: Hybrid Monitoring - **CHOSEN**
+**Option B: Hybrid Monitoring - **CHOSEN\*\*
+
 - Real-time transaction failure alerts
 - Hourly lightweight checks (relationship counts, index consistency)
 - Daily comprehensive checks (orphaned relationships, missing properties)
@@ -206,6 +219,7 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 ### Affected Components
 
 **Services to Implement**:
+
 - `FileAccessTracker`: Log file accesses to PostgreSQL
 - `AccessAggregator`: Daily job to update weekly materialized views
 - `TierPromotionService`: Check promotion candidates, execute migrations
@@ -214,6 +228,7 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 - `BackupManager`: PITR backup scheduling, retention management
 
 **Data Pipeline**:
+
 - File access → PostgreSQL access log (real-time)
 - Daily aggregation → Materialized view refresh
 - Daily promotion job → Identify candidates → Execute tier migrations
@@ -221,6 +236,7 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 - Daily comprehensive check → Generate integrity report → Archive
 
 **Documentation**:
+
 - `docs/operations/03-data-management.md`: Add §4.3 Re-Promotion System
 - `docs/architecture/02-memory-system.md`: Add §3.4 Integrity Monitoring
 - `docs/implementation/02-tech-requirements.md`: Neo4j recovery procedures, monitoring stack
@@ -232,6 +248,7 @@ Primary approach adds PostgreSQL-based access tracking to enable dynamic tier pr
 ### Access Tracking Architecture
 
 **PostgreSQL Schema**:
+
 ```sql
 -- Raw access log (append-only, partitioned by week)
 CREATE TABLE file_access_log (
@@ -264,6 +281,7 @@ CREATE INDEX idx_weekly_promotion ON file_access_weekly(promotion_candidate) WHE
 ### Re-Promotion Algorithm
 
 **Thresholds**:
+
 ```python
 ACCESS_THRESHOLD_HOT = 10   # accesses per 7-day window for Warm→Hot
 ACCESS_THRESHOLD_WARM = 3   # accesses per 7-day window for Cold→Warm
@@ -271,6 +289,7 @@ SAFETY_WINDOW_DAYS = 7      # Keep file in both tiers during migration
 ```
 
 **Daily Promotion Job**:
+
 ```python
 class TierPromotionService:
     """Automated file promotion based on access patterns"""
@@ -332,12 +351,14 @@ class TierPromotionService:
 ### Manual Override API
 
 **Schema Extension**:
+
 ```sql
 ALTER TABLE file_metadata ADD COLUMN tier_override VARCHAR(10);
 -- Values: NULL (auto), 'hot', 'warm', 'cold'
 ```
 
 **Admin API**:
+
 ```python
 @admin_api.post("/files/{file_id}/tier")
 def set_tier_override(file_id: str, tier: str):
@@ -368,6 +389,7 @@ def set_tier_override(file_id: str, tier: str):
 **Hybrid Architecture**:
 
 **1. Real-Time Alerts** (Prometheus + Neo4j metrics)
+
 ```yaml
 Alerts:
   - name: HighTransactionFailureRate
@@ -382,6 +404,7 @@ Alerts:
 ```
 
 **2. Hourly Lightweight Checks**
+
 ```python
 class GraphIntegrityMonitor:
     """Hourly + daily integrity checks"""
@@ -424,6 +447,7 @@ class GraphIntegrityMonitor:
 ```
 
 **3. Daily Comprehensive Checks**
+
 ```python
 def daily_comprehensive_check(self):
     """Deep integrity validation"""
@@ -530,6 +554,7 @@ class GraphRepairService:
 ### Backup & Recovery
 
 **PITR Backup Strategy**:
+
 ```yaml
 Backup Schedule:
   - Frequency: Hourly incremental
@@ -552,6 +577,7 @@ Backup Locations:
 ```
 
 **Recovery Procedures**:
+
 ```python
 class BackupManager:
     """PITR backup and recovery"""
@@ -591,12 +617,14 @@ class BackupManager:
 ### Integration Points
 
 **File Access Flow**:
+
 1. Agent requests file from data layer
 2. Data layer serves file from current tier
 3. **Log access** → PostgreSQL `file_access_log`
 4. Return file to agent
 
 **Daily Operations Flow**:
+
 1. **02:00 UTC**: Refresh `file_access_weekly` materialized view
 2. **02:10 UTC**: Run tier promotion job
 3. **02:30 UTC**: Run daily comprehensive integrity check
@@ -604,6 +632,7 @@ class BackupManager:
 5. **03:30 UTC**: Replicate backup to secondary storage
 
 **Hourly Operations Flow**:
+
 1. **:05 minutes**: Run lightweight integrity check
 2. **:10 minutes**: Incremental Neo4j backup
 3. If issues detected → Trigger repair → Alert ops team
@@ -621,12 +650,14 @@ class BackupManager:
 ### Rollback Strategy
 
 If re-promotion causes issues:
+
 1. Disable automated promotion job (manual mode only)
 2. If thrashing detected: Increase thresholds (10→20 for Hot, 3→5 for Warm)
 3. If cost overruns: Lower thresholds or disable Warm→Hot promotions
 4. Full rollback: Return to pure age-based tiering (DD-009 baseline)
 
 If integrity monitoring causes issues:
+
 1. Disable automated repair (alert-only mode)
 2. Reduce check frequency (hourly→daily)
 3. If false positives: Tune threshold ranges
@@ -640,6 +671,7 @@ If integrity monitoring causes issues:
 **Week 4**: Automated repair & backup (repair procedures, PITR, testing)
 
 **Dependencies**:
+
 - DD-009 tiered storage operational
 - PostgreSQL database operational
 - Neo4j knowledge graph operational
@@ -674,17 +706,17 @@ None - all critical questions resolved during design:
 - **Industry Patterns**:
   - CDN cache warming (Cloudflare, Akamai)
   - Database buffer pool management (PostgreSQL shared_buffers)
-  - Neo4j backup/recovery: https://neo4j.com/docs/operations-manual/current/backup-restore/
-- **PostgreSQL Materialized Views**: https://www.postgresql.org/docs/current/sql-creatematerializedview.html
+  - Neo4j backup/recovery: <https://neo4j.com/docs/operations-manual/current/backup-restore/>
+- **PostgreSQL Materialized Views**: <https://www.postgresql.org/docs/current/sql-creatematerializedview.html>
 
 ---
 
 ## Status History
 
-| Date       | Status   | Notes                                      |
-| ---------- | -------- | ------------------------------------------ |
+| Date       | Status   | Notes                                       |
+| ---------- | -------- | ------------------------------------------- |
 | 2025-11-18 | Proposed | Initial proposal based on Flaw #17 analysis |
-| 2025-11-18 | Approved | Hybrid approach, <1hr detection SLA        |
+| 2025-11-18 | Approved | Hybrid approach, <1hr detection SLA         |
 
 ---
 
@@ -693,6 +725,7 @@ None - all critical questions resolved during design:
 ### Cost Estimate
 
 **Access Tracking Storage**:
+
 ```text
 Assumptions:
 - 1000 stocks analyzed per year
@@ -708,6 +741,7 @@ PostgreSQL Storage:
 ```
 
 **Tier Promotion Costs**:
+
 ```text
 Assumptions:
 - 10% of Cold files promoted to Warm (high re-validation)
@@ -721,6 +755,7 @@ Cost Increase: <1% of all-hot baseline
 ```
 
 **Integrity Monitoring Costs**:
+
 ```text
 Prometheus/Grafana: Open-source (self-hosted)
 Compute for checks: <5min/day × $0.10/hr = $0.25/mo

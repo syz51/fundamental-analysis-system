@@ -128,6 +128,7 @@ The addition of memory and learning systems introduces unique risks around data 
 **Monitoring**: Uptime >99.95% (production target), alert on any service degradation
 
 **References**:
+
 - [DD-021: Neo4j High Availability](../design-decisions/DD-021_NEO4J_HA.md)
 - [Flaw #21: Scalability Architecture](../design-flaws/resolved/21-scalability.md)
 

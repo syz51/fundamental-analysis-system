@@ -42,6 +42,7 @@ With unlimited parallel stock processing, human gates create queuing bottlenecks
 ### Sub-Issue A1: No Queue Priority Algorithm
 
 **Current Behavior**:
+
 ```yaml
 Queue Processing: First-In-First-Out (FIFO)
   Stock A (small cap, $10K position) arrives → Queue position 1
@@ -54,6 +55,7 @@ Human Reviews: A → B → C (regardless of importance)
 **Problem**: High-impact decisions wait behind low-impact decisions
 
 **Missing**:
+
 - Impact-weighted priority (position size, market cap, time sensitivity)
 - Deadline-aware scheduling (Gate 1 has 24hr timeout, Gate 5 blocking)
 - Confidence-adjusted routing (low-confidence debates escalate faster)
@@ -61,6 +63,7 @@ Human Reviews: A → B → C (regardless of importance)
 ### Sub-Issue A2: No Queue Depth Limits
 
 **Current Behavior**:
+
 ```yaml
 Scenario: 200 stocks analyzed in 1 week
   200 stocks × 6 gates = 1,200 gate reviews total
@@ -79,6 +82,7 @@ System: Continues accepting new analyses (no backpressure)
 **Problem**: Human overwhelmed, queue never clears, analysis start → decision time grows unbounded
 
 **Missing**:
+
 - Max queue depth limit (e.g., 50 gates pending)
 - Backpressure signaling (pause new analyses when queue full)
 - Queue overflow handling (defer low-priority analyses)
@@ -86,6 +90,7 @@ System: Continues accepting new analyses (no backpressure)
 ### Sub-Issue A3: No Batch Review UX
 
 **Current Behavior**:
+
 ```yaml
 Gate 5 Review Flow (Current):
   For each of 100 stocks:
@@ -105,6 +110,7 @@ No Batch Operations:
 **Problem**: Sequential review inefficient, no bulk workflows
 
 **Missing**:
+
 - Batch comparison view (rank 10 stocks by ROE, margins, etc.)
 - Bulk deferral (mark 20 stocks "review tomorrow")
 - Delegation workflow (assign 10 stocks to junior analyst)
@@ -153,11 +159,13 @@ Scenario 4: Burst Processing (100 stocks in 1 week)
 ```
 
 **Conclusion**: This flaw matters when:
+
 - Processing >50 stocks/month (150 gates/month intake)
 - Burst processing periods (earnings season, market events)
 - Gate review rate < analysis intake rate (queue accumulates)
 
 **Current Mitigations**:
+
 - Auto-approval reduces queue size (50-90% depending on phase)
 - Timeouts with defaults prevent blocking (analyses continue provisionally)
 - Conservative defaults ensure safety even without human review
@@ -197,9 +205,9 @@ Dashboard Features:
   - Group View: Show all pending Gate 5 decisions (100 stocks)
   - Sort/Filter: By sector, priority, position size, confidence
   - Bulk Actions:
-    - Mark 10 stocks "review tomorrow"
-    - Approve 5 stocks in batch (if thesis similar)
-    - Delegate 20 stocks to assistant (with approval workflow)
+      - Mark 10 stocks "review tomorrow"
+      - Approve 5 stocks in batch (if thesis similar)
+      - Delegate 20 stocks to assistant (with approval workflow)
   - Comparison View: Side-by-side metrics for 5 stocks
 
 Performance:
@@ -234,6 +242,7 @@ Safety:
 **Phase**: Month 12+ (Scale phase) or when queue persistently >30 pending
 
 **Approach**: Implement Option 1 (Priority Queue + Backpressure) first
+
 - **Effort**: 3 weeks
 - **Components**:
   - Priority scoring algorithm
@@ -242,10 +251,12 @@ Safety:
   - Gate dashboard showing priority order
 
 **Optional**: Add Option 2 (Batch Review) if queue >50 regularly
+
 - **Effort**: 2 weeks (UI work)
 - **Benefit**: 40% review time reduction
 
 **Defer**: Option 3 (Dynamic Auto-Approval) until proven need
+
 - **Risk**: Variable auto-approval thresholds complicate auditing
 - **Prefer**: Hire additional reviewer instead
 
@@ -278,11 +289,13 @@ Safety:
 **Flaw #21 (Scalability)** assumed **sequential processing** and calculated 18 FTE needed for 1000 stocks/year.
 
 **Flaw #22 (Queue Management)** addresses **parallel processing** assumption:
+
 - Parallel processing removes sequential throughput limit
 - But creates queue management challenge instead
 - Queue management enables human to work at own pace from prioritized queue
 
 **Resolution**:
+
 - Flaw #21 sub-issue A2 (Human throughput bottleneck) marked **INVALID** (flawed premise)
 - Flaw #22 created to capture **queue management** issue for future
 - No immediate action required (current workload manageable)

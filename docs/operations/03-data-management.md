@@ -602,6 +602,7 @@ The memory system (L1 working memory, L2 agent caches, L3 central knowledge grap
 - **human_admin**: full_control (all memory tiers, patterns, audit log)
 
 **Key Differences from File Access**:
+
 - **Agent Isolation**: Agents cannot read/write other agents' L1/L2 memory (prevents cache corruption)
 - **L3 Write Restriction**: Only Knowledge Base Agent + Learning Engine can write to central graph
 - **Pattern Governance**: Pattern lifecycle (PROPOSED → VALIDATED → APPROVED → ACTIVE) enforced

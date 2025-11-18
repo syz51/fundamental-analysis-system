@@ -342,13 +342,13 @@ def _extract_pattern(self, normalized_message):
 
 **Example Signatures**:
 
-| Original Error                                                          | Normalized Pattern                 | Signature               |
-| ----------------------------------------------------------------------- | ---------------------------------- | ----------------------- |
-| `Koyfin API quota exceeded: 1000/1000 (request_id=abc123)`             | `api_quota_exceeded`               | `koyfin:quota:api:abc1` |
-| `Koyfin rate limit reached - 1000 requests/hour (req_id=xyz789)`       | `api_rate_limit_exceeded`          | `koyfin:quota:api:abc1` |
-| `Bloomberg terminal timeout after 30s (2025-11-18T14:27:33)`           | `network_timeout`                  | `bloomberg:net:term:ef2` |
-| `SEC EDGAR filing not found: 10-K for 2024-Q3 (ticker=AAPL)`           | `data_not_found`                   | `sec:404:edgar:3f9a`    |
-| `Financial data missing required field 'revenue' (stock_id=MSFT-uuid)` | `data_missing_field`               | `findata:miss:api:7b2c` |
+| Original Error                                                         | Normalized Pattern        | Signature                |
+| ---------------------------------------------------------------------- | ------------------------- | ------------------------ |
+| `Koyfin API quota exceeded: 1000/1000 (request_id=abc123)`             | `api_quota_exceeded`      | `koyfin:quota:api:abc1`  |
+| `Koyfin rate limit reached - 1000 requests/hour (req_id=xyz789)`       | `api_rate_limit_exceeded` | `koyfin:quota:api:abc1`  |
+| `Bloomberg terminal timeout after 30s (2025-11-18T14:27:33)`           | `network_timeout`         | `bloomberg:net:term:ef2` |
+| `SEC EDGAR filing not found: 10-K for 2024-Q3 (ticker=AAPL)`           | `data_not_found`          | `sec:404:edgar:3f9a`     |
+| `Financial data missing required field 'revenue' (stock_id=MSFT-uuid)` | `data_missing_field`      | `findata:miss:api:7b2c`  |
 
 ### Correlation Detection Algorithm
 
@@ -461,13 +461,13 @@ def infer_root_cause(self, signature, correlated_failures):
 
 **Example Inferences**:
 
-| Correlated Failures                                | Inference Rule | Root Cause                         |
-| -------------------------------------------------- | -------------- | ---------------------------------- |
-| 5 stocks, Koyfin, quota error                      | Rule 1         | "Koyfin API quota exceeded"        |
-| 8 stocks, Bloomberg, timeout error                 | Rule 2         | "Bloomberg network connectivity"   |
-| 4 stocks, SEC EDGAR, 404 error                     | Rule 3         | "SEC EDGAR data unavailable"       |
-| 3 stocks, Financial Analyst, OOM error             | Rule 4         | "Financial Analyst OOM failure"    |
-| 3 stocks, mixed sources/agents                     | Fallback       | "Shared failure - 3 stocks"        |
+| Correlated Failures                    | Inference Rule | Root Cause                       |
+| -------------------------------------- | -------------- | -------------------------------- |
+| 5 stocks, Koyfin, quota error          | Rule 1         | "Koyfin API quota exceeded"      |
+| 8 stocks, Bloomberg, timeout error     | Rule 2         | "Bloomberg network connectivity" |
+| 4 stocks, SEC EDGAR, 404 error         | Rule 3         | "SEC EDGAR data unavailable"     |
+| 3 stocks, Financial Analyst, OOM error | Rule 4         | "Financial Analyst OOM failure"  |
+| 3 stocks, mixed sources/agents         | Fallback       | "Shared failure - 3 stocks"      |
 
 ### Auto-Batch Trigger Integration
 
@@ -575,11 +575,11 @@ CREATE TABLE failure_correlations (
 
 **Retention Policy**:
 
-| Status           | Retention | Action                 |
-| ---------------- | --------- | ---------------------- |
-| Unresolved       | 14 days   | Active                 |
-| Resolved         | 90 days   | Archive to cold storage|
-| Archived         | 1 year    | Purge (audit log kept) |
+| Status     | Retention | Action                  |
+| ---------- | --------- | ----------------------- |
+| Unresolved | 14 days   | Active                  |
+| Resolved   | 90 days   | Archive to cold storage |
+| Archived   | 1 year    | Purge (audit log kept)  |
 
 ### Lead Coordinator Integration
 
@@ -676,8 +676,8 @@ class LeadCoordinator:
 
 ## Status History
 
-| Date       | Status   | Notes                                  |
-| ---------- | -------- | -------------------------------------- |
+| Date       | Status   | Notes                                     |
+| ---------- | -------- | ----------------------------------------- |
 | 2025-11-18 | Approved | Design finalized, resolves Flaw #26 E1/E2 |
 
 ---

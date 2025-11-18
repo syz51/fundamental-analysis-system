@@ -537,13 +537,13 @@ This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw 
 
 ### Request Prioritization
 
-| Priority       | Description                       | Response Time | Auto-Action (After Timeout)            | Applies To                                  |
-| -------------- | --------------------------------- | ------------- | -------------------------------------- | ------------------------------------------- |
-| AGENT_FAILURE  | Agent infrastructure failure      | None          | Block pipeline, await human (no auto)  | Agent crashes, API failures, data issues    |
-| CRITICAL       | Blocks all analysis               | 2 hours       | Halt pipeline                          | System errors, data corruption              |
-| HIGH           | Critical-path blocking debates    | 6 hours       | Conservative default (provisional)     | Debates blocking immediate progress         |
-| MEDIUM         | Valuation/model decisions         | 24 hours      | Conservative estimates (provisional)   | Gate 3 assumptions, medium-priority debates |
-| LOW            | Nice-to-have                      | 48 hours      | Skip or defer to next gate             | Supporting analysis debates                 |
+| Priority      | Description                    | Response Time | Auto-Action (After Timeout)           | Applies To                                  |
+| ------------- | ------------------------------ | ------------- | ------------------------------------- | ------------------------------------------- |
+| AGENT_FAILURE | Agent infrastructure failure   | None          | Block pipeline, await human (no auto) | Agent crashes, API failures, data issues    |
+| CRITICAL      | Blocks all analysis            | 2 hours       | Halt pipeline                         | System errors, data corruption              |
+| HIGH          | Critical-path blocking debates | 6 hours       | Conservative default (provisional)    | Debates blocking immediate progress         |
+| MEDIUM        | Valuation/model decisions      | 24 hours      | Conservative estimates (provisional)  | Gate 3 assumptions, medium-priority debates |
+| LOW           | Nice-to-have                   | 48 hours      | Skip or defer to next gate            | Supporting analysis debates                 |
 
 **Debate-Specific Priority Routing**:
 

@@ -702,8 +702,8 @@ def handle_batch_failure(self, stocks, root_cause):
 
 ## Status History
 
-| Date       | Status   | Notes                                  |
-| ---------- | -------- | -------------------------------------- |
+| Date       | Status   | Notes                                          |
+| ---------- | -------- | ---------------------------------------------- |
 | 2025-11-18 | Approved | Design finalized, resolves Flaw #24 (C1/C2/C3) |
 
 ---

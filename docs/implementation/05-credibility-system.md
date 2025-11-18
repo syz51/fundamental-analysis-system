@@ -5,6 +5,7 @@
 This document provides the technical specification for the comprehensive agent credibility scoring system that addresses temporal decay, market regime adaptation, performance trend detection, and human override tracking.
 
 **Related Design Decisions**:
+
 - [DD-008: Comprehensive Agent Credibility System](../design-decisions/DD-008_AGENT_CREDIBILITY_SYSTEM.md)
 - [DD-004: Agent Credibility Scoring](../../docs/design-flaws/resolved/04-credibility-scoring.md) (RESOLVED)
 
@@ -17,10 +18,12 @@ The credibility system is implemented in two phases to balance rapid delivery wi
 ### Phase 2: Simple Credibility (Months 3-4)
 
 **Components implemented**:
+
 - ✅ **TimeWeightedCredibility** (Section 1 below)
 - ✅ **Wilson confidence intervals** (integrated into TimeWeightedCredibility)
 
 **Phase 2 configuration**:
+
 ```python
 # Simple credibility calculation (Phase 2 only)
 simple_credibility_config = {
@@ -43,6 +46,7 @@ min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
 **Use case**: Enables debate auto-resolution (DD-003 Level 2) with statistically sound credibility differentials
 
 **Limitations**:
+
 - No market regime awareness (bull vs bear performance conflated)
 - No trend detection (improving agents underestimated)
 - No override tracking (blind spots undetected)
@@ -53,6 +57,7 @@ min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
 ### Phase 4: Comprehensive Credibility (Months 7-8)
 
 **Additional components implemented**:
+
 - ✅ **MarketRegimeDetector** (Section 2 below)
 - ✅ **AgentTrendAnalysis** (Section 3 below)
 - ✅ **HumanOverrideTracking** (Section 4 below)
@@ -60,6 +65,7 @@ min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
 - ✅ **ComprehensiveCredibilitySystem** (Section 6 below - orchestrator)
 
 **Phase 4 configuration**:
+
 ```python
 # Comprehensive credibility calculation (Phase 4)
 comprehensive_credibility_config = {

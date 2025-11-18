@@ -418,6 +418,7 @@ Before enabling auto-approval, run 90-day shadow mode:
 - **Validation**: Achieve >95% agreement with statistical significance (p < 0.05)
 
 **Conservative Error Rate Targets**:
+
 - False positive rate ≤1% (auto-approve when shouldn't - most dangerous)
 - False negative rate ≤5% (send to human when could auto-approve - inefficient but safe)
 - Overall accuracy >95% required before enabling
@@ -435,12 +436,12 @@ After enabling auto-approval, continuous monitoring with automatic rollback:
 
 **Rollback Actions**:
 
-| Accuracy (14d) | Action                     | Timeline  |
-| -------------- | -------------------------- | --------- |
-| ≥95%           | Continue normally          | N/A       |
-| 94-95%         | Trigger investigation      | 48 hrs    |
+| Accuracy (14d) | Action                          | Timeline  |
+| -------------- | ------------------------------- | --------- |
+| ≥95%           | Continue normally               | N/A       |
+| 94-95%         | Trigger investigation           | 48 hrs    |
 | 92-94%         | Reduce auto-approval % 10-15pts | Immediate |
-| <92%           | Auto-disable, full audit   | Immediate |
+| <92%           | Auto-disable, full audit        | Immediate |
 
 **Rationale**: 14-day window (vs 7-day) reduces false alarms from short-term fluctuations. 94% threshold provides early warning before disabling. 92% hard floor prevents runaway quality degradation. Weekly spot-checks verify automated monitoring accuracy.
 
@@ -485,6 +486,7 @@ When pattern enters blind testing:
 5. **Isolated agents**: Spawn clean agent instances with no pattern history
 
 **Isolation Verification**:
+
 - Automated checks after every blind test (all vectors verified)
 - Manual audits weekly during first 6 months (catches subtle contamination)
 - Zero tolerance: any contamination detected → invalidate test, restart
@@ -515,6 +517,7 @@ class ContaminationDetector:
 ```
 
 **Audit Protocol**:
+
 - Automated checks: Every blind test (100% coverage)
 - Manual audits: Weekly for 6 months, then monthly (verify automated checks working)
 - Response: Contamination detected → invalidate test, fix vector, strengthen isolation
@@ -694,11 +697,13 @@ Archived patterns can be automatically promoted back to active status when marke
 **Promotion Triggers**:
 
 1. **Regime Change Detection**: Market shifts make old patterns relevant
+
    - Interest rate changes >2% in 6 months
    - Inflation regime shifts >1% in quarter
    - Industry cycle transitions
 
 2. **Access Frequency**: Pattern accessed 3+ times in 30 days
+
    - Multiple agents requesting same archived pattern
    - Signals current relevance
 
@@ -748,18 +753,18 @@ Auto-promoted patterns subject to human review within 48-hour window:
 
 ```yaml
 Pattern Promotion Alert:
-  trigger: "Regime change: Interest rates increased 4.5% in 8mo"
+  trigger: 'Regime change: Interest rates increased 4.5% in 8mo'
   promoted_count: 5 patterns
 
   patterns:
-    - pattern: "Bank profitability in high-rate environment"
+    - pattern: 'Bank profitability in high-rate environment'
       confidence: 0.82
       historical_accuracy: 75%
-      last_used: "2020-03-15"
+      last_used: '2020-03-15'
       evidence_age: 4.7 years
 
-  action_required: "Review by 2024-11-20 14:30 UTC"
-  default_action: "Promotion approved (no action = approval)"
+  action_required: 'Review by 2024-11-20 14:30 UTC'
+  default_action: 'Promotion approved (no action = approval)'
   override_options:
     - Approve (no action needed)
     - Reject individual pattern
@@ -770,11 +775,13 @@ Pattern Promotion Alert:
 **Override Actions**:
 
 1. **Approve Promotion** (Default):
+
    - No action required (promotion permanent after 48hr)
    - Pattern stays "active_from_archive"
    - Requires re-validation on new data before investment decisions
 
 2. **Reject Promotion**:
+
    - Pattern demoted back to archive
    - Trigger cooldown: 6 months for this pattern+trigger combo
    - Rejection reason logged (false_regime_signal, pattern_obsolete, etc)
@@ -882,14 +889,14 @@ Archive metadata stored in Redis/ElasticSearch for <100ms queries without S3 acc
 ```yaml
 Pattern Archive Index Entry:
   pattern_id: uuid-1234
-  pattern_name: "Bank profitability in high-rate environment"
-  status: "deprecated"
+  pattern_name: 'Bank profitability in high-rate environment'
+  status: 'deprecated'
   deprecation_date: 2021-03-15
   archive_tier: 2
 
   # Searchable metadata
-  regime_tags: ["high_interest_rate", "financials"]
-  industry_tags: ["banking", "lending"]
+  regime_tags: ['high_interest_rate', 'financials']
+  industry_tags: ['banking', 'lending']
   confidence_score: 0.82
   historical_accuracy: 0.75
 
@@ -898,8 +905,8 @@ Pattern Archive Index Entry:
   access_count_30d: 3
   promotion_history:
     - promoted_at: 2024-11-18
-      trigger: "regime_change_interest_rate"
-      human_decision: "approved"
+      trigger: 'regime_change_interest_rate'
+      human_decision: 'approved'
 ```
 
 **Query Performance**:

@@ -140,6 +140,7 @@ System provides:
 3. **Zero duplicate work**: Agents resume from exact L1 state, never re-fetch API data or re-parse documents. Critical for quota-limited APIs (Koyfin, Bloomberg).
 
 4. **Hybrid trigger strategy**:
+
    - During analysis: Snapshot to Redis secondary only (fast)
    - On pause: Force dual snapshot to Redis + PostgreSQL (durability)
    - Optimizes for common case (analysis continues) while protecting long pauses
@@ -171,13 +172,16 @@ System provides:
 ### Negative Impacts / Tradeoffs
 
 - ❌ Storage overhead: 2x Redis for secondary + PostgreSQL checkpoint
+
   - Estimate: ~100 KB per agent × 5 agents/stock × 200 stocks = 100 MB total
   - Mitigated by: TTL-based cleanup (14d max), constant memory per agent
 
 - ❌ Restore complexity: deserialization, type preservation, consistency verification
+
   - Mitigated by: Clean abstraction (L1CacheRestorer class), comprehensive testing
 
 - ❌ Snapshot overhead: Redis-to-Redis copy on checkpoint events
+
   - Mitigated by: Fast Redis operations (~100ms), only on checkpoint boundaries
 
 - ❌ Consistency verification latency: hash computation on restore
@@ -251,11 +255,13 @@ class L1TTLManager:
 **Snapshot Strategy (Hybrid)**:
 
 1. **During active analysis**: Piggyback on DD-011 checkpoint events
+
    - Snapshot to Redis secondary only (fast)
    - Enables mid-analysis crash recovery
    - Minimal overhead (Redis-to-Redis copy)
 
 2. **On pause**: Force full dual snapshot
+
    - Snapshot to both Redis secondary AND PostgreSQL
    - Extend TTL: 24h → 14d
    - Maximum durability for long pause
@@ -554,11 +560,13 @@ CREATE INDEX idx_checkpoint_l1_snapshot ON agent_checkpoints(analysis_id, agent_
 ### Integration Points
 
 1. **CheckpointManager (DD-011)**:
+
    - Hook into checkpoint save events
    - Trigger `L1CacheSnapshotter.snapshot_on_checkpoint(dual_write=False)`
    - Include L1 snapshot metadata in checkpoint record
 
 2. **PauseManager (DD-012)**:
+
    - On pause: Call `L1TTLManager.extend_ttl_on_pause()` + `L1CacheSnapshotter.snapshot_on_checkpoint(dual_write=True)`
    - On resume: Call `L1CacheRestorer.restore_from_snapshot()` + `ConsistencyVerifier` (integrated)
 
@@ -629,8 +637,8 @@ If L1 durability system has critical bugs:
 
 ## Status History
 
-| Date       | Status   | Notes                                                   |
-| ---------- | -------- | ------------------------------------------------------- |
+| Date       | Status   | Notes                                          |
+| ---------- | -------- | ---------------------------------------------- |
 | 2025-11-18 | Approved | Design finalized, resolves Flaw #25 (D1/D2/D3) |
 
 ---

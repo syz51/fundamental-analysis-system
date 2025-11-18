@@ -247,6 +247,7 @@ CREATE TABLE agent_checkpoints (
 ```
 
 **Retention Policy**:
+
 - Success: Delete immediately after analysis completes
 - Failure: Retain for 30 days
 - Manual override: Flag to preserve for debugging
@@ -291,6 +292,7 @@ CREATE INDEX idx_alert_day7 ON paused_analyses(pause_timestamp, alert_day7_sent)
 ```
 
 **Key Fields**:
+
 - `pause_trigger`: Distinguishes auto-pause (Tier 2 failure) vs manual vs gate timeout
 - `resume_dependencies`: JSONB storing `{restart: [...], skip: [...], wait: [...]}`
 - `alert_day3_sent`, `alert_day7_sent`: Prevent duplicate reminder alerts
@@ -298,6 +300,7 @@ CREATE INDEX idx_alert_day7 ON paused_analyses(pause_timestamp, alert_day7_sent)
 - `batch_id`: Links to batch operation (if part of batch pause)
 
 **Retention Policy**:
+
 - PAUSED/RESUMING: Until resume or expiration
 - RESUMED: Archive after 30 days to `paused_analyses_history`
 - STALE: Purge after 30 days from stale date (keep audit log)
@@ -331,6 +334,7 @@ CREATE INDEX idx_batch_created ON batch_pause_operations(created_at);
 ```
 
 **Key Fields**:
+
 - `stock_ids`: Array of tickers included in batch (denormalized for quick access)
 - `paused_count`, `resumed_count`, `failed_count`: Progress tracking
 - `concurrency_limit`: Max parallel operations for this batch
@@ -361,11 +365,13 @@ CREATE INDEX idx_resume_execution_status ON resume_plans(execution_status);
 ```
 
 **Key Fields**:
+
 - `restart_agents`: Agents to re-execute (failed agent + dependents)
 - `skip_agents`: Completed agents (from checkpoint)
 - `wait_agents`: In-progress agents (check completion before deciding)
 
 **Retention Policy**:
+
 - COMPLETED: Purge after 30 days
 - FAILED: Keep for 90 days (debugging)
 
@@ -412,6 +418,7 @@ CREATE INDEX idx_batch ON failure_correlations(batch_id) WHERE batch_id IS NOT N
 ```
 
 **Key Fields**:
+
 - `error_signature`: 16-char hash of normalized error (agent_type, error_type, data_source, pattern)
 - `failure_ids`: Array of individual agent failure IDs that matched signature
 - `root_cause`: Human-readable inference (e.g., "Koyfin API quota exceeded")
@@ -419,6 +426,7 @@ CREATE INDEX idx_batch ON failure_correlations(batch_id) WHERE batch_id IS NOT N
 - `batch_id`: Links to batch operation (if auto-triggered batch pause)
 
 **Retention Policy**:
+
 - Unresolved: 14 days (active)
 - Resolved: Archive after 90 days to cold storage
 - Archived: Purge after 1 year (keep audit log)
@@ -457,15 +465,18 @@ CREATE INDEX idx_weekly_promotion ON file_access_weekly(promotion_candidate) WHE
 ```
 
 **Key Fields**:
+
 - `access_type`: Categorizes access reason (read, pattern_validation, post_mortem)
 - `tier_at_access`: Tier where file was stored when accessed (performance tracking)
 - `access_count_7d`: Aggregated 7-day access frequency for promotion thresholds
 
 **Re-Promotion Thresholds**:
+
 - Warm → Hot: 10+ accesses per 7-day window
 - Cold → Warm: 3+ accesses per 7-day window
 
 **Retention Policy**:
+
 - Raw logs: 30-day rolling window (partition-based cleanup)
 - Materialized view: Refreshed daily at 02:00 UTC
 - Historical aggregations: Archive after 90 days

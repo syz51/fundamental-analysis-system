@@ -4,6 +4,7 @@
 **Date**: 2025-11-18
 **Decider(s)**: System Architect
 **Related Docs**:
+
 - [Memory System](../architecture/02-memory-system.md)
 - [Data Management](../operations/03-data-management.md)
 - [Agents - Support](../architecture/04-agents-support.md)
@@ -27,6 +28,7 @@
 ### Concrete Examples
 
 **Example 1: Rogue Agent Cache Corruption**
+
 ```text
 Scenario: Financial Analyst agent has bug causing invalid ratio writes
 Current State: Bug writes corrupt data to own L2 cache AND other agents' caches
@@ -36,6 +38,7 @@ Expected: Agent isolation prevents cross-cache writes
 ```
 
 **Example 2: Unauthorized Pattern Modification**
+
 ```text
 Scenario: Strategy Analyst disputes pattern "High ROIC indicates durable moat"
 Current State: Agent could directly modify pattern confidence_score in Neo4j
@@ -45,6 +48,7 @@ Expected: Only Knowledge Base Agent + Learning Engine can modify patterns
 ```
 
 **Example 3: Credibility Score Manipulation**
+
 ```text
 Scenario: Agent attempts to boost own credibility after repeated failures
 Current State: No enforcement preventing agent from writing to credibility_scores table
@@ -54,6 +58,7 @@ Expected: Only Learning Engine authorized to update credibility scores
 ```
 
 **Example 4: Pattern Pollution**
+
 ```text
 Scenario: Business Research Agent proposes pattern during normal analysis
 Current State: Unclear if agent can create Pattern nodes directly vs proposal queue
@@ -88,11 +93,13 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 **Description**: Trust all agents, no enforcement layer
 
 **Pros**:
+
 - Zero implementation cost
 - No performance overhead
 - Simple architecture
 
 **Cons**:
+
 - Data integrity risk (agent bugs cause corruption)
 - No security against malicious agents
 - No audit trail (can't debug incidents)
@@ -108,11 +115,13 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 **Description**: Agents access memory only via API, no direct database connections
 
 **Pros**:
+
 - Simpler than full RBAC (no permission matrix)
 - Prevents direct database manipulation
 - Easier to implement
 
 **Cons**:
+
 - No granular control (agent can still corrupt via API)
 - Doesn't solve L2 cache isolation
 - No audit logging
@@ -128,11 +137,13 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 **Description**: Two roles only: "agent" (read-only L3) and "admin" (full access)
 
 **Pros**:
+
 - Simple permission matrix (2 roles vs 5)
 - Prevents agent L3 writes
 - Low implementation complexity
 
 **Cons**:
+
 - Doesn't distinguish Knowledge Base Agent from regular agents
 - Learning Engine has no write path for credibility scores
 - Debate Facilitator can't read cross-agent caches
@@ -148,6 +159,7 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 **Description**: 5 roles with granular permissions: agent, knowledge_base_agent, debate_facilitator, learning_engine, human_admin
 
 **Pros**:
+
 - Precise permissions per role (principle of least privilege)
 - Agent isolation (read_write_own for L1/L2, read_all for L3)
 - Pattern lifecycle clear (Knowledge Base Agent validates, humans approve)
@@ -157,6 +169,7 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 - Production-ready security
 
 **Cons**:
+
 - More complex permission matrix (5 roles × 6 resources)
 - Requires API authorization layer (5ms overhead per query)
 - More testing surface area
@@ -228,6 +241,7 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 ### Affected Components
 
 **Services to Implement**:
+
 - `MemoryAccessControl`: Permission matrix, check_permission() API
 - `MemoryAuditLog`: Log all memory writes to PostgreSQL
 - `AuthorizationGateway`: API layer enforcing RBAC before memory operations
@@ -235,11 +249,13 @@ Primary approach uses permission-based API gateway layer enforcing read/write/de
 - `AuditLogQuery`: Query interface for incident investigation
 
 **Data Pipeline**:
+
 - Agent memory request → AuthorizationGateway.check_permission()
 - If authorized → Execute memory operation → MemoryAuditLog.log_write()
 - If denied → Log denial → Return 403 Forbidden
 
 **Documentation**:
+
 - `docs/architecture/02-memory-system.md`: Add §5 Access Control
 - `docs/architecture/04-agents-support.md`: Clarify Knowledge Base Agent permissions
 - `docs/operations/03-data-management.md`: Link memory RBAC to file RBAC (unified governance)
@@ -347,6 +363,7 @@ class MemoryAccessControl:
 ### Audit Logging Architecture
 
 **PostgreSQL Schema**:
+
 ```sql
 -- Audit log (append-only, partitioned by month)
 CREATE TABLE memory_access_audit (
@@ -375,6 +392,7 @@ CREATE INDEX idx_audit_unauthorized ON memory_access_audit(authorized) WHERE aut
 ```
 
 **Audit Logging Implementation**:
+
 ```python
 class MemoryAuditLog:
     """Audit trail for memory modifications"""
@@ -443,6 +461,7 @@ class MemoryAuditLog:
 ### Authorization Gateway
 
 **API Layer Integration**:
+
 ```python
 class AuthorizationGateway:
     """API gateway enforcing RBAC for memory operations"""
@@ -501,6 +520,7 @@ class AuthorizationGateway:
 ### Pattern Lifecycle Permissions
 
 **Pattern State Machine with RBAC**:
+
 ```python
 class PatternLifecycle:
     """Pattern lifecycle with access control"""
@@ -565,6 +585,7 @@ class PatternLifecycle:
 ### Agent Role Assignment
 
 **Configuration**:
+
 ```yaml
 # config/agent_roles.yaml
 agents:
@@ -590,18 +611,23 @@ agents:
 
   knowledge_base_agent:
     role: knowledge_base_agent
-    permissions: [l1_write_own, l2_write_own, l3_read_write,
-                 pattern_validate, credibility_read_all]
+    permissions:
+      [
+        l1_write_own,
+        l2_write_own,
+        l3_read_write,
+        pattern_validate,
+        credibility_read_all,
+      ]
 
   debate_facilitator:
     role: debate_facilitator
-    permissions: [l1_write_own, l2_read_all, l3_read_all,
-                 credibility_read_all]
+    permissions: [l1_write_own, l2_read_all, l3_read_all, credibility_read_all]
 
   learning_engine:
     role: learning_engine
-    permissions: [l2_read_all, l3_read_write, pattern_validate,
-                 credibility_read_write_all]
+    permissions:
+      [l2_read_all, l3_read_write, pattern_validate, credibility_read_write_all]
 
 humans:
   analyst:
@@ -612,6 +638,7 @@ humans:
 ### Integration Points
 
 **Memory Write Flow**:
+
 ```python
 # Before: Direct Neo4j write (no access control)
 def store_pattern_old(agent_id, pattern_data):
@@ -634,6 +661,7 @@ def store_pattern_new(agent_id, pattern_data):
 ```
 
 **Cross-Agent Cache Access** (Debate Facilitator):
+
 ```python
 # Debate Facilitator reading Financial Analyst's L2 cache
 def get_agent_evidence(facilitator_id, target_agent_id, cache_key):
@@ -656,6 +684,7 @@ def get_agent_evidence(facilitator_id, target_agent_id, cache_key):
 ### Testing Requirements
 
 **Permission Matrix Test Coverage**:
+
 ```python
 def test_agent_l3_write_denied():
     """Agents cannot write to L3 central graph"""
@@ -803,12 +832,14 @@ def benchmark_permission_check():
 ### Rollback Strategy
 
 If RBAC causes issues:
+
 1. **Feature Flag**: Disable authorization checks, keep audit logging
 2. **Degraded Mode**: Log denials but allow (monitoring-only)
 3. **Gradual Rollout**: Enable RBAC for L3 only first, then L2
 4. **Full Rollback**: Remove authorization gateway, direct memory access
 
 **Monitoring**:
+
 - Track authorization denial rate (target: <1% denied)
 - Monitor permission check latency (target: p95 <5ms)
 - Alert on unauthorized access attempts (>10/hour)
@@ -846,18 +877,18 @@ None - all critical questions resolved during design:
   - [Agents - Support](../architecture/04-agents-support.md) (Knowledge Base Agent definition)
   - [Data Management](../operations/03-data-management.md) (file RBAC baseline)
 - **Industry Patterns**:
-  - PostgreSQL roles: https://www.postgresql.org/docs/current/user-manag.html
-  - AWS IAM RBAC: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html
-  - OAuth scopes: https://oauth.net/2/scope/
+  - PostgreSQL roles: <https://www.postgresql.org/docs/current/user-manag.html>
+  - AWS IAM RBAC: <https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html>
+  - OAuth scopes: <https://oauth.net/2/scope/>
 
 ---
 
 ## Status History
 
-| Date       | Status   | Notes                                      |
-| ---------- | -------- | ------------------------------------------ |
+| Date       | Status   | Notes                                       |
+| ---------- | -------- | ------------------------------------------- |
 | 2025-11-18 | Proposed | Initial proposal based on Flaw #20 analysis |
-| 2025-11-18 | Approved | Fine-grained RBAC (5 roles), <5ms overhead |
+| 2025-11-18 | Approved | Fine-grained RBAC (5 roles), <5ms overhead  |
 
 ---
 
@@ -866,6 +897,7 @@ None - all critical questions resolved during design:
 ### Cost Estimate
 
 **Audit Log Storage**:
+
 ```text
 Assumptions:
 - 13 agents × 100 memory operations/day = 1300 operations/day
@@ -880,6 +912,7 @@ PostgreSQL Storage:
 ```
 
 **Performance Overhead**:
+
 ```text
 Permission check: <1ms (in-memory dictionary lookup)
 Audit log write: <4ms (async PostgreSQL insert)
@@ -898,6 +931,7 @@ Acceptable for production
 **Week 4**: Testing (30+ test cases), performance benchmarking, documentation
 
 **Dependencies**:
+
 - Memory system operational (L1/L2/L3) - ✅ exists
 - PostgreSQL database operational - ✅ exists
 - Neo4j central graph operational - ✅ exists
