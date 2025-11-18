@@ -3,8 +3,8 @@
 ## At a Glance
 
 - **Total**: 26 flaws + 6 minor issues
-- **Active**: 9 (2 critical, 6 high, 1 medium, 2 deferred)
-- **Resolved**: 15
+- **Active**: 5 (2 critical, 2 high, 1 medium, 2 deferred)
+- **Resolved**: 19
 - **Deferred**: 2
 
 ---
@@ -20,7 +20,7 @@ Blocks MVP or production deployment:
 
 ---
 
-## High Priority Active Flaws (7)
+## High Priority Active Flaws (2)
 
 <details>
 <summary><b>Should fix before MVP</b></summary>
@@ -28,11 +28,7 @@ Blocks MVP or production deployment:
 | # | Flaw | Impact | Phase | Effort | Dependencies |
 |---|------|--------|-------|--------|--------------|
 | [17](active/17-data-tier-mgmt.md) | Data Tier Management Gaps | Performance degradation, no corruption recovery | 4 | 4w | DD-009 tiered storage, Neo4j operational |
-| [19](active/19-partial-failures.md) | Partial Failure Handling Undefined | Undefined behavior when subset of agents fail | 2 | 4w | Flaw #22, #23, #24 |
-| [22](active/22-agent-checkpoints.md) | Agent Checkpoint System Missing | Failed agents restart from scratch, wasting completed work | 2 | 3w | PostgreSQL/Redis infrastructure |
-| [23](active/23-workflow-pause-resume.md) | Workflow Pause/Resume Infrastructure Undefined | Cannot safely stop analysis mid-pipeline when failures occur | 2 | 4w | Flaw #22 |
-| [24](active/24-agent-failure-alerts.md) | Agent Failure Human Alerts Missing | Infrastructure failures go unnoticed, analyses silently fail | 2 | 2w | Flaw #23 |
-| [26](active/26-multi-stock-batching.md) | Multi-Stock Failure Batching Undefined | Inefficient recovery when shared failures affect multiple stocks | 2 | 2w | Flaw #23, #24 |
+| [19](active/19-partial-failures.md) | Partial Failure Handling Undefined | Undefined behavior when subset of agents fail | 2 | 4w | Multi-agent workflows operational |
 
 </details>
 
@@ -46,8 +42,6 @@ Blocks MVP or production deployment:
 | # | Flaw | Impact | Phase | Effort |
 |---|------|--------|-------|--------|
 | [20](active/20-access-control.md) | Memory System Access Control Undefined | Data integrity risk from unrestricted modifications | 3 | 4w |
-
-Note: Flaws #25 and #26 are listed as Medium priority but included in High Priority section above due to dependency chain with Phase 2 flaws.
 
 </details>
 
@@ -67,7 +61,7 @@ Note: Flaws #25 and #26 are listed as Medium priority but included in High Prior
 
 ---
 
-## ✅ Resolved Flaws by Phase (14)
+## ✅ Resolved Flaws by Phase (19)
 
 <details>
 <summary><b>Phase 1: Foundation (2 resolved)</b></summary>
@@ -80,14 +74,18 @@ Note: Flaws #25 and #26 are listed as Medium priority but included in High Prior
 </details>
 
 <details>
-<summary><b>Phase 2: Core Systems (4 resolved)</b></summary>
+<summary><b>Phase 2: Core Systems (8 resolved)</b></summary>
 
 | # | Flaw | Resolution | Completed |
 |---|------|-----------|-----------|
 | [8](resolved/08-debate-deadlock.md) | Debate Resolution Deadlock Scenario | 5-level tiered escalation system | 2025-11-17 |
 | [11](resolved/11-algorithm-specs.md) | Missing Algorithm Specifications | All algorithms documented in main architecture docs | 2025-11-17 |
 | [16](resolved/16-timeline-conflicts.md) | Timeline & Dependency Conflicts | N/A | 2025-11-18 |
-| [25](resolved/25-working-memory-durability.md) | Working Memory Insufficient for Long Pauses | DD-016 L1 Memory Durability | 2025-11-18 |
+| [22](resolved/22-agent-checkpoints.md) | Agent Checkpoint System Missing | Design Decision DD-011 addresses all sub-issues | 2025-11-18 |
+| [23](resolved/23-workflow-pause-resume.md) | Workflow Pause/Resume Infrastructure Undefined | N/A | 2025-11-18 |
+| [24](resolved/24-agent-failure-alerts.md) | Agent Failure Human Alerts Missing | N/A | 2025-11-18 |
+| [25](resolved/25-working-memory-durability.md) | Working Memory Insufficient for Long Pauses | N/A | N/A |
+| [26](resolved/26-multi-stock-batching.md) | Multi-Stock Failure Batching Undefined | DD-017: Failure Correlation System | 2025-11-18 |
 
 </details>
 
@@ -139,7 +137,7 @@ Note: Flaws #25 and #26 are listed as Medium priority but included in High Prior
 Navigate by system component:
 
 <details>
-<summary><b>Memory System (7 flaws: 3 active, 4 resolved)</b></summary>
+<summary><b>Memory System (8 flaws: 3 active, 5 resolved)</b></summary>
 
 **Active:**
 - [#15](active/15-failure-modes.md) - Query & Sync Failure Modes (C, Phase 3)
@@ -170,19 +168,17 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Agent System (5 flaws: 1 active, 4 resolved)</b></summary>
+<summary><b>Agent System (6 flaws: 1 active, 5 resolved)</b></summary>
 
 **Active:**
 - [#19](active/19-partial-failures.md) - Partial Failure Handling Undefined (H, Phase 2)
-- [#22](active/22-agent-checkpoints.md) - Agent Checkpoint System Missing (H, Phase 2)
-- [#23](active/23-workflow-pause-resume.md) - Workflow Pause/Resume Infrastructure Undefined (H, Phase 2)
-- [#24](active/24-agent-failure-alerts.md) - Agent Failure Human Alerts Missing (H, Phase 2)
 
 **Resolved:**
 - [#4](resolved/04-credibility-scoring.md)✅ - Agent Credibility Scoring - No Temporal Decay
 - [#8](resolved/08-debate-deadlock.md)✅ - Debate Resolution Deadlock Scenario
 - [#11](resolved/11-algorithm-specs.md)✅ - Missing Algorithm Specifications
 - [#14](resolved/14-statistical-reliability.md)✅ - Statistical Reliability Issues
+- [#22](resolved/22-agent-checkpoints.md)✅ - Agent Checkpoint System Missing
 
 </details>
 
@@ -203,7 +199,6 @@ Navigate by system component:
 
 **Active:**
 - [#21](active/21-scalability.md) - Scalability Architecture Bottlenecks (C, Phase 4)
-- [#24](active/24-agent-failure-alerts.md) - Agent Failure Human Alerts Missing (H, Phase 2)
 
 **Resolved:**
 - [#1](resolved/01-missing-human-gate.md)✅ - Missing Human Gate for Learning Validation
@@ -212,20 +207,20 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Architecture (6 flaws: 3 active, 3 resolved)</b></summary>
+<summary><b>Architecture (9 flaws: 3 active, 6 resolved)</b></summary>
 
 **Active:**
 - [#19](active/19-partial-failures.md) - Partial Failure Handling Undefined (H, Phase 2)
 - [#20](active/20-access-control.md) - Memory System Access Control Undefined (M, Phase 3)
 - [#21](active/21-scalability.md) - Scalability Architecture Bottlenecks (C, Phase 4)
-- [#22](active/22-agent-checkpoints.md) - Agent Checkpoint System Missing (H, Phase 2)
-- [#23](active/23-workflow-pause-resume.md) - Workflow Pause/Resume Infrastructure Undefined (H, Phase 2)
-- [#26](active/26-multi-stock-batching.md) - Multi-Stock Failure Batching Undefined (M, Phase 2)
 
 **Resolved:**
 - [#8](resolved/08-debate-deadlock.md)✅ - Debate Resolution Deadlock Scenario
 - [#11](resolved/11-algorithm-specs.md)✅ - Missing Algorithm Specifications
 - [#16](resolved/16-timeline-conflicts.md)✅ - Timeline & Dependency Conflicts
+- [#22](resolved/22-agent-checkpoints.md)✅ - Agent Checkpoint System Missing
+- [#23](resolved/23-workflow-pause-resume.md)✅ - Workflow Pause/Resume Infrastructure Undefined
+- [#25](resolved/25-working-memory-durability.md)✅ - Working Memory Insufficient for Long Pauses
 
 </details>
 
@@ -235,12 +230,8 @@ Navigate by system component:
 
 ### By Phase
 
-**Phase 2 (Immediate - Months 3-4):** 5 active
+**Phase 2 (Immediate - Months 3-4):** 1 active
 - [19](active/19-partial-failures.md) Partial Failure Handling Undefined (H, 4w)
-- [22](active/22-agent-checkpoints.md) Agent Checkpoint System Missing (H, 3w)
-- [23](active/23-workflow-pause-resume.md) Workflow Pause/Resume Infrastructure Undefined (H, 4w)
-- [24](active/24-agent-failure-alerts.md) Agent Failure Human Alerts Missing (H, 2w)
-- [26](active/26-multi-stock-batching.md) Multi-Stock Failure Batching Undefined (M, 2w)
 
 **Phase 3 (Months 5-6):** 2 active
 - [15](active/15-failure-modes.md) Query & Sync Failure Modes (C, 4w)
@@ -252,37 +243,29 @@ Navigate by system component:
 
 ### By Effort
 
-**Quick wins (<3 weeks):** 3 flaws
-- [22](active/22-agent-checkpoints.md) - 3w
-- [24](active/24-agent-failure-alerts.md) - 2w
-- [26](active/26-multi-stock-batching.md) - 2w
+**Quick wins (<3 weeks):** 0 flaws
 
-**Medium (3-5 weeks):** 5 flaws
+**Medium (3-5 weeks):** 4 flaws
 - [15](active/15-failure-modes.md) - 4w
 - [17](active/17-data-tier-mgmt.md) - 4w
 - [19](active/19-partial-failures.md) - 4w
 - [20](active/20-access-control.md) - 4w
-- [23](active/23-workflow-pause-resume.md) - 4w
 
 **Large (>5 weeks):** 1 flaws
 - [21](active/21-scalability.md) - 8w
 
 ### By Dependencies
 
-**Unblocked (ready to start):** 2 flaws
-- [22](active/22-agent-checkpoints.md) - PostgreSQL/Redis infrastructure (exists)
-- [20](active/20-access-control.md) - Memory system operational (L1/L2/L3)
+**Unblocked (ready to start):** 0 flaws
 
 **Waiting on 1 dependency:** 2 flaws
-- [23](active/23-workflow-pause-resume.md) - Flaw #22
-- [24](active/24-agent-failure-alerts.md) - Flaw #23
+- [19](active/19-partial-failures.md) - Multi-agent workflows operational
+- [20](active/20-access-control.md) - Memory system operational (L1/L2/L3)
 
-**Waiting on 2+ dependencies:** 5 flaws
+**Waiting on 2+ dependencies:** 3 flaws
 - [15](active/15-failure-modes.md) - DD-005 memory system, DD-002 event-driven sync
 - [17](active/17-data-tier-mgmt.md) - DD-009 tiered storage, Neo4j operational
-- [19](active/19-partial-failures.md) - Flaw #22, #23, #24
 - [21](active/21-scalability.md) - Neo4j operational, DD-004 auto-approval
-- [26](active/26-multi-stock-batching.md) - Flaw #23, #24
 
 ---
 

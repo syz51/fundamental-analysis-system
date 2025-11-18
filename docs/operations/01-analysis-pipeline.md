@@ -458,6 +458,91 @@ Day 1, 12:01am: Quota reset detected
 Efficiency: Single batch operation vs 10 individual pause/resume cycles
 ```
 
+### Failure Correlation Detection (DD-017)
+
+The system automatically detects correlated failures across multiple stocks and triggers batch operations without manual intervention.
+
+**How It Works**:
+
+When an agent fails, the FailureCorrelator analyzes the failure for correlation with recent failures (5min window):
+
+1. **Error Signature Generation**:
+   - Normalize error message: remove timestamps, UUIDs, request IDs
+   - Extract semantic pattern: "Koyfin quota 1000/1000" → "api_quota_exceeded"
+   - Generate hash: `hash(agent_type, error_type, data_source, pattern)`
+
+2. **Temporal Correlation Detection**:
+   - Query failures with matching signature within 5min window
+   - Check batch threshold: ≥3 correlated failures = batch trigger
+
+3. **Root Cause Inference**:
+   - **API Quota**: 3+ stocks, same source, quota error → "{source} API quota exceeded"
+   - **Network Outage**: 5+ stocks, same source, timeout → "{source} network connectivity"
+   - **Data Unavailability**: 3+ stocks, 404 errors → "{source} data unavailable"
+   - **Agent Bug**: 3+ stocks, same agent type, same error → "{agent} failure"
+
+4. **Auto-Batch Trigger**:
+   - If correlated: `BatchManager.pause_batch(stock_ids, root_cause, correlation_id)`
+   - If not correlated (<3): Individual pause via standard Tier 2 handling
+
+**Correlation Example**:
+
+```
+Timeline:
+14:47:12 - AAPL Financial Analyst fails: "Koyfin API quota exceeded: 1000/1000"
+  → FailureCorrelator: signature=koyfin:quota:api:abc1, wait for correlations...
+
+14:47:18 - MSFT Financial Analyst fails: "Koyfin rate limit reached - 1000 requests"
+  → FailureCorrelator: signature=koyfin:quota:api:abc1 (same), 2 failures detected
+
+14:47:23 - GOOGL Strategy Analyst fails: "Koyfin quota error (request_id=xyz789)"
+  → FailureCorrelator: signature=koyfin:quota:api:abc1 (same), 3 failures detected
+  → Threshold met (≥3), infer root cause: "Koyfin API quota exceeded"
+  → Auto-trigger batch pause for [AAPL, MSFT, GOOGL]
+
+14:47:25 - AMZN Financial Analyst fails: "Koyfin quota exceeded"
+  → FailureCorrelator: joins existing correlation, add AMZN to batch
+
+14:47:30 - Alert sent to human:
+  → "Koyfin API quota exceeded - 4 stocks paused"
+  → 4 separate alert cards (DD-015 requirement) with "Resume All" button
+  → Root cause: "Koyfin API quota exceeded"
+  → Suggested resolution: "Quota resets at midnight, or upgrade Koyfin tier"
+
+Total detection time: 18 seconds from first failure to batch trigger
+Human action: One-click "Resume All" when quota restored
+```
+
+**Benefits vs Manual Correlation**:
+
+- **Speed**: 30s detection vs hours (manual pattern recognition)
+- **Scale**: Works at 100+ stocks (manual correlation impossible)
+- **Efficiency**: 1 diagnosis vs N investigations (5 stocks = 5x time saved)
+- **Automation**: Zero human intervention for grouping (vs manual batch creation)
+
+**Integration Flow**:
+
+```
+Agent Failure → FailureCorrelator.on_agent_failure()
+                    ↓
+            Generate error signature
+                    ↓
+            Detect correlations (5min window)
+                    ↓
+            ┌─────────────────┐
+            │ <3 failures?    │──Yes──→ Standard Tier 2 pause (individual)
+            └─────────────────┘
+                    │ No (≥3)
+                    ↓
+            Infer root cause
+                    ↓
+            Auto-trigger batch pause
+                    ↓
+            BatchManager.pause_batch()
+                    ↓
+            AlertManager (batch alerts)
+```
+
 **Timeout Escalation Timeline**:
 
 ```

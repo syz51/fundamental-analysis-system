@@ -1,28 +1,46 @@
 ---
 flaw_id: 26
 title: Multi-Stock Failure Batching Undefined
-status: active
+status: resolved
 priority: medium
 phase: 2
 effort_weeks: 2
 impact: Inefficient recovery when shared failures affect multiple stocks
-blocks: ['Batch recovery efficiency']
-depends_on: ['DD-012 (pause/resume)', 'Flaw #24 (alerts)']
-domain: ['operations']
+blocks:
+- Batch recovery efficiency
+depends_on:
+- DD-012 (pause/resume)
+- 'Flaw #24 (alerts)'
+domain:
+- operations
 sub_issues:
-  - id: E1
-    severity: medium
-    title: Failure correlation detection missing
-  - id: E2
-    severity: medium
-    title: Batch pause capability undefined
-  - id: E3
-    severity: low
-    title: Parallel resume orchestration missing
+- id: E1
+  severity: medium
+  title: Failure correlation detection missing
+- id: E2
+  severity: medium
+  title: Batch pause capability undefined
+- id: E3
+  severity: low
+  title: Parallel resume orchestration missing
 discovered: 2025-11-18
+resolved: '2025-11-18'
+resolution: 'DD-017: Failure Correlation System'
+---
+# Flaw #26: Multi-Stock Failure Batching Undefined
+
+## Resolution Summary
+
+**Status**: RESOLVED ✅
+**Resolution**: DD-017 (see design decision document)
+**Reference**: [DD-017](../../design-decisions/DD-017_FAILURE_CORRELATION_SYSTEM.md)
+
+### How DD-017 Resolves This Flaw
+
+[TODO: Explain how the design decision addresses this flaw]
+
 ---
 
-# Flaw #26: Multi-Stock Failure Batching Undefined
 
 **Status**: 🔴 ACTIVE
 **Priority**: Medium

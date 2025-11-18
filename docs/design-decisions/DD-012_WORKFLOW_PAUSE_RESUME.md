@@ -628,7 +628,7 @@ If pause/resume system has critical bugs:
 - [DD-015: Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md) - integrates with pause alerts, resolves Flaw #24
 - [Flaw #25: Working Memory Durability](../design-flaws/resolved/25-working-memory-durability.md) - extends L1 TTL during pause
 - [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) - implements L1 snapshot/restore on pause/resume
-- [Flaw #26: Multi-Stock Batching](../design-flaws/active/26-multi-stock-batching.md) - uses BatchManager
+- [Flaw #26: Multi-Stock Batching](../design-flaws/resolved/26-multi-stock-batching.md) - uses BatchManager
 - [DD-011: Agent Checkpoint System](DD-011_AGENT_CHECKPOINT_SYSTEM.md) - prerequisite for pause/resume
 
 ---

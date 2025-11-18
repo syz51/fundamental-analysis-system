@@ -298,6 +298,57 @@ The Lead Coordinator integrates with three specialized components for workflow p
 - Calls PauseManager for individual stock operations
 - Monitors orchestrator resource utilization
 - Coordinates with alert system for batch notifications
+- Accepts auto-trigger from FailureCorrelator (DD-017)
+
+#### FailureCorrelator
+
+**Purpose**: Automatically detect correlated failures, infer root causes, trigger batch operations
+
+**Responsibilities**:
+- Error signature generation (normalize vendor-specific errors)
+- Temporal correlation detection (5min window clustering)
+- Root cause inference (API quota vs network vs data patterns)
+- Auto-batch trigger (3+ correlated failures → batch pause)
+
+**Algorithm**:
+1. On agent failure, generate error signature: `hash(agent_type, error_type, data_source, normalized_msg)`
+2. Detect correlations: find failures with same signature within 5min window
+3. Check batch threshold: if ≥3 correlated failures, trigger batch pause
+4. Infer root cause: API quota (3+ stocks, same source) vs network (5+ stocks) vs data (404 patterns)
+5. Auto-trigger BatchManager with root cause and correlation_id
+
+**API**:
+- `on_agent_failure(stock_ticker, agent_type, error_type, error_message, data_source) -> CorrelationResult`
+- `generate_error_signature(agent_type, error_type, data_source, error_message) -> str`
+- `detect_correlation(signature, timestamp, window_minutes=5) -> List[UUID]`
+- `infer_root_cause(signature, correlated_failures) -> str`
+- `trigger_batch_pause(stock_ids, root_cause, correlation_id) -> BatchPauseResult`
+
+**Error Signature Normalization**:
+- Remove timestamps, UUIDs, request IDs
+- Normalize quota numbers: "1000/1000" → "LIMIT_EXCEEDED"
+- Extract semantic patterns: "quota exceeded" → "api_quota_exceeded"
+- Hash normalized signature for matching
+
+**Root Cause Inference Rules**:
+1. **API Quota**: 3+ stocks, same data source, quota error → "{source} API quota exceeded"
+2. **Network Outage**: 5+ stocks, same source, timeout/connection → "{source} network connectivity"
+3. **Data Unavailability**: 3+ stocks, 404/not found → "{source} data unavailable"
+4. **Agent Bug**: 3+ stocks, same agent type, same error → "{agent} failure - {error}"
+5. **Fallback**: Generic correlation → "Shared failure - {count} stocks"
+
+**Example Correlations**:
+- AAPL, MSFT, GOOGL, AMZN, TSLA all fail at 14:47 with Koyfin quota error
+- FailureCorrelator detects within 30s: signature match, 5 failures within 5min window
+- Infers: "Koyfin API quota exceeded"
+- Auto-triggers: `BatchManager.pause_batch(["AAPL", "MSFT", ...], "Koyfin API quota exceeded")`
+- AlertManager creates 5 separate cards (DD-015 requirement) with "Resume All" button
+
+**Interactions**:
+- Subscribes to agent failure events via Lead Coordinator
+- Calls BatchManager for auto-batch pause trigger
+- Stores correlation records in failure_correlations table
+- Links correlations to batch operations via batch_id
 
 #### Message Types (Extended)
 
@@ -315,6 +366,17 @@ The Lead Coordinator integrates with three specialized components for workflow p
   - Recipient: PauseManager
 - **BATCH_PAUSE_REQUEST**: `{stock_ids, reason, batch_id, max_concurrency}`
   - Sent by: Lead Coordinator
+  - Recipient: BatchManager
+
+**New Types (DD-017)**:
+- **AGENT_FAILURE_EVENT**: `{stock_ticker, agent_type, error_type, error_message, data_source, timestamp}`
+  - Sent by: Base Agent (on failure), Lead Coordinator
+  - Recipient: FailureCorrelator
+- **CORRELATION_DETECTED**: `{correlation_id, stock_tickers, root_cause, signature, batch_triggered}`
+  - Sent by: FailureCorrelator
+  - Recipient: Lead Coordinator, BatchManager
+- **BATCH_TRIGGER**: `{stock_ids, root_cause, correlation_id}`
+  - Sent by: FailureCorrelator (auto-trigger)
   - Recipient: BatchManager
 
 ---

@@ -362,6 +362,60 @@ CREATE INDEX idx_resume_execution_status ON resume_plans(execution_status);
 - COMPLETED: Purge after 30 days
 - FAILED: Keep for 90 days (debugging)
 
+#### Table 5: `failure_correlations` (DD-017)
+
+**Purpose**: Track correlated failures across stocks for automatic batch operation triggering
+
+```sql
+CREATE TABLE failure_correlations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Correlation metadata
+    error_signature VARCHAR(16) NOT NULL,  -- Generated signature hash
+    detected_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    correlation_window_min INTEGER DEFAULT 5,
+
+    -- Correlated failures
+    failure_ids UUID[] NOT NULL,  -- FK to agent_failures.id
+    stock_tickers TEXT[] NOT NULL,
+    failure_count INTEGER NOT NULL,
+
+    -- Root cause inference
+    root_cause TEXT,
+    inference_confidence DECIMAL(3,2),  -- 0.00-1.00
+    data_sources TEXT[],  -- Unique data sources involved
+    agent_types TEXT[],  -- Unique agent types involved
+    error_types TEXT[],  -- Unique error types involved
+
+    -- Batch operation linkage
+    batch_id UUID,  -- FK to batch_pause_operations.id (DD-012)
+    batch_triggered_at TIMESTAMP,
+
+    -- Resolution tracking
+    resolved_at TIMESTAMP,
+    resolution_action VARCHAR(50),  -- 'batch_resumed', 'manually_resolved', 'expired'
+
+    FOREIGN KEY (batch_id) REFERENCES batch_pause_operations(id)
+);
+
+CREATE INDEX idx_signature ON failure_correlations(error_signature);
+CREATE INDEX idx_detected_at ON failure_correlations(detected_at);
+CREATE INDEX idx_unresolved ON failure_correlations(resolved_at) WHERE resolved_at IS NULL;
+CREATE INDEX idx_batch ON failure_correlations(batch_id) WHERE batch_id IS NOT NULL;
+```
+
+**Key Fields**:
+- `error_signature`: 16-char hash of normalized error (agent_type, error_type, data_source, pattern)
+- `failure_ids`: Array of individual agent failure IDs that matched signature
+- `root_cause`: Human-readable inference (e.g., "Koyfin API quota exceeded")
+- `inference_confidence`: Confidence score 0.00-1.00 based on inference rule match quality
+- `batch_id`: Links to batch operation (if auto-triggered batch pause)
+
+**Retention Policy**:
+- Unresolved: 14 days (active)
+- Resolved: Archive after 90 days to cold storage
+- Archived: Purge after 1 year (keep audit log)
+
 ### Archival Process
 
 **Monthly job** (runs on day 1 of each month):
@@ -387,6 +441,14 @@ WHERE completed_at < NOW() - INTERVAL '90 days';
 
 DELETE FROM batch_pause_operations
 WHERE completed_at < NOW() - INTERVAL '90 days';
+
+-- Archive resolved failure correlations
+INSERT INTO failure_correlations_archive
+SELECT * FROM failure_correlations
+WHERE resolved_at < NOW() - INTERVAL '90 days';
+
+DELETE FROM failure_correlations
+WHERE resolved_at < NOW() - INTERVAL '90 days';
 ```
 
 ---
