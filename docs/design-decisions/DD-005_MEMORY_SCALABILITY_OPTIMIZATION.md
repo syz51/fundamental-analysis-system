@@ -4,7 +4,7 @@
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
 **Related Docs**: [Memory System](../architecture/02-memory-system.md), [System Overview](../architecture/01-system-overview.md), [Knowledge Base Agent](../architecture/04-agents-support.md), [Tech Requirements](../implementation/02-tech-requirements.md)
-**Related Decisions**: DD-002 (Event-Driven Memory Sync)
+**Related Decisions**: DD-002 (Event-Driven Memory Sync), DD-013 (Pattern Archive Lifecycle Management)
 **Resolves**: [Flaw #7: Memory Scalability](../design-flaws/resolved/07-memory-scalability.md)
 
 ---
@@ -392,6 +392,7 @@ LIMIT 10
 - [Tech Requirements](../implementation/02-tech-requirements.md) - Infrastructure specs
 - [Roadmap](../implementation/01-roadmap.md) - Phased optimization deployment
 - DD-002 (Event-Driven Memory Sync) - Related memory system enhancement
+- DD-013 (Pattern Archive Lifecycle Management) - Complements pruning strategy with status-aware retention
 
 ---
 

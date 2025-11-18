@@ -4,7 +4,7 @@
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
 **Related Docs**: [Learning Systems](../learning/01-learning-systems.md), [Memory System](../architecture/02-memory-system.md), [Knowledge Base Agent](../architecture/04-agents-support.md)
-**Related Decisions**: DD-001 (Gate 6 Learning Validation)
+**Related Decisions**: DD-001 (Gate 6 Learning Validation), DD-014 (Validation Gaps Resolution)
 
 ---
 
@@ -329,6 +329,7 @@ None - specification complete, ready for implementation.
 
 - [Flaw #3: Pattern Validation Confirmation Bias Loop](../design-flaws/resolved/03-pattern-validation.md) - Original problem analysis
 - [DD-001: Gate 6 Learning Validation](DD-001_GATE_6_LEARNING_VALIDATION.md) - Human oversight layer
+- [DD-014: Validation Gaps Resolution](DD-014_VALIDATION_GAPS_RESOLUTION.md) - Extends validation framework with shadow mode and quarantine system
 - [Learning Systems](../learning/01-learning-systems.md) - Anti-confirmation bias mechanisms
 - [Knowledge Base Agent](../architecture/04-agents-support.md) - Pattern storage and lifecycle
 

@@ -171,6 +171,7 @@ Rejected Option 1 (human-only) due to deadlock risk. Rejected Option 2 (agent-on
 5. **Gate Review**: Validate/override provisionals at Gates 3/5
 
 **Credibility System Integration** (DD-008):
+
 - **Phase 2 (Months 3-4)**: Simple credibility (overall accuracy + temporal decay + confidence intervals)
 - **Phase 4 (Months 7-8)**: Comprehensive credibility (adds regime, trend, override, context matching)
 

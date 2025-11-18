@@ -4,7 +4,7 @@
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
 **Related Docs**: [DD-001](DD-001_GATE_6_LEARNING_VALIDATION.md), [Human Integration](../operations/02-human-integration.md), [Learning Systems](../learning/01-learning-systems.md)
-**Related Decisions**: DD-001 (Gate 6 Learning Validation)
+**Related Decisions**: DD-001 (Gate 6 Learning Validation), DD-014 (Validation Gaps Resolution)
 **Resolves**: [Flaw #10: Gate 6 Parameter Optimization](../design-flaws/resolved/10-gate-6-parameters.md)
 
 ---

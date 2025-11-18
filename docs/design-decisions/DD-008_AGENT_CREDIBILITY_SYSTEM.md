@@ -314,10 +314,12 @@ To balance rapid delivery with comprehensive functionality, credibility system i
 **Scope**: Minimum viable credibility for debate auto-resolution
 
 **Components**:
+
 1. **Temporal decay**: Exponential weighting with 2-year half-life
 2. **Confidence intervals**: Wilson score intervals for sample size adjustment
 
 **Formula**:
+
 ```python
 credibility_score = (
     base_accuracy *           # Overall domain accuracy
@@ -334,6 +336,7 @@ min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
 **Use case**: Enables debate auto-resolution (DD-003 Level 2) with statistically sound credibility differentials
 
 **Limitations**:
+
 - No market regime awareness (bull vs bear performance conflated)
 - No trend detection (improving agents underestimated)
 - No override tracking (blind spots undetected)
@@ -347,11 +350,7 @@ min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
 
 **Scope**: Full DD-008 specification with all 6 components
 
-**Added components**:
-3. **Market regime-specific credibility**: 6 regimes (BULL_LOW_RATES, BULL_HIGH_RATES, BEAR_HIGH_RATES, BEAR_LOW_RATES, HIGH_VOLATILITY, NORMAL)
-4. **Performance trend detection**: 52-week linear regression, extrapolation (R² > 0.3)
-5. **Human override tracking**: Override rate penalties (>20% = 15% penalty, >40% = 30% penalty)
-6. **Multi-dimensional context matching**: 5 dimensions (sector, metric_type, time_horizon, company_size, growth_stage)
+**Added components**: 3. **Market regime-specific credibility**: 6 regimes (BULL_LOW_RATES, BULL_HIGH_RATES, BEAR_HIGH_RATES, BEAR_LOW_RATES, HIGH_VOLATILITY, NORMAL) 4. **Performance trend detection**: 52-week linear regression, extrapolation (R² > 0.3) 5. **Human override tracking**: Override rate penalties (>20% = 15% penalty, >40% = 30% penalty) 6. **Multi-dimensional context matching**: 5 dimensions (sector, metric_type, time_horizon, company_size, growth_stage)
 
 **Formula**: (as specified in Core Components above)
 
@@ -366,16 +365,19 @@ min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
 ### Migration Path
 
 **Week 1-2 (Phase 4)**: Parallel calculation
+
 - Calculate both Phase 2 (simple) and Phase 4 (comprehensive) credibility
 - Use Phase 2 for decisions (production)
 - Log Phase 4 (shadow mode) for comparison
 
 **Week 3 (Phase 4)**: A/B testing
+
 - 50% debates use Phase 4 credibility
 - Measure auto-resolution accuracy, override rates
 - Validate Phase 4 performs better (>10% improvement)
 
 **Week 4 (Phase 4)**: Full rollout
+
 - 100% debates use Phase 4 credibility
 - Monitor for regressions
 - Keep Phase 2 calculation for 30 days (rollback option)
