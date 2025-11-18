@@ -6,13 +6,13 @@ Documentation of design issues discovered during system architecture development
 
 ## Overview
 
-This folder contains **21 documented design flaws** identified through comprehensive architecture reviews. Each flaw is tracked with priority, dependencies, resolution status, and implementation details.
+This folder contains **24 documented design flaws** identified through comprehensive architecture reviews. Each flaw is tracked with priority, dependencies, resolution status, and implementation details.
 
 **Current Stats** (as of 2025-11-18):
 
-- **Active**: 10 flaws (3 critical, 5 high, 1 medium, 1 deferred)
-- **Resolved**: 11 flaws (through design decisions DD-001 through DD-012)
-- **Deferred**: 1 flaw (subset of another flaw)
+- **Active**: 0 flaws (all resolved or deferred)
+- **Resolved**: 24 flaws (through design decisions DD-001 through DD-021)
+- **Deferred**: 3 flaws (moved to future/ for consideration in later phases)
 - **Minor Issues**: 6 low-priority clarifications
 
 ---
@@ -22,30 +22,35 @@ This folder contains **21 documented design flaws** identified through comprehen
 ```text
 docs/design-flaws/
 ├── INDEX.md                # Central navigation (start here!)
-├── DEPENDENCIES.md         # Dependency graph & critical path
-├── ROADMAP.md              # Phase timeline
+├── STATUS.md               # Phase-by-phase blocker tracking
 ├── README.md               # This file - how to navigate
 ├── RESOLVING.md            # Guide for resolving flaws (using script)
 ├── generate_index.py       # Auto-generates INDEX.md
 ├── resolve_flaw.py         # Auto-resolve script (moves, updates refs)
 ├── MINOR-ISSUES.md         # Low-priority clarifications
 │
-├── active/                 # Active flaws (10 files)
+├── active/                 # Active flaws (0 files - all resolved!)
 │   └── NN-flaw-name.md
 │
-└── resolved/               # Resolved flaws (11 files)
+├── future/                 # Deferred flaws (3 files)
+│   └── NN-flaw-name.md
+│
+└── resolved/               # Resolved flaws (24 files)
     └── NN-flaw-name.md
 
 docs/archive/design-flaws/  # Deprecated files (moved 2025-11-18)
 ├── 00-SUMMARY.md           # → see INDEX.md
-└── PRIORITY.md             # → see INDEX.md, DEPENDENCIES.md, ROADMAP.md
+├── PRIORITY.md             # → see INDEX.md, STATUS.md
+├── DEPENDENCIES.md         # → see INDEX.md, STATUS.md
+└── ROADMAP.md              # → see STATUS.md, implementation/01-roadmap.md
 ```
 
 ### File Naming Convention
 
 - **Active flaws**: `active/NN-short-name.md`
 - **Resolved flaws**: `resolved/NN-short-name.md`
-- **Numbering**: Flaws numbered #1-21 in discovery order
+- **Deferred flaws**: `future/NN-short-name.md`
+- **Numbering**: Flaws numbered #1-26 in discovery order (some gaps for deferred flaws)
 
 ---
 
@@ -55,52 +60,42 @@ docs/archive/design-flaws/  # Deprecated files (moved 2025-11-18)
 
 **I want to...**
 
-| Goal                            | Go To                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------- |
-| See all flaws at a glance       | [INDEX.md](INDEX.md) - Quick stats & priority view                              |
-| Find critical blockers          | [INDEX.md § Critical Flaws](INDEX.md#-critical-active-flaws-3)                  |
-| Understand dependencies         | [DEPENDENCIES.md](DEPENDENCIES.md) - Dependency graph & matrix                  |
-| Plan implementation timeline    | [ROADMAP.md](ROADMAP.md) - Phase-by-phase breakdown                             |
-| Find flaws in a specific domain | [INDEX.md § Domain View](INDEX.md#-domain-view) (memory/learning/agents/etc.)   |
-| Find flaws in a specific phase  | [INDEX.md § Quick Filters](INDEX.md#-quick-filters) or [ROADMAP.md](ROADMAP.md) |
-| See what's blocking a feature   | [DEPENDENCIES.md § Blocking Analysis](DEPENDENCIES.md#blocking-analysis)        |
-| Find quick wins (<3 weeks)      | [INDEX.md § By Effort](INDEX.md#by-effort)                                      |
-| Understand flaw frontmatter     | [Frontmatter Schema](#frontmatter-schema) below                                 |
-| Add a new flaw                  | [Maintenance § Adding Flaws](#adding-a-new-flaw) below                          |
-| Resolve a flaw                  | [RESOLVING.md](RESOLVING.md) - Automated script guide                           |
+| Goal                            | Go To                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| See all flaws at a glance       | [INDEX.md](INDEX.md) - Quick stats & priority view                            |
+| Track phase blockers            | [STATUS.md](STATUS.md) - Phase-by-phase blocker tracking                      |
+| Plan implementation timeline    | [STATUS.md](STATUS.md) or [01-roadmap.md](../implementation/01-roadmap.md)    |
+| Find flaws in a specific domain | [INDEX.md § Domain View](INDEX.md#-domain-view) (memory/learning/agents/etc.) |
+| Find flaws in a specific phase  | [INDEX.md § Quick Filters](INDEX.md#-quick-filters) or [STATUS.md](STATUS.md) |
+| Find quick wins (<3 weeks)      | [INDEX.md § By Effort](INDEX.md#by-effort)                                    |
+| Understand flaw frontmatter     | [Frontmatter Schema](#frontmatter-schema) below                               |
+| Add a new flaw                  | [Maintenance § Adding Flaws](#adding-a-new-flaw) below                        |
+| Resolve a flaw                  | [RESOLVING.md](RESOLVING.md) - Automated script guide                         |
 
 ### Navigation by View
 
 **Priority View** → [INDEX.md](INDEX.md)
 
-- Critical (3 flaws) - blocks MVP/production
-- High (6 flaws) - should fix before MVP
-- Medium (1 flaw) - post-MVP
-- Low/Deferred (2 flaws) - future optimization
+- All 24 flaws resolved or deferred to future/
+- 3 flaws deferred to future phases
+- See INDEX.md for complete historical priority breakdown
 
-**Timeline View** → [ROADMAP.md](ROADMAP.md)
+**Timeline View** → [STATUS.md](STATUS.md) or [implementation/01-roadmap.md](../implementation/01-roadmap.md)
 
-- Phase 1 (Complete) - 2 flaws resolved
-- Phase 2 (3 active blockers) - Must resolve before Phase 3
-- Phase 3 (4 active) - Quality & learning
-- Phase 4 (2 active) - Production readiness
-- Phase 5 (2 deferred) - Optional refinements
+- All phases complete or deferred
+- STATUS.md tracks phase-by-phase blocker resolution
+- implementation/01-roadmap.md for overall project timeline
 
 **Domain View** → [INDEX.md § Domain View](INDEX.md#-domain-view)
 
-- Memory System (6 flaws)
-- Learning System (6 flaws)
-- Agent System (5 flaws)
-- Data System (3 flaws)
-- Human Gates (4 flaws)
-- Architecture (4 flaws)
+- Memory System
+- Learning System
+- Agent System
+- Data System
+- Human Gates
+- Architecture
 
-**Dependency View** → [DEPENDENCIES.md](DEPENDENCIES.md)
-
-- Critical path visualization
-- Dependency matrix
-- Blocking analysis
-- Parallel workstreams
+See INDEX.md for complete domain breakdown and flaw counts.
 
 ---
 
@@ -196,7 +191,7 @@ Every flaw file (`*.md`) has YAML frontmatter with the following fields:
 
 ```yaml
 ---
-flaw_id: 13 # Integer: Flaw number (1-21)
+flaw_id: 13 # Integer: Flaw number (1-26)
 title: 'Short descriptive title'
 status: active # Enum: active | resolved | deferred
 priority: critical # Enum: critical | high | medium | low
@@ -221,7 +216,7 @@ resolution: 'DD-007 Pattern Validation' # String: Resolution method (resolved on
 
 | Field           | Type       | Required | Description                                                   |
 | --------------- | ---------- | -------- | ------------------------------------------------------------- |
-| `flaw_id`       | int        | ✅       | Unique flaw number (1-21)                                     |
+| `flaw_id`       | int        | ✅       | Unique flaw number (1-26)                                     |
 | `title`         | string     | ✅       | Short descriptive title                                       |
 | `status`        | enum       | ✅       | `active`, `resolved`, or `deferred`                           |
 | `priority`      | enum       | ✅       | `critical`, `high`, `medium`, or `low`                        |
@@ -308,8 +303,7 @@ Valid domain values (can be multiple per flaw):
    ```
 
 6. **Update docs**:
-   - Add to [DEPENDENCIES.md](DEPENDENCIES.md) if it blocks/depends on other flaws
-   - Add to [ROADMAP.md](ROADMAP.md) in appropriate phase
+   - Update [STATUS.md](STATUS.md) if it affects phase blockers
 
 ### Resolving a Flaw
 
@@ -343,7 +337,7 @@ See [RESOLVING.md](RESOLVING.md) for complete guide, examples, and troubleshooti
 
 5. **Regenerate INDEX.md**: `python generate_index.py`
 
-6. **Update dependencies**: Check [DEPENDENCIES.md](DEPENDENCIES.md) and [ROADMAP.md](ROADMAP.md)
+6. **Update dependencies**: Check [STATUS.md](STATUS.md)
 
 ### Changing Flaw Priority
 
@@ -359,7 +353,7 @@ See [RESOLVING.md](RESOLVING.md) for complete guide, examples, and troubleshooti
    python generate_index.py
    ```
 
-3. **Update [ROADMAP.md](ROADMAP.md)** if phase changed
+3. **Update [STATUS.md](STATUS.md)** if phase changed
 
 ### Regenerating INDEX.md
 
@@ -384,8 +378,7 @@ python docs/design-flaws/generate_index.py && git add docs/design-flaws/INDEX.md
 
 **What's manual:**
 
-- [DEPENDENCIES.md](DEPENDENCIES.md) - dependency graph visualization
-- [ROADMAP.md](ROADMAP.md) - phase descriptions and milestones
+- [STATUS.md](STATUS.md) - phase blocker tracking
 - This [README.md](README.md) - navigation guide
 
 ---
@@ -401,11 +394,11 @@ python docs/design-flaws/generate_index.py && git add docs/design-flaws/INDEX.md
 **New Structure** (post-2025-11-18):
 
 - [INDEX.md](INDEX.md) - Priority & domain views (~250 lines)
-- [DEPENDENCIES.md](DEPENDENCIES.md) - Dependency graph & blocking analysis (~150 lines)
-- [ROADMAP.md](ROADMAP.md) - Phase timeline (~150 lines)
+- [STATUS.md](STATUS.md) - Phase blocker tracking (~140 lines)
 - All flaws have YAML frontmatter
-- Active flaws in `active/`, resolved in `resolved/`
+- Active flaws in `active/` (now 0), resolved in `resolved/` (24 files), deferred in `future/` (3 files)
 - Old files moved to `../archive/design-flaws/` (centralized archive)
+- DEPENDENCIES.md & ROADMAP.md archived (info in STATUS.md & implementation/01-roadmap.md)
 
 **Benefits:**
 
@@ -426,6 +419,6 @@ python docs/design-flaws/generate_index.py && git add docs/design-flaws/INDEX.md
 
 ---
 
-**Questions?** Check [INDEX.md](INDEX.md) for quick navigation or [DEPENDENCIES.md](DEPENDENCIES.md) for dependency relationships.
+**Questions?** Check [INDEX.md](INDEX.md) for quick navigation or [STATUS.md](STATUS.md) for phase blocker tracking.
 
 **Last Updated**: 2025-11-18

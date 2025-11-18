@@ -24,8 +24,7 @@ Operations:
 
 Manual steps required after:
     - Fill in resolution content in the markdown body
-    - Update DEPENDENCIES.md
-    - Update ROADMAP.md
+    - Update STATUS.md (if affects phase blockers)
 """
 
 import argparse
@@ -339,8 +338,7 @@ def main():
     print("\n  Will regenerate: INDEX.md")
     print("\nManual steps required after:")
     print(f"  - Fill in resolution content in resolved/{flaw_filename}")
-    print("  - Update DEPENDENCIES.md")
-    print("  - Update ROADMAP.md")
+    print("  - Update STATUS.md (if affects phase blockers)")
 
     # Confirmation
     if not args.yes:
@@ -414,9 +412,8 @@ def main():
     print(f"{'=' * 60}")
     print("\nNext steps:")
     print(f"  1. Edit resolved/{flaw_filename} to add resolution details")
-    print("  2. Update DEPENDENCIES.md")
-    print("  3. Update ROADMAP.md")
-    print("  4. Review and commit changes")
+    print("  2. Update STATUS.md (if affects phase blockers)")
+    print("  3. Review and commit changes")
 
 
 if __name__ == "__main__":
