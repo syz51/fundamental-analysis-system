@@ -440,7 +440,7 @@ None - all critical questions resolved during design:
 
 ## References
 
-- **Design Flaws**: [Flaw #5 - Data Retention Policy Conflict](../docs/design-flaws/05-data-retention.md)
+- **Design Flaws**: [Flaw #5 - Data Retention Policy Conflict](../docs/design-flaws/resolved/05-data-retention.md)
 - **Related Decisions**:
   - DD-005: Memory Scalability Optimization (archive storage strategy)
   - DD-006: Negative Feedback System (mentions "Pattern evidence retained for re-validation")

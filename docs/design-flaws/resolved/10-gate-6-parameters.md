@@ -7,8 +7,8 @@ phase: 4
 effort_weeks: 2
 impact: Human bandwidth, learning efficiency, validation accuracy
 blocks: []
-depends_on: ["#1 Gate 6 operational"]
-domain: ["human-gates", "learning"]
+depends_on: ['#1 Gate 6 operational']
+domain: ['human-gates', 'learning']
 resolved: 2025-11-17
 resolution: DD-004 Gate 6 Parameter Optimization
 ---

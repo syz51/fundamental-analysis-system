@@ -4,7 +4,7 @@
 
 This document provides the technical specification for the comprehensive agent credibility scoring system that addresses temporal decay, market regime adaptation, performance trend detection, and human override tracking.
 
-**Related Design Decisions**: [DD-004: Agent Credibility Scoring](../../docs/design-flaws/04-credibility-scoring.md) (RESOLVED)
+**Related Design Decisions**: [DD-004: Agent Credibility Scoring](../../docs/design-flaws/resolved/04-credibility-scoring.md) (RESOLVED)
 
 ---
 
@@ -74,14 +74,14 @@ class TimeWeightedCredibility:
 
 **Example Weights**:
 
-| Age         | Weight |
-| ----------- | ------ |
-| 3 months    | 0.93   |
-| 6 months    | 0.87   |
-| 1 year      | 0.71   |
-| 2 years     | 0.50   |
-| 4 years     | 0.25   |
-| 8 years     | 0.06   |
+| Age      | Weight |
+| -------- | ------ |
+| 3 months | 0.93   |
+| 6 months | 0.87   |
+| 1 year   | 0.71   |
+| 2 years  | 0.50   |
+| 4 years  | 0.25   |
+| 8 years  | 0.06   |
 
 ---
 
@@ -749,16 +749,16 @@ SET c.overall_score = $overall_score,
 
 **Trigger Schedule**:
 
-| Trigger Type              | Frequency      | Priority | Actions                                        |
-| ------------------------- | -------------- | -------- | ---------------------------------------------- |
-| Major error               | Immediate      | Critical | Recalculate all scores, update debates         |
-| Human override            | Within 1 hour  | High     | Update override metrics, apply penalty         |
-| Challenge lost in debate  | Within 1 hour  | High     | Update credibility, track debate outcome       |
-| New outcome recorded      | Daily batch    | Normal   | Incremental update, regime classification      |
-| Regime detection          | Daily          | Normal   | Detect regime, update regime-specific scores   |
-| Trend analysis            | Weekly         | Normal   | 52-week rolling regression, extrapolate        |
-| Comprehensive review      | Monthly        | Normal   | Full recalculation, all dimensions, validation |
-| Override rate analysis    | Quarterly      | Normal   | Blind spot investigation, root cause analysis  |
+| Trigger Type             | Frequency     | Priority | Actions                                        |
+| ------------------------ | ------------- | -------- | ---------------------------------------------- |
+| Major error              | Immediate     | Critical | Recalculate all scores, update debates         |
+| Human override           | Within 1 hour | High     | Update override metrics, apply penalty         |
+| Challenge lost in debate | Within 1 hour | High     | Update credibility, track debate outcome       |
+| New outcome recorded     | Daily batch   | Normal   | Incremental update, regime classification      |
+| Regime detection         | Daily         | Normal   | Detect regime, update regime-specific scores   |
+| Trend analysis           | Weekly        | Normal   | 52-week rolling regression, extrapolate        |
+| Comprehensive review     | Monthly       | Normal   | Full recalculation, all dimensions, validation |
+| Override rate analysis   | Quarterly     | Normal   | Blind spot investigation, root cause analysis  |
 
 ---
 
@@ -776,21 +776,25 @@ SET c.overall_score = $overall_score,
 **Validation Metrics**:
 
 1. **Temporal Decay Validation**:
+
    - Verify recent performance weighted more heavily
    - Confirm smooth decay curve (no cliff effects)
    - Test half-life tuning across agent types
 
 2. **Regime Detection Accuracy**:
+
    - Classify historical periods correctly
    - Verify regime transitions captured accurately
    - Test regime-specific credibility improves predictions
 
 3. **Trend Detection Effectiveness**:
+
    - Identify improving/degrading agents correctly
    - Validate extrapolation accuracy (6-month forward)
    - Confirm statistical significance thresholds
 
 4. **Override Tracking Impact**:
+
    - Verify high override rate reduces credibility
    - Test root cause analysis triggers
    - Validate penalty calibration
@@ -815,4 +819,4 @@ SET c.overall_score = $overall_score,
 - [Memory System](../architecture/02-memory-system.md) - AgentCredibility schema
 - [Coordination Agents](../architecture/05-agents-coordination.md) - Debate credibility logic
 - [Collaboration Protocols](../architecture/07-collaboration-protocols.md) - Credibility weighting
-- [DD-004: Agent Credibility Scoring](../../docs/design-flaws/04-credibility-scoring.md) - Original flaw specification (RESOLVED)
+- [DD-004: Agent Credibility Scoring](../../docs/design-flaws/resolved/04-credibility-scoring.md) - Original flaw specification (RESOLVED)

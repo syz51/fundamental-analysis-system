@@ -7,8 +7,8 @@ phase: 4
 effort_weeks: 4
 impact: Systematic learning from failures, prevents repeated mistakes
 blocks: []
-depends_on: ["#1 Gate 6", "#3 pattern validation"]
-domain: ["learning"]
+depends_on: ['#1 Gate 6', '#3 pattern validation']
+domain: ['learning']
 resolved: 2025-11-17
 resolution: DD-006 Negative Feedback System
 ---
@@ -62,7 +62,7 @@ def checkpoint_review(self, decision_id, days_elapsed):
 
 ### Specific Failure Scenarios
 
-**Scenario 1: False Positive Success**
+**_Scenario 1: False Positive Success_**
 
 ```text
 Decision: BUY Netflix (NFLX) at $400
@@ -88,7 +88,7 @@ Problem: System learned wrong lesson
   - Will repeat same mistakes
 ```
 
-**Scenario 2: Undiagnosed Failure**
+**_Scenario 2: Undiagnosed Failure_**
 
 ```text
 Decision: BUY SaaS Company XYZ at $100
@@ -114,7 +114,7 @@ Missing Analysis:
 Without understanding WHY, can't improve
 ```
 
-**Scenario 3: Near-Miss Not Recognized**
+**_Scenario 3: Near-Miss Not Recognized_**
 
 ```text
 Decision: PASS on Adobe (ADBE) at $300

@@ -5,7 +5,7 @@
 **Decider(s)**: System Architect
 **Related Docs**: [DD-001](DD-001_GATE_6_LEARNING_VALIDATION.md), [Human Integration](../docs/operations/02-human-integration.md), [Learning Systems](../docs/learning/01-learning-systems.md)
 **Related Decisions**: DD-001 (Gate 6 Learning Validation)
-**Resolves**: [Flaw #10: Gate 6 Parameter Optimization](../docs/design-flaws/10-gate-6-parameters.md)
+**Resolves**: [Flaw #10: Gate 6 Parameter Optimization](../docs/design-flaws/resolved/10-gate-6-parameters.md)
 
 ---
 
@@ -550,7 +550,7 @@ If auto-approval accuracy falls below 90% or human time exceeds 20 hrs/month:
 ## References
 
 - [DD-001: Gate 6 Learning Validation](DD-001_GATE_6_LEARNING_VALIDATION.md) - Base implementation
-- [Flaw #10: Gate 6 Parameter Optimization](../docs/design-flaws/10-gate-6-parameters.md) - Problem analysis
+- [Flaw #10: Gate 6 Parameter Optimization](../docs/design-flaws/resolved/10-gate-6-parameters.md) - Problem analysis
 - [Human Integration](../docs/operations/02-human-integration.md) - Gate 6 in workflow
 - [Learning Systems](../docs/learning/01-learning-systems.md) - Learning architecture
 - [Flaw #1 Resolution](../docs/design-flaws/resolved/01-missing-human-gate.md) - Original problem

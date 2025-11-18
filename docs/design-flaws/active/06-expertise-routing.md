@@ -7,8 +7,8 @@ phase: 5
 effort_weeks: 3
 impact: Marginal improvement in expertise matching
 blocks: []
-depends_on: ["Human gates operational with usage data"]
-domain: ["human-gates", "learning"]
+depends_on: ['Human gates operational with usage data']
+domain: ['human-gates', 'learning']
 discovered: 2025-11-17
 ---
 
@@ -555,6 +555,7 @@ Comprehensive review confirms this flaw remains **unresolved and valid**. Key fi
 **Asymmetry with Agent Credibility System**:
 
 Agents have sophisticated credibility tracking (DD-008, Flaw #4 RESOLVED):
+
 - Multi-factor temporal decay (exponential, 2-year half-life)
 - Market regime-specific credibility (6 regimes)
 - Performance trend detection (52-week regression, R² > 0.3)
@@ -567,12 +568,14 @@ Agents have sophisticated credibility tracking (DD-008, Flaw #4 RESOLVED):
 **Human Override Data Collected But Not Used**:
 
 System tracks human override rates (feedback-loops.md:199-243) for agent penalties:
+
 - Override rate calculation
 - Override outcome accuracy
 - Override reason categorization
 - Root cause analysis triggers
 
 However, this data is NOT used to:
+
 - Build human expertise profiles
 - Route decisions to humans with best track records
 - Identify which humans add value in which contexts
@@ -581,6 +584,7 @@ However, this data is NOT used to:
 **Multi-Expert Workflows Lack Intelligence**:
 
 Human-integration.md (lines 546-555) describes purely rule-based workflows:
+
 - No expertise-based matching ("Route to Alex - 87% accuracy on EV companies")
 - No performance-based prioritization
 - Assumes single expert or random assignment
@@ -588,6 +592,7 @@ Human-integration.md (lines 546-555) describes purely rule-based workflows:
 **Queue Management Without Expertise Matching**:
 
 Collaboration-protocols.md (lines 212-230) shows workload management (max 3 concurrent) but:
+
 - No routing based on domain expertise
 - No historical accuracy consideration
 - No similarity matching to past successful decisions
@@ -595,11 +600,13 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 ### Affected Documentation
 
 **Primary**:
-- `docs/design-flaws/06-expertise-routing.md` (this file)
-- `docs/design-flaws/PRIORITY.md` (roadmap tracking)
-- `docs/design-flaws/00-SUMMARY.md` (status tracking)
+
+- `docs/design-flaws/active/06-expertise-routing.md` (this file)
+- `docs/design-flaws/ROADMAP.md` (roadmap tracking)
+- `docs/design-flaws/INDEX.md` (status tracking)
 
 **Requires Updates When Implemented**:
+
 - `docs/operations/02-human-integration.md` (lines 522-555: static 4-role section)
 - `docs/architecture/07-collaboration-protocols.md` (lines 212-230: debate routing)
 - `docs/learning/02-feedback-loops.md` (lines 199-243: extend override tracking)
@@ -609,12 +616,14 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 ### Design Approach (When Implemented)
 
 **Human Credibility System** (parallel structure to DD-008 agent credibility):
+
 - Multi-dimensional tracking: sector/metric/decision-type/complexity
 - Temporal decay: 2-year half-life matching agent credibility
 - Sample size confidence intervals (min 10-30 decisions before routing uses expertise)
 - Override outcome accuracy tracking (6-month rolling windows)
 
 **5-Factor Dynamic Routing Algorithm**:
+
 1. **Domain expertise** (35% weight): Sector-specific accuracy track record
 2. **Complexity match** (20% weight): Has expert handled similar complexity?
 3. **Similarity** (25% weight): Historical accuracy on similar decisions
@@ -622,12 +631,14 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 5. **Recency** (10% weight): Recent experience in sector (3-month window)
 
 **Learning Integration**:
+
 - Capture human decision + context + outcome in knowledge graph
 - Extract patterns from override data (identify systematic AI weaknesses)
 - Update expertise profiles based on rolling performance windows
 - Gate 6 validation: Review human credibility changes alongside agent credibility
 
 **Architectural Principles**:
+
 - Parallel structure to agent credibility (consistency)
 - Privacy-preserving (aggregate insights, no individual shaming)
 - Graceful degradation (fall back to availability if insufficient data)
@@ -651,12 +662,14 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 ### Prerequisites for Implementation
 
 **Design Foundation**:
+
 - [ ] DD-008 agent credibility system (COMPLETE) - use as template
 - [ ] Operational gates collecting human decision data (Phase 2-3)
 - [ ] DD-006 post-mortem system (COMPLETE) - extend to capture human decisions
 - [ ] Knowledge graph with decision/outcome tracking (Phase 1-2)
 
 **Data Requirements**:
+
 - [ ] 6+ months human decision history per expert
 - [ ] Min 30 decisions per expert across 3+ domains
 - [ ] Human override outcomes tracked (win/loss/neutral)
@@ -665,22 +678,26 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 **Implementation Checklist** (when triggered):
 
 1. **Create DD-010**: Dynamic Human Expertise Routing & Credibility System
+
    - Human credibility schema (parallel to DD-008 structure)
    - DynamicExpertRouter algorithm specification
    - Integration points with Gates 1-6
    - Database extensions (HumanExpert nodes in knowledge graph)
 
 2. **Update Architecture Docs**:
+
    - `memory-system.md`: Add HumanExpert nodes/relationships to schema
    - `collaboration-protocols.md`: Add expertise matching to debate routing
    - `learning-system.md`: Add human credibility to Gate 6 review items
 
 3. **Update Operations Docs**:
+
    - `human-integration.md`: Replace static 4-role section with dynamic routing
    - Add human performance dashboard specification
    - Add expertise-based queue management
 
 4. **Extend Learning Systems**:
+
    - `feedback-loops.md`: Extend override tracking to build expertise profiles
    - Add human decision outcome analysis for routing improvements
    - Add systematic AI weakness detection from override patterns

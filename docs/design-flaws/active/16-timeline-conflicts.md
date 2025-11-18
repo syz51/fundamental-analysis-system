@@ -6,9 +6,9 @@ priority: high
 phase: 2
 effort_weeks: 2
 impact: Phase 2 blocked by Phase 4 dependency
-blocks: ["Phase 2 implementation"]
+blocks: ['Phase 2 implementation']
 depends_on: []
-domain: ["architecture"]
+domain: ['architecture']
 sub_issues:
   - id: H1
     severity: high
@@ -37,11 +37,12 @@ Roadmap has timeline conflicts and missing allocations:
 
 ### Sub-Issue H1: Phase 2-4 Credibility Dependency
 
-**Files**: `docs/implementation/01-roadmap.md:112-157`, `docs/design-flaws/PRIORITY.md:31-51`
+**Files**: `docs/implementation/01-roadmap.md:112-157`, `docs/design-flaws/ROADMAP.md`
 
 **Problem**: Debate Resolution (Phase 2) needs comprehensive credibility scoring (Phase 4).
 
 **Timeline Conflict**:
+
 ```yaml
 # Phase 2 (Months 3-4)
 - Implement memory-enhanced debate facilitator
@@ -58,6 +59,7 @@ CONFLICT: Can't implement credibility-weighted resolution in Month 3
 ```
 
 **Solution**: Two-phase credibility implementation
+
 - **Phase 2 (Simplified)**: Overall accuracy only, no regime/context specificity
 - **Phase 4 (Comprehensive)**: Full DD-008 with decay, regime detection, multi-dimensional context
 
@@ -68,6 +70,7 @@ CONFLICT: Can't implement credibility-weighted resolution in Month 3
 **Problem**: DD-005 requires benchmarking at each phase, but roadmap doesn't allocate time.
 
 **Current State**:
+
 ```yaml
 Phase 1: Foundation (Months 1-2) - NO BENCHMARK MILESTONE
 Phase 2: Core (Months 3-4) - NO BENCHMARK MILESTONE
@@ -76,6 +79,7 @@ Phase 4: Optimization (Months 7-8) - "Re-benchmark at production scale" L352
 ```
 
 **Benchmarking Typically Requires**:
+
 - 1 week data collection (run 50+ analyses)
 - 1 week analysis & tuning
 - Total: 2 weeks per phase
@@ -89,6 +93,7 @@ Phase 4: Optimization (Months 7-8) - "Re-benchmark at production scale" L352
 ### H1: Phased Credibility Implementation
 
 **Phase 2 Simplified Credibility** (Week 3-4):
+
 ```python
 class SimplifiedCredibility:
     """Lightweight credibility for Phase 2"""
@@ -113,6 +118,7 @@ class SimplifiedCredibility:
 ```
 
 **Phase 4 Comprehensive Credibility** (Week 7-8):
+
 ```python
 class ComprehensiveCredibility(SimplifiedCredibility):
     """Full DD-008 implementation"""
@@ -152,6 +158,7 @@ class ComprehensiveCredibility(SimplifiedCredibility):
 ### M8: Add Benchmark Sprints
 
 **Updated Roadmap**:
+
 ```yaml
 Phase 1: Months 1-2
   - Week 1-7: Foundation implementation
