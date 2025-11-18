@@ -475,8 +475,10 @@ Pattern Archives (DD-009):
 DD-013 Additions (Archive Lifecycle):
   Deprecated pattern retention (18mo, 40GB): $0.72/mo
   Late-stage Tier 2 archives (40 patterns):  $0.40/mo
-  Cached index (Redis, 50MB):                $0.01/mo
+  Cached index (in-memory, 50MB):            $0.01/mo
   Subtotal:                                  $1.13/mo
+
+Note: In-memory storage tech TBD (see tech-requirements.md)
 
 Total:            $6.42/mo
 vs. All Hot:      $23/mo (77% savings)

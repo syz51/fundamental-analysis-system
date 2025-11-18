@@ -40,16 +40,16 @@ Timeline for addressing design flaws across development phases.
 
 ### Active Blockers (1/5)
 
-| Flaw                              | Priority | Effort | Status    | Blocks                  |
-| --------------------------------- | -------- | ------ | --------- | ----------------------- |
-| [#19](19-partial-failures.md)     | High     | 4w     | 🔴 ACTIVE | Multi-agent reliability |
+| Flaw                          | Priority | Effort | Status    | Blocks                  |
+| ----------------------------- | -------- | ------ | --------- | ----------------------- |
+| [#19](19-partial-failures.md) | High     | 4w     | 🔴 ACTIVE | Multi-agent reliability |
 
 **Recently Resolved:**
 
-| Flaw                                            | Priority | Effort | Resolved   | Resolution                                  |
-| ----------------------------------------------- | -------- | ------ | ---------- | ------------------------------------------- |
-| [#14](resolved/14-statistical-reliability.md)   | High     | 4w     | 2025-11-18 | Wilson score + n=15 + dynamic threshold     |
-| [#16](resolved/16-timeline-conflicts.md)        | High     | 2w     | 2025-11-18 | Phased credibility + roadmap updates        |
+| Flaw                                          | Priority | Effort | Resolved   | Resolution                              |
+| --------------------------------------------- | -------- | ------ | ---------- | --------------------------------------- |
+| [#14](resolved/14-statistical-reliability.md) | High     | 4w     | 2025-11-18 | Wilson score + n=15 + dynamic threshold |
+| [#16](resolved/16-timeline-conflicts.md)      | High     | 2w     | 2025-11-18 | Phased credibility + roadmap updates    |
 
 **Required Before Phase 3:**
 
@@ -62,9 +62,10 @@ Timeline for addressing design flaws across development phases.
   - [x] Increase min sample size 5→15
   - [x] Update all credibility calculations
 - [ ] Define partial failure handling (#19)
-  - [ ] Agent quorum requirements
-  - [ ] RabbitMQ message queue setup
+  - [ ] Agent checkpoint-based hard stop implementation
+  - [ ] Message queue implementation (tech TBD - see tech-requirements.md)
   - [ ] Contradiction resolution fallback
+  - [ ] Decide Redis role (cache-only vs dual cache+queue)
 
 **Estimated Completion:** 4 weeks (#19 only, can parallelize with #15)
 
@@ -76,12 +77,12 @@ Timeline for addressing design flaws across development phases.
 
 ### Resolved (4/6)
 
-| Flaw                                       | Priority | Effort | Status      | Completed  |
-| ------------------------------------------ | -------- | ------ | ----------- | ---------- |
-| [#3](resolved/03-pattern-validation.md)    | High     | 6w     | ✅ RESOLVED | 2025-11-17 |
-| [#7](resolved/07-memory-scalability.md)    | High     | 4w     | ✅ RESOLVED | 2025-11-17 |
-| [#12](resolved/12-archive-lifecycle.md)    | High     | 7w     | ✅ RESOLVED | 2025-11-18 |
-| [#13](resolved/13-validation-gaps.md)      | Critical | 8w     | ✅ RESOLVED | 2025-11-18 |
+| Flaw                                    | Priority | Effort | Status      | Completed  |
+| --------------------------------------- | -------- | ------ | ----------- | ---------- |
+| [#3](resolved/03-pattern-validation.md) | High     | 6w     | ✅ RESOLVED | 2025-11-17 |
+| [#7](resolved/07-memory-scalability.md) | High     | 4w     | ✅ RESOLVED | 2025-11-17 |
+| [#12](resolved/12-archive-lifecycle.md) | High     | 7w     | ✅ RESOLVED | 2025-11-18 |
+| [#13](resolved/13-validation-gaps.md)   | Critical | 8w     | ✅ RESOLVED | 2025-11-18 |
 
 **Deliverables:**
 
@@ -264,9 +265,10 @@ Timeline for addressing design flaws across development phases.
    - [x] Update all credibility calculations
 
 3. **Flaw #19: Partial failure handling** (4 weeks)
-   - [ ] Agent quorum requirements
-   - [ ] RabbitMQ message queue setup
+   - [ ] Agent checkpoint-based hard stop implementation
+   - [ ] Message queue implementation (tech TBD - see tech-requirements.md)
    - [ ] Contradiction resolution fallback
+   - [ ] Decide Redis role (cache-only vs dual cache+queue)
 
 **Estimated Time:** 10 weeks total (some parallel work possible)
 

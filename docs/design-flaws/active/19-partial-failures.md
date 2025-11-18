@@ -13,12 +13,16 @@ sub_issues:
   - id: G1
     severity: high
     title: Agent failure quorum undefined
+    status: pending
   - id: G2
     severity: high
     title: Message protocol implementation missing
+    status: resolved
+    resolution: Tech-agnostic message queue spec defined (see tech-requirements.md)
   - id: M6
     severity: medium
     title: Data contradiction resolution timeout missing
+    status: pending
 discovered: 2025-11-17
 ---
 
@@ -226,40 +230,42 @@ class AgentFailureHandler:
 
 ### G2: Message Queue Specification
 
-```python
-# Recommended: RabbitMQ for reliability + ordering
+**Technology-Agnostic Requirements**:
 
-class MessageQueueConfig:
-    """Message queue implementation details"""
+```yaml
+Message Queue Requirements:
 
-    QUEUE_TYPE = 'rabbitmq'
+  Reliability:
+    - Delivery guarantee: At-least-once semantics
+    - Persistent storage: Survive system restarts
+    - Dead letter queue: Handle failed message deliveries
+    - Durability: Messages persisted to disk
 
-    EXCHANGES = {
-        'agent_communication': {
-            'type': 'topic',
-            'durable': True
-        }
-    }
+  Ordering:
+    - Per-sender ordering: Messages from Agent A arrive in order
+    - Priority levels: 4 tiers (critical, high, normal, low)
+    - No global ordering required across all agents
 
-    QUEUES = {
-        'agent_{agent_id}': {
-            'durable': True,
-            'max_length': 1000,
-            'message_ttl': 3600000,  # 1 hour
-            'dead_letter_exchange': 'dlx_agent_messages'
-        }
-    }
+  Performance:
+    - Latency: <100ms (95th percentile)
+    - Queue depth limit: 1000 messages per agent
+    - Message TTL: 1 hour (prevent stale messages)
+    - Throughput: Support 5-10 concurrent agents
 
-    RETRY_POLICY = {
-        'max_retries': 3,
-        'backoff': 'exponential',  # 1s, 2s, 4s
-        'dead_letter_after': 3
-    }
+  Retry Policy:
+    - Max retries: 3 attempts
+    - Backoff strategy: Exponential (1s, 2s, 4s)
+    - Dead letter handling: After 3 failed retries
 
-    ORDERING = {
-        'guarantee': 'per_sender',  # Messages from Agent A arrive in order
-        'priority_levels': ['critical', 'high', 'normal', 'low']
-    }
+  Topology:
+    - Topic-based routing: agent_communication topic
+    - Per-agent queues: Isolated message streams
+    - Broadcast capability: System-wide announcements
+    - Unicast: Direct agent-to-agent messages
+
+Technology Options: [RabbitMQ, Apache Kafka, Redis Streams]
+Decision: TBD - Phase 2 implementation
+Selection Criteria: Reliability, operational complexity, existing infrastructure
 ```
 
 ### M6: Contradiction Resolution Fallback

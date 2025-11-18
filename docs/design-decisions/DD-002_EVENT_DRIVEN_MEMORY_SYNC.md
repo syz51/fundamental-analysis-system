@@ -1,6 +1,6 @@
 # Event-Driven Memory Synchronization
 
-**Status**: Implemented
+**Status**: Implemented (design), Tech: TBD (implementation)
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
 **Related Docs**: [Memory System](../architecture/02-memory-system.md), [Collaboration Protocols](../architecture/07-collaboration-protocols.md)
@@ -52,7 +52,7 @@ Message types trigger appropriate sync levels. Debates use immutable memory snap
 
 ### Negative Impacts / Tradeoffs
 
-- **Infrastructure complexity**: 3-tier Kafka topics, Redis snapshot storage, event bus
+- **Infrastructure complexity**: 3-tier priority message queues, snapshot storage, event bus
 - **Code complexity**: Event handlers, priority routing, snapshot management
 - **Testing burden**: 8 scenarios (race conditions, priority routing, snapshot locks)
 - **Monitoring**: Need sync latency tracking, priority queue depth alerts
@@ -63,8 +63,8 @@ Message types trigger appropriate sync levels. Debates use immutable memory snap
 - **Debate Facilitator**: Pre-debate force sync, snapshot creation
 - **Message Protocol**: Message types map to sync priorities
 - **All Agents**: Memory lock/unlock during debates
-- **Infrastructure**: Kafka priority topics, Redis snapshot cache
-- **Central KB (Neo4j)**: Bulk write API, read replicas, priority routing
+- **Infrastructure**: Message queue priority channels, snapshot storage, event bus
+- **Central KB**: Bulk write API, read replicas, priority routing
 
 ---
 
@@ -138,23 +138,28 @@ async def initialize_debate(debate_topic, participants):
 
 ### Infrastructure Requirements
 
-**Kafka**:
+**Message Queue** (tech TBD - see tech-requirements.md):
 
-- `critical_sync_requests` topic (dedicated high-performance partition)
-- `high_priority_sync` topic (fast-track queue)
-- `normal_sync` topic (existing)
+- Critical priority channel (dedicated high-performance routing)
+- High priority channel (fast-track queue)
+- Normal priority channel (existing background sync)
+- Requirements: <100ms latency (p95), per-sender ordering, persistent storage
 
-**Redis**:
+**In-Memory Storage** (tech TBD - see tech-requirements.md):
 
 - Sync locks (prevent simultaneous write conflicts)
 - Snapshot storage (1hr TTL for debate snapshots)
 - Sync event log (audit trail)
+- Requirements: sub-millisecond latency, persistence, TTL support
 
-**Neo4j (Central KB)**:
+**Central Knowledge Base**:
 
 - Bulk write API (batch critical syncs)
 - Read replicas (distribute sync read load)
 - Priority query routing (fast-track critical syncs)
+- Requirements: graph database with high-throughput writes
+
+**Technology Selection**: Deferred to Phase 2 implementation. See [Tech Requirements](../implementation/02-tech-requirements.md) for evaluation criteria.
 
 ### Testing Requirements
 
@@ -176,16 +181,17 @@ async def initialize_debate(debate_topic, participants):
 **Dependencies**:
 
 - Event bus infrastructure
-- Kafka priority topics
-- Redis snapshot storage
+- Message queue with 3-tier priority support
+- In-memory storage with snapshot capability
 - Agent memory lock capability
+- Technology selection decisions (see tech-requirements.md)
 
 ---
 
 ## Open Questions
 
 1. **2s timeout adequate for critical sync?** May need per-environment config (cloud vs local)
-2. **Redis 1hr TTL sufficient for debate snapshots?** Or need persistent backup?
+2. **1hr TTL sufficient for debate snapshots?** Or need persistent backup beyond in-memory storage?
 3. **Conflict resolution**: If pre-sync detects contradictions, auto-resolve or escalate?
 4. **Partial failures**: If 1 of 5 agents fails critical sync, abort debate or proceed with 4?
 5. **Performance monitoring**: Alert on p95, p99, or p99.9 latency?
@@ -199,6 +205,7 @@ async def initialize_debate(debate_topic, participants):
 - [Flaw #2: Memory Sync Timing](../design-flaws/resolved/02-memory-sync-timing.md) - Original problem analysis
 - [Memory System Architecture](../architecture/02-memory-system.md) - Updated with event-driven sync
 - [Collaboration Protocols](../architecture/07-collaboration-protocols.md) - Debate protocol with sync
+- [Technical Requirements](../implementation/02-tech-requirements.md#message-queue) - Message queue specifications for priority channels, reliability, ordering
 - Related: DD-003 (debate deadlock uses critical sync for human gates)
 
 ---

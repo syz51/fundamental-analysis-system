@@ -101,21 +101,37 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - Full-text indexes on text content
   - Graph algorithm projections
 
-#### Redis (Memory Caches) - NEW
+#### In-Memory Cache & Storage - NEW
 
-- **Version**: 7+
-- **Purpose**: L1/L2 agent working memory, session cache, message queue
-- **Size**: 500GB-1TB
-- **Configuration**:
-  - Redis Cluster mode
-  - Persistence enabled (RDB + AOF)
-  - Eviction policy: LRU for cache data
-  - Separate instances for cache vs. queues
-- **Namespaces**:
+**Purpose**: L1/L2 agent working memory, session cache, optional message queue
+
+**Requirements**:
+
+- **Performance**:
+  - Sub-millisecond read latency (p95)
+  - High throughput (100k+ ops/sec)
+  - 500GB-1TB capacity
+- **Persistence**:
+  - Snapshot-based backup (RDB equivalent)
+  - Append-only log (AOF equivalent)
+  - Survive restarts without data loss
+- **Eviction**:
+  - LRU policy for cache data
+  - TTL support for temporary data
+- **Data Structures**:
+  - Key-value storage
+  - Hash maps for nested data
+  - Lists/sets for collections
+- **Namespacing**:
   - `L1:{agent_id}:working`: Agent working memory
   - `L2:{agent_id}:specialized`: Agent domain cache
   - `sessions:{session_id}`: Debate/collaboration sessions
-  - `queue:{topic}`: Message queues
+  - Optional: `queue:{topic}` if used for message queue
+
+**Technology Options**: [Redis, Memcached + persistence layer, Dragonfly]
+**Decision**: TBD - Phase 2 implementation
+
+**Note**: Role decision (cache-only vs dual cache+queue) deferred to Phase 2. If separate message queue chosen, remove `queue:{topic}` namespace.
 
 #### Vector Database (Semantic Search)
 
@@ -130,22 +146,51 @@ The system requires sophisticated infrastructure to support parallel agent execu
 
 ### Message Queue
 
-#### Apache Kafka
+**Purpose**: Inter-agent communication, memory sync events, learning updates
 
-- **Version**: 3+
-- **Purpose**: Inter-agent communication, memory sync events, learning updates
-- **Configuration**:
-  - 3+ broker cluster
-  - Replication factor: 3
-  - Retention: 7 days for messages, permanent for memory events
-  - Partitioning by analysis_id
-- **Topics**:
+**Requirements**:
+
+- **Reliability**:
+  - At-least-once delivery semantics
+  - Persistent storage (survive restarts)
+  - Dead letter queue for failed deliveries
+  - High availability (no single point of failure)
+- **Performance**:
+  - Latency: <100ms (p95)
+  - Throughput: Support 5-10 concurrent agents
+  - Queue depth: 1000 messages per topic
+- **Ordering**:
+  - Per-sender ordering guarantee
+  - Priority levels: 4 tiers (critical, high, normal, low)
+- **Retention**:
+  - Standard messages: 7 days
+  - Memory events: Permanent (or until processed)
+  - Configurable per topic
+- **Topology**:
+  - Topic-based routing with partitioning
+  - Broadcast capability (system announcements)
+  - Unicast (direct agent-to-agent)
+- **Retry Policy**:
+  - Max retries: 3 attempts
+  - Exponential backoff: 1s, 2s, 4s
+  - Dead letter after max retries
+
+**Topic Categories** (implementation-agnostic):
+
+- **Agent Communication**:
   - `agent.findings`: Analysis findings between agents
   - `agent.challenges`: Debate challenges
+- **Memory & Learning**:
   - `memory.sync`: Memory synchronization events
   - `memory.updates`: Learning updates, pattern discoveries
+- **Human Integration**:
   - `human.gates`: Human decision requests
+- **Outcome Tracking**:
   - `outcomes.tracking`: Prediction tracking events
+
+**Technology Options**: [Apache Kafka, RabbitMQ, Redis Streams]
+**Decision**: TBD - Phase 2 implementation
+**Selection Criteria**: Reliability, operational complexity, existing infrastructure, throughput needs
 
 ### API Integrations
 

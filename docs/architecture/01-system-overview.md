@@ -118,6 +118,8 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 - Multiple database systems (PostgreSQL, MongoDB, Neo4j, Redis)
 - Document storage for filings, transcripts, reports
 - Specialized memory storage for knowledge graph and agent caches
+- Message queue for inter-agent communication and memory synchronization
+  - See [Technical Requirements](../implementation/02-tech-requirements.md#message-queue) for specifications
 
 ---
 

@@ -868,6 +868,8 @@ The system determines which agents need immediate notification based on:
 - Insight importance and urgency
 - Message type and priority
 
+**Note**: For message queue reliability, ordering, performance specifications, and technology selection, see [Technical Requirements](../implementation/02-tech-requirements.md#message-queue).
+
 ---
 
 ## Scalability & Performance Optimization
@@ -1057,4 +1059,6 @@ Performance validation at each scale milestone:
 - [Specialist Agents](./03-agents-specialist.md) - Agents using memory systems
 - [Knowledge Base Agent](./04-agents-support.md#knowledge-base-agent) - Memory management agent
 - [Collaboration Protocols](./07-collaboration-protocols.md) - Memory-enhanced communication
+- [Technical Requirements](../implementation/02-tech-requirements.md#message-queue) - Message queue specifications for memory synchronization
+- [DD-002: Event-Driven Memory Sync](../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md) - Priority-based sync design
 - [DD-005: Memory Scalability Optimization](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design

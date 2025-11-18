@@ -27,6 +27,8 @@ This document defines the communication and collaboration protocols that enable 
 }
 ```
 
+**Note**: Message structure is technology-agnostic. For message queue implementation details, reliability requirements, and technology selection, see [Tech Requirements](../implementation/02-tech-requirements.md).
+
 ### Message Types
 
 **Finding**: Share analytical results
@@ -124,12 +126,14 @@ The debate protocol uses a tiered escalation approach with timeouts and fallback
 - Credibility system evolves across implementation phases (see DD-008):
 
 **Phase 2 (Months 3-4) - Simple Credibility**:
+
 - **Base accuracy**: Overall domain-specific track record
 - **Temporal weighting**: Exponential decay with 2-year half-life
 - **Confidence intervals**: Wilson score intervals for statistical reliability
 - Formula: `credibility = base_accuracy × temporal_weight`
 
 **Phase 4 (Months 7-8) - Comprehensive Credibility** (adds):
+
 - **Regime-specific accuracy** (30%): Performance in current market regime (bull/bear, rates, volatility)
 - **Context matching** (30% weight if sufficient data): Multi-dimensional context (sector, metric, horizon, size, stage)
 - **Performance trend**: Extrapolate improvement/degradation trajectory (if R² > 0.3)
@@ -651,3 +655,5 @@ After debate resolution:
 - [Memory System](./02-memory-system.md) - Knowledge graph supporting collaboration
 - [Coordination Agents](./05-agents-coordination.md) - Debate facilitation
 - [Specialist Agents](./03-agents-specialist.md) - Primary participants in collaboration
+- [Technical Requirements](../implementation/02-tech-requirements.md#message-queue) - Message queue specifications for inter-agent communication
+- [DD-002: Event-Driven Memory Sync](../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md) - Priority-based messaging for debates
