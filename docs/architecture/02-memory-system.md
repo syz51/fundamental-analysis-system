@@ -1584,6 +1584,181 @@ Performance validation at each scale milestone:
 
 ---
 
+## Access Control & Security
+
+### Overview
+
+The memory system implements role-based access control (RBAC) to protect data integrity and prevent unauthorized modifications. While data file access is controlled at the storage layer (see [Data Management](../operations/03-data-management.md)), memory system access requires fine-grained permissions for L1/L2/L3 tiers, pattern lifecycle management, and credibility score updates.
+
+See [DD-020: Memory Access Control](../design-decisions/DD-020_MEMORY_ACCESS_CONTROL.md) for complete design.
+
+### Permission Model
+
+**5 Roles with Granular Access**:
+
+| Role | L1 Working Memory | L2 Agent Cache | L3 Central Graph | Pattern Lifecycle | Credibility Scores |
+|------|-------------------|----------------|------------------|-------------------|--------------------|
+| **agent** | read_write_own | read_write_own | read_all | propose_only | read_own |
+| **knowledge_base_agent** | read_write_own | read_write_own | read_write | validate | read_all |
+| **debate_facilitator** | read_write_own | read_all | read_all | read_all | read_all |
+| **learning_engine** | none | read_all | read_write | validate | read_write_all |
+| **human_admin** | read_all | read_all | read_write_delete | full_control | read_write_all |
+
+**Permission Semantics**:
+- **read_write_own**: Can read/write only own memory (agent isolation)
+- **read_all**: Can read all agents' memory (cross-agent visibility)
+- **read_write**: Can read/write shared memory (L3 graph)
+- **propose_only**: Can propose patterns, cannot modify existing
+- **validate**: Can advance pattern status through lifecycle
+- **full_control**: All operations including deletion
+
+### Agent Isolation
+
+**L1/L2 Isolation Guarantees**:
+- Agents cannot read other agents' L1 working memory
+- Agents cannot write to other agents' L2 caches
+- Exception: Debate Facilitator has `read_all` for L2 caches (cross-agent evidence review during mediation)
+
+**L3 Shared Access**:
+- All agents have `read_all` access to L3 central graph (institutional knowledge sharing)
+- Only Knowledge Base Agent + Learning Engine can write to L3 (data integrity)
+- Regular agents propose patterns via proposal queue, cannot write directly
+
+### Pattern Lifecycle Governance
+
+**State Machine with RBAC**:
+
+```text
+PROPOSED → VALIDATED → APPROVED → ACTIVE → DEPRECATED → ARCHIVED
+```
+
+**Transition Permissions**:
+- **PROPOSED → VALIDATED**: Knowledge Base Agent, Human Admin
+- **VALIDATED → APPROVED**: Human Admin only
+- **APPROVED → ACTIVE**: Knowledge Base Agent, Human Admin
+- **ACTIVE → DEPRECATED**: Learning Engine, Human Admin
+- **DEPRECATED → ARCHIVED**: Human Admin only
+
+**Pattern Creation**:
+- Regular agents create patterns with `status=PROPOSED` (proposal queue)
+- Knowledge Base Agent validates proposals (evidence check, format validation)
+- Human approves validated patterns (Gate 6: Learning Validation)
+- Knowledge Base Agent activates approved patterns
+
+### Credibility Score Protection
+
+**Write Authority**:
+- Only Learning Engine can write credibility scores (prevents self-manipulation)
+- Learning Engine updates scores based on prediction accuracy, human feedback
+- All agents can read own credibility score (self-awareness)
+- Debate Facilitator can read all scores (auto-resolution threshold checks)
+
+**Self-Manipulation Prevention**:
+- Agents cannot boost own credibility after failures
+- Credibility updates logged in audit trail (accountability)
+- Human review required if score drops >0.2 in 7 days (alert for investigation)
+
+### Audit Trail
+
+**PostgreSQL Audit Log**:
+- All L3 writes logged: actor_id, resource_type, resource_id, action, old_value, new_value, reason
+- 5-year retention (regulatory compliance for investment decisions)
+- Query interface for incident investigation (filter by actor, resource, timerange)
+- Alert on unauthorized access attempts (>10/hour threshold)
+
+**Logged Operations**:
+- Pattern creation/modification/deletion
+- Credibility score updates
+- L3 graph node/relationship writes
+- Unauthorized access attempts (permission denials)
+
+### Authorization Gateway
+
+**API Layer Enforcement**:
+- All memory operations pass through authorization gateway
+- Permission check: <1ms (in-memory lookup)
+- Audit log write: <4ms (async PostgreSQL insert)
+- Total overhead: <5ms per operation (5% of 100ms analysis latency budget)
+
+**Enforcement Flow**:
+```python
+# Agent request → Authorization check → Execute if authorized → Log access
+gateway.authorize_and_execute(
+    actor=Actor(id='financial_analyst_1', role='agent'),
+    resource=Resource(type='l3_central_graph', id='pattern_123'),
+    action='write',
+    operation=lambda: neo4j.create_pattern(...)
+)
+# If denied: PermissionDenied exception + audit log entry
+```
+
+### Integration with Memory Operations
+
+**Memory Write Example**:
+```python
+# Before: Direct L3 write (no access control)
+neo4j.run("CREATE (p:Pattern {data: $data})", data=pattern_data)
+
+# After: Via authorization gateway
+gateway.authorize_and_execute(
+    actor=actor,
+    resource=Resource(type='pattern_lifecycle', id='new_pattern'),
+    action='propose',
+    operation=lambda: neo4j.run(
+        "CREATE (p:Pattern {status: 'PROPOSED', data: $data})",
+        data=pattern_data
+    )
+)
+```
+
+**Cross-Agent Cache Access** (Debate Facilitator only):
+```python
+# Facilitator reading Financial Analyst's L2 cache during debate
+facilitator = Actor(id='debate_facilitator_1', role='debate_facilitator')
+resource = Resource(
+    type='l2_agent_cache',
+    id='roe_calculation_history',
+    owner='financial_analyst_1'
+)
+
+# Succeeds: Facilitator has read_all for L2
+evidence = gateway.authorize_and_execute(
+    actor=facilitator,
+    resource=resource,
+    action='read',
+    operation=lambda: redis.get('financial_analyst_1:l2:roe_calculation_history')
+)
+```
+
+### Security Monitoring
+
+**Real-Time Alerts**:
+- Unauthorized access attempts: >10/hour → Alert ops team
+- Credibility score anomaly: >0.2 drop in 7 days → Human review
+- Pattern lifecycle violation: Direct status modification → Block + alert
+- Audit log query failures: PostgreSQL connection errors → Alert
+
+**Performance Monitoring**:
+- Authorization check latency: Target p95 <5ms
+- Audit log write latency: Target p95 <4ms
+- Permission denial rate: Target <1% (indicates misconfiguration if higher)
+
+### Testing & Validation
+
+**Security Test Coverage**:
+- 30+ test cases for permission matrix (5 roles × 6 resources)
+- Agent isolation tests (cross-cache write attempts)
+- Pattern lifecycle tests (unauthorized status transitions)
+- Credibility manipulation tests (agent self-boost attempts)
+- Audit log capture tests (verify all writes logged)
+
+**Penetration Testing**:
+- Phase 4 production deployment requirement
+- Third-party security audit for RBAC implementation
+- Verify no bypass paths (direct database access, API vulnerabilities)
+
+---
+
 ## Related Documentation
 
 - [System Overview](./01-system-overview.md) - High-level architecture
@@ -1593,3 +1768,4 @@ Performance validation at each scale milestone:
 - [Technical Requirements](../implementation/02-tech-requirements.md#message-queue) - Message queue specifications for memory synchronization
 - [DD-002: Event-Driven Memory Sync](../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md) - Priority-based sync design
 - [DD-005: Memory Scalability Optimization](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
+- [DD-020: Memory Access Control](../design-decisions/DD-020_MEMORY_ACCESS_CONTROL.md) - RBAC and security design

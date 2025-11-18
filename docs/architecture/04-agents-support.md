@@ -193,6 +193,60 @@ To maintain <500ms memory retrieval at scale (1000+ stocks, 15K+ analyses), the 
 | Timeout rate     | <5%                            | Phase 3-5 |
 | Query success    | >95% within budget or fallback | Phase 3-5 |
 
+### Access Control Permissions
+
+The Knowledge Base Agent has elevated permissions for memory system access to perform institutional memory management. See [DD-020: Memory Access Control](../design-decisions/DD-020_MEMORY_ACCESS_CONTROL.md) for complete RBAC design.
+
+**Role**: `knowledge_base_agent`
+
+**Permissions**:
+- **L1 Working Memory**: read_write_own (own L1 only)
+- **L2 Agent Cache**: read_write_own (own L2 only, cannot read other agents' caches)
+- **L3 Central Graph**: read_write (can write to shared knowledge graph)
+- **Pattern Lifecycle**: validate (can advance patterns PROPOSED → VALIDATED → ACTIVE)
+- **Credibility Scores**: read_all (can read all agents' credibility, cannot write)
+- **Audit Log**: read_all (can query audit trail for investigations)
+
+**L3 Write Authority**:
+- One of only 2 roles with L3 write access (Knowledge Base Agent + Learning Engine)
+- Responsible for creating/updating Pattern nodes in Neo4j
+- Can advance pattern status from PROPOSED → VALIDATED → ACTIVE
+- Cannot delete patterns (Human Admin only)
+
+**Pattern Lifecycle Management**:
+- Regular agents propose patterns (create with status=PROPOSED)
+- Knowledge Base Agent validates proposals:
+  - Evidence quality check (minimum 3 supporting analyses)
+  - Format validation (required fields, data types)
+  - Duplicate detection (prevent redundant patterns)
+- If validation passes → status=VALIDATED
+- Human approves via Gate 6 → status=APPROVED
+- Knowledge Base Agent activates → status=ACTIVE
+- Patterns become visible to all agents only when ACTIVE
+
+**Credibility Score Calculation**:
+- Knowledge Base Agent queries agent credibility scores (read_all)
+- Used for pattern validation (high-credibility agents' findings weighted more)
+- Cannot write credibility scores (Learning Engine exclusive)
+- Supports Debate Facilitator with credibility data for auto-resolution
+
+**Audit Trail Access**:
+- Can query PostgreSQL audit log for incident investigation
+- Used for post-mortem analysis (e.g., "Why did pattern X fail?")
+- Helps identify systematic issues (e.g., multiple agents making same error)
+- Cannot delete or modify audit log entries (Human Admin only)
+
+**Agent Isolation Enforcement**:
+- Cannot read other agents' L1/L2 caches (agent isolation)
+- Exception: Can read all agents' findings via L3 central graph (shared institutional knowledge)
+- Prevents cache pollution while maintaining cross-agent pattern recognition
+
+**Security Constraints**:
+- All L3 writes logged in audit trail (actor, resource, action, old/new values)
+- Cannot bypass authorization gateway (API enforcement layer)
+- Pattern lifecycle state machine enforced (cannot skip validation steps)
+- 5ms overhead per L3 write for permission check + audit logging
+
 ---
 
 ## Related Documentation
@@ -203,3 +257,4 @@ To maintain <500ms memory retrieval at scale (1000+ stocks, 15K+ analyses), the 
 - [Coordination Agents](./05-agents-coordination.md) - Workflow orchestration
 - [Output Agents](./06-agents-output.md) - Report and watchlist generation
 - [DD-005: Memory Scalability Optimization](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
+- [DD-020: Memory Access Control](../design-decisions/DD-020_MEMORY_ACCESS_CONTROL.md) - RBAC and security design

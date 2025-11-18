@@ -579,13 +579,36 @@ vs. All Hot:      $23/mo (64% savings)
 
 ### Access Control
 
-**Role-Based Permissions**:
+#### File Storage Access Control
+
+**Role-Based Permissions** for data files (raw/processed data, models, outputs):
 
 - **Analysts**: Read access to all data, write to outputs
 - **Data Engineers**: Full access to raw/processed, read outputs
 - **Admins**: Full system access
 - **Auditors**: Read-only access to all data
 - **External**: No direct access (API only)
+
+#### Memory System Access Control
+
+**Agent-Level Permissions** for memory tiers (L1/L2/L3, patterns, credibility):
+
+The memory system (L1 working memory, L2 agent caches, L3 central knowledge graph) uses separate RBAC with 5 agent roles:
+
+- **agent** (regular specialist agents): read_write_own (L1/L2), read_all (L3), propose patterns
+- **knowledge_base_agent**: read_write_own (L1/L2), read_write (L3), validate patterns
+- **debate_facilitator**: read_write_own (L1), read_all (L2/L3), access all credibility scores
+- **learning_engine**: read_all (L2/L3), read_write_all (credibility scores)
+- **human_admin**: full_control (all memory tiers, patterns, audit log)
+
+**Key Differences from File Access**:
+- **Agent Isolation**: Agents cannot read/write other agents' L1/L2 memory (prevents cache corruption)
+- **L3 Write Restriction**: Only Knowledge Base Agent + Learning Engine can write to central graph
+- **Pattern Governance**: Pattern lifecycle (PROPOSED → VALIDATED → APPROVED → ACTIVE) enforced
+- **Credibility Protection**: Only Learning Engine can update agent credibility scores
+- **Audit Trail**: All memory writes logged (actor, resource, action, old/new values) with 5-year retention
+
+See [DD-020: Memory Access Control](../../design-decisions/DD-020_MEMORY_ACCESS_CONTROL.md) for complete RBAC design and [Memory System - Access Control](../../architecture/02-memory-system.md#access-control--security) for implementation details.
 
 ### Sensitive Data Handling
 
