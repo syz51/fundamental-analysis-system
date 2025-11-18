@@ -25,7 +25,9 @@ docs/design-flaws/
 ├── DEPENDENCIES.md         # Dependency graph & critical path
 ├── ROADMAP.md              # Phase timeline
 ├── README.md               # This file - how to navigate
+├── RESOLVING.md            # Guide for resolving flaws (using script)
 ├── generate_index.py       # Auto-generates INDEX.md
+├── resolve_flaw.py         # Auto-resolve script (moves, updates refs)
 ├── MINOR-ISSUES.md         # Low-priority clarifications
 │
 ├── active/                 # Active flaws (11 files)
@@ -65,6 +67,7 @@ docs/archive/design-flaws/  # Deprecated files (moved 2025-11-18)
 | Find quick wins (<3 weeks)      | [INDEX.md § By Effort](INDEX.md#by-effort)                                      |
 | Understand flaw frontmatter     | [Frontmatter Schema](#frontmatter-schema) below                                 |
 | Add a new flaw                  | [Maintenance § Adding Flaws](#adding-a-new-flaw) below                          |
+| Resolve a flaw                  | [RESOLVING.md](RESOLVING.md) - Automated script guide                           |
 
 ### Navigation by View
 
@@ -310,6 +313,20 @@ Valid domain values (can be multiple per flaw):
 
 ### Resolving a Flaw
 
+**Recommended**: Use automated script (handles frontmatter, file move, reference updates, INDEX regeneration)
+
+```bash
+# Resolved by design decision
+python resolve_flaw.py 22 --dd DD-013
+
+# Resolved by direct fix
+python resolve_flaw.py 22 --desc "Added input validation"
+```
+
+See [RESOLVING.md](RESOLVING.md) for complete guide, examples, and troubleshooting.
+
+**Manual process** (if needed):
+
 1. **Update frontmatter**:
 
    ```yaml
@@ -318,21 +335,15 @@ Valid domain values (can be multiple per flaw):
    resolution: DD-010 Your Solution Name
    ```
 
-2. **Move file**:
-
-   ```bash
-   mv active/22-flaw-name.md resolved/22-flaw-name.md
-   ```
+2. **Move file**: `mv active/22-flaw-name.md resolved/22-flaw-name.md`
 
 3. **Update content**: Add resolution summary at top
 
-4. **Regenerate INDEX.md**:
+4. **Update all path references**: Find/replace `design-flaws/active/22-` → `design-flaws/resolved/22-` across repo
 
-   ```bash
-   python generate_index.py
-   ```
+5. **Regenerate INDEX.md**: `python generate_index.py`
 
-5. **Update references**: Check [DEPENDENCIES.md](DEPENDENCIES.md) for flaws that were blocked by this one
+6. **Update dependencies**: Check [DEPENDENCIES.md](DEPENDENCIES.md) and [ROADMAP.md](ROADMAP.md)
 
 ### Changing Flaw Priority
 

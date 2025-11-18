@@ -69,26 +69,27 @@ Timeline for addressing design flaws across development phases.
 
 **Focus**: Validation systems and memory reliability
 
-### Resolved (2/6)
+### Resolved (3/6)
 
-| Flaw                                    | Priority | Effort | Status      | Completed  |
-| --------------------------------------- | -------- | ------ | ----------- | ---------- |
-| [#3](resolved/03-pattern-validation.md) | High     | 6w     | ✅ RESOLVED | 2025-11-17 |
-| [#7](resolved/07-memory-scalability.md) | High     | 4w     | ✅ RESOLVED | 2025-11-17 |
+| Flaw                                       | Priority | Effort | Status      | Completed  |
+| ------------------------------------------ | -------- | ------ | ----------- | ---------- |
+| [#3](resolved/03-pattern-validation.md)    | High     | 6w     | ✅ RESOLVED | 2025-11-17 |
+| [#7](resolved/07-memory-scalability.md)    | High     | 4w     | ✅ RESOLVED | 2025-11-17 |
+| [#12](resolved/12-archive-lifecycle.md)    | High     | 7w     | ✅ RESOLVED | 2025-11-18 |
 
 **Deliverables:**
 
 - ✅ 3-tier pattern validation pipeline (DD-007)
 - ✅ 6-strategy memory optimization framework (DD-005)
+- ✅ Pattern archive lifecycle management (DD-013)
 
-### Active (4/6)
+### Active (3/6)
 
-| Flaw                           | Priority | Effort | Status    | Impact                    |
-| ------------------------------ | -------- | ------ | --------- | ------------------------- |
-| [#13](13-validation-gaps.md)   | Critical | 6w     | 🔴 ACTIVE | Auto-approval unvalidated |
-| [#15](15-failure-modes.md)     | Critical | 4w     | 🔴 ACTIVE | System hangs              |
-| [#12](12-archive-lifecycle.md) | High     | 7w     | 🔴 ACTIVE | Data loss risk            |
-| [#20](20-access-control.md)    | Medium   | 4w     | 🔴 ACTIVE | Security concern          |
+| Flaw                         | Priority | Effort | Status    | Impact                    |
+| ---------------------------- | -------- | ------ | --------- | ------------------------- |
+| [#13](13-validation-gaps.md) | Critical | 6w     | 🔴 ACTIVE | Auto-approval unvalidated |
+| [#15](15-failure-modes.md)   | Critical | 4w     | 🔴 ACTIVE | System hangs              |
+| [#20](20-access-control.md)  | Medium   | 4w     | 🔴 ACTIVE | Security concern          |
 
 **Required Before Phase 4:**
 
@@ -100,14 +101,14 @@ Timeline for addressing design flaws across development phases.
   - [ ] Query timeout recursion prevention
   - [ ] Memory sync backpressure
   - [ ] Regime detection sequencing
-- [ ] Archive lifecycle fixes (#12)
-  - [ ] Deprecated pattern retention rules
-  - [ ] Archive promotion system
+- [x] Archive lifecycle fixes (#12)
+  - [x] Deprecated pattern retention rules
+  - [x] Archive promotion system
 - [ ] Access control (#20)
   - [ ] Permission matrix implementation
   - [ ] Audit logging
 
-**Estimated Completion:** 21 weeks (6w + 4w + 7w + 4w, some parallel)
+**Estimated Completion:** 14 weeks (6w + 4w + 4w, some parallel)
 
 ---
 
@@ -180,12 +181,12 @@ Timeline for addressing design flaws across development phases.
 | --------- | ----------------- | ---------------------- | ------------ | ------------- |
 | Phase 1   | 8 weeks           | 0 weeks (complete)     | 8 weeks      | ✅ COMPLETE   |
 | Phase 2   | 8 weeks           | +10 weeks              | 18 weeks     | 🔴 3 BLOCKERS |
-| Phase 3   | 8 weeks           | +21 weeks              | 29 weeks     | 🔴 4 ACTIVE   |
+| Phase 3   | 8 weeks           | +14 weeks              | 22 weeks     | 🔴 3 ACTIVE   |
 | Phase 4   | 8 weeks           | +12 weeks              | 20 weeks     | 🔴 2 ACTIVE   |
 | Phase 5   | 16 weeks          | +3 weeks (optional)    | 19 weeks     | 🟢 DEFERRED   |
-| **Total** | **48 weeks**      | **+46 weeks**          | **94 weeks** | **19 months** |
+| **Total** | **48 weeks**      | **+39 weeks**          | **87 weeks** | **17 months** |
 
-**Key Finding**: Design flaw resolution adds ~46 weeks to original 12-month roadmap, extending to 19 months total.
+**Key Finding**: Design flaw resolution adds ~39 weeks to original 12-month roadmap, extending to 17 months total.
 
 ---
 
@@ -210,12 +211,12 @@ Timeline for addressing design flaws across development phases.
 
 - ✅ Pattern validation working
 - ✅ Memory scalability proven
+- ✅ Archive lifecycle fixed (#12)
 - 🔴 Validation gaps closed (#13)
 - 🔴 Failure modes handled (#15)
-- 🔴 Archive lifecycle fixed (#12)
 - 🔴 Access control implemented (#20)
 
-**Status:** 2/6 complete, **4 active blockers**
+**Status:** 3/6 complete, **3 active blockers**
 
 ### Month 8: Production (200 stocks, <24hr)
 

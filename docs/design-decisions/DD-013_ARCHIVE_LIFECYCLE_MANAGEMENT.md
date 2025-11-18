@@ -266,7 +266,7 @@ Extends DD-009 with (1) pattern status-aware retention logic providing 18-month 
 - `docs/design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md` (this doc)
 - `docs/design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md` (add DD-013 reference)
 - `docs/learning/01-learning-systems.md` (promotion examples, override procedures)
-- `docs/design-flaws/active/12-archive-lifecycle.md` (status → resolved_by DD-013)
+- `docs/design-flaws/resolved/12-archive-lifecycle.md` (status → resolved_by DD-013)
 
 ---
 
@@ -659,7 +659,7 @@ None - all decisions finalized:
 
 ## References
 
-- **Design Flaws**: [Flaw #12 - Pattern Archive Lifecycle Gaps](../design-flaws/active/12-archive-lifecycle.md)
+- **Design Flaws**: [Flaw #12 - Pattern Archive Lifecycle Gaps](../design-flaws/resolved/12-archive-lifecycle.md)
 - **Related Decisions**:
   - DD-005: Memory Scalability Optimization (archive storage strategy)
   - DD-007: Pattern Validation Architecture (pattern lifecycle states)

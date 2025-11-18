@@ -3,8 +3,8 @@
 ## At a Glance
 
 - **Total**: 21 flaws + 6 minor issues
-- **Active**: 9 (3 critical, 5 high, 1 medium, 2 deferred)
-- **Resolved**: 10
+- **Active**: 8 (3 critical, 4 high, 1 medium, 2 deferred)
+- **Resolved**: 11
 - **Deferred**: 2
 
 ---
@@ -21,18 +21,17 @@ Blocks MVP or production deployment:
 
 ---
 
-## High Priority Active Flaws (5)
+## High Priority Active Flaws (4)
 
 <details>
 <summary><b>Should fix before MVP</b></summary>
 
-| #                                          | Flaw                               | Impact                                                       | Phase | Effort | Dependencies                              |
-| ------------------------------------------ | ---------------------------------- | ------------------------------------------------------------ | ----- | ------ | ----------------------------------------- |
-| [12](active/12-archive-lifecycle.md)       | Pattern Archive Lifecycle Gaps     | Data loss risk for deprecated patterns, no archive promotion | 3-4   | 7w     | DD-009 implemented, #9 post-mortem system |
-| [14](active/14-statistical-reliability.md) | Statistical Reliability Issues     | Auto-resolution may never trigger with current parameters    | 2-3   | 4w     | Agent performance data, Debate protocol   |
-| [16](active/16-timeline-conflicts.md)      | Timeline & Dependency Conflicts    | Phase 2 blocked by Phase 4 dependency                        | 2     | 2w     | -                                         |
-| [17](active/17-data-tier-mgmt.md)          | Data Tier Management Gaps          | Performance degradation, no corruption recovery              | 4     | 4w     | DD-009 tiered storage, Neo4j operational  |
-| [19](active/19-partial-failures.md)        | Partial Failure Handling Undefined | Undefined behavior when subset of agents fail                | 2     | 4w     | Multi-agent workflows operational         |
+| #                                          | Flaw                               | Impact                                                    | Phase | Effort | Dependencies                             |
+| ------------------------------------------ | ---------------------------------- | --------------------------------------------------------- | ----- | ------ | ---------------------------------------- |
+| [14](active/14-statistical-reliability.md) | Statistical Reliability Issues     | Auto-resolution may never trigger with current parameters | 2-3   | 4w     | Agent performance data, Debate protocol  |
+| [16](active/16-timeline-conflicts.md)      | Timeline & Dependency Conflicts    | Phase 2 blocked by Phase 4 dependency                     | 2     | 2w     | -                                        |
+| [17](active/17-data-tier-mgmt.md)          | Data Tier Management Gaps          | Performance degradation, no corruption recovery           | 4     | 4w     | DD-009 tiered storage, Neo4j operational |
+| [19](active/19-partial-failures.md)        | Partial Failure Handling Undefined | Undefined behavior when subset of agents fail             | 2     | 4w     | Multi-agent workflows operational        |
 
 </details>
 
@@ -65,7 +64,7 @@ Blocks MVP or production deployment:
 
 ---
 
-## ✅ Resolved Flaws by Phase (10)
+## ✅ Resolved Flaws by Phase (11)
 
 <details>
 <summary><b>Phase 1: Foundation (2 resolved)</b></summary>
@@ -98,6 +97,15 @@ Blocks MVP or production deployment:
 </details>
 
 <details>
+<summary><b>Phase 3-4: Phase 3-4 (1 resolved)</b></summary>
+
+| #                                      | Flaw                           | Resolution                                   | Completed  |
+| -------------------------------------- | ------------------------------ | -------------------------------------------- | ---------- |
+| [12](resolved/12-archive-lifecycle.md) | Pattern Archive Lifecycle Gaps | DD-013: Pattern Archive Lifecycle Management | 2025-11-18 |
+
+</details>
+
+<details>
 <summary><b>Phase 4: Optimization (4 resolved)</b></summary>
 
 | #                                       | Flaw                                           | Resolution                                            | Completed  |
@@ -116,11 +124,10 @@ Blocks MVP or production deployment:
 Navigate by system component:
 
 <details>
-<summary><b>Memory System (7 flaws: 4 active, 3 resolved)</b></summary>
+<summary><b>Memory System (7 flaws: 3 active, 4 resolved)</b></summary>
 
 **Active:**
 
-- [#12](active/12-archive-lifecycle.md) - Pattern Archive Lifecycle Gaps (H, Phase 3-4)
 - [#15](active/15-failure-modes.md) - Query & Sync Failure Modes (C, Phase 3)
 - [#17](active/17-data-tier-mgmt.md) - Data Tier Management Gaps (H, Phase 4)
 - [#20](active/20-access-control.md) - Memory System Access Control Undefined (M, Phase 3)
@@ -130,6 +137,7 @@ Navigate by system component:
 - [#2](resolved/02-memory-sync-timing.md)✅ - Memory Sync Timing Incompatible with Debate Protocol
 - [#5](resolved/05-data-retention.md)✅ - Data Retention Policy Conflict
 - [#7](resolved/07-memory-scalability.md)✅ - Memory Scalability vs Performance Targets
+- [#12](resolved/12-archive-lifecycle.md)✅ - Pattern Archive Lifecycle Gaps
 
 </details>
 
@@ -168,16 +176,16 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Data System (3 flaws: 2 active, 1 resolved)</b></summary>
+<summary><b>Data System (3 flaws: 1 active, 2 resolved)</b></summary>
 
 **Active:**
 
-- [#12](active/12-archive-lifecycle.md) - Pattern Archive Lifecycle Gaps (H, Phase 3-4)
 - [#17](active/17-data-tier-mgmt.md) - Data Tier Management Gaps (H, Phase 4)
 
 **Resolved:**
 
 - [#5](resolved/05-data-retention.md)✅ - Data Retention Policy Conflict
+- [#12](resolved/12-archive-lifecycle.md)✅ - Pattern Archive Lifecycle Gaps
 
 </details>
 
@@ -233,10 +241,6 @@ Navigate by system component:
 - [15](active/15-failure-modes.md) Query & Sync Failure Modes (C, 4w)
 - [20](active/20-access-control.md) Memory System Access Control Undefined (M, 4w)
 
-**Phase 3-4 (Months 5-8):** 1 active
-
-- [12](active/12-archive-lifecycle.md) Pattern Archive Lifecycle Gaps (H, 7w)
-
 **Phase 4 (Months 7-8):** 2 active
 
 - [17](active/17-data-tier-mgmt.md) Data Tier Management Gaps (H, 4w)
@@ -256,9 +260,8 @@ Navigate by system component:
 - [19](active/19-partial-failures.md) - 4w
 - [20](active/20-access-control.md) - 4w
 
-**Large (>5 weeks):** 3 flaws
+**Large (>5 weeks):** 2 flaws
 
-- [12](active/12-archive-lifecycle.md) - 7w
 - [13](active/13-validation-gaps.md) - 6w
 - [21](active/21-scalability.md) - 8w
 
@@ -273,9 +276,8 @@ Navigate by system component:
 - [19](active/19-partial-failures.md) - Multi-agent workflows operational
 - [20](active/20-access-control.md) - Memory system operational (L1/L2/L3)
 
-**Waiting on 2+ dependencies:** 6 flaws
+**Waiting on 2+ dependencies:** 5 flaws
 
-- [12](active/12-archive-lifecycle.md) - DD-009 implemented, #9 post-mortem system
 - [13](active/13-validation-gaps.md) - Gate 6 operational, DD-007 pattern validation
 - [14](active/14-statistical-reliability.md) - Agent performance data, Debate protocol
 - [15](active/15-failure-modes.md) - DD-005 memory system, DD-002 event-driven sync

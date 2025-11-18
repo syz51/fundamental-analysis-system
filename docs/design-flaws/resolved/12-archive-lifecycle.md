@@ -6,11 +6,16 @@ priority: high
 phase: 3-4
 effort_weeks: 7
 impact: Data loss risk for deprecated patterns, no archive promotion
-blocks: ['Post-mortem investigation']
-depends_on: ['DD-009 implemented', '#9 post-mortem system']
+blocks:
+  - Post-mortem investigation
+depends_on:
+  - DD-009 implemented
+  - '#9 post-mortem system'
 resolved_by: DD-013
 resolved_date: 2025-11-18
-domain: ['memory', 'data']
+domain:
+  - memory
+  - data
 sub_issues:
   - id: C2
     severity: critical
@@ -19,6 +24,8 @@ sub_issues:
     severity: high
     title: No archive promotion path
 discovered: 2025-11-17
+resolved: '2025-11-18'
+resolution: 'DD-013: Pattern Archive Lifecycle Management'
 ---
 
 # Flaw #12: Pattern Archive Lifecycle Gaps

@@ -215,7 +215,9 @@ def generate_index(flaws):
 
     content.append("## ✅ Resolved Flaws by Phase (%d)" % len(cats["resolved"]))
     content.append("")
-    for phase in sorted(resolved_by_phase.keys()):
+    for phase in sorted(
+        resolved_by_phase.keys(), key=lambda p: (int(str(p).split("-")[0]), str(p))
+    ):
         flaws_in_phase = resolved_by_phase[phase]
         phase_names = {
             1: "Foundation",

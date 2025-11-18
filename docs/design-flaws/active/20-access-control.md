@@ -6,9 +6,9 @@ priority: medium
 phase: 3
 effort_weeks: 4
 impact: Data integrity risk from unrestricted modifications
-blocks: ["Production security"]
-depends_on: ["Memory system operational (L1/L2/L3)"]
-domain: ["memory", "architecture"]
+blocks: ['Production security']
+depends_on: ['Memory system operational (L1/L2/L3)']
+domain: ['memory', 'architecture']
 discovered: 2025-11-17
 ---
 
@@ -28,6 +28,7 @@ discovered: 2025-11-17
 **Problem**: Data-management.md specifies role-based access control for data files, but memory system (L2 caches, L3 graph) access control undefined.
 
 **Current State**:
+
 ```yaml
 # data-management.md L516-541 - Data file access control:
 Roles:
@@ -35,7 +36,7 @@ Roles:
   - Agents: Read source data, write processed
   - Analysts: Read-only all
 
-# Memory system access - UNDEFINED:
+  # Memory system access - UNDEFINED:
   - Can agents read each other's L2 caches?
   - Can agents write to L3 graph directly?
   - Who can deprecate patterns?
@@ -50,6 +51,7 @@ Roles:
 ### 1. Agent L2 Cache Access
 
 **Questions**:
+
 - Can Financial Analyst read Business Analyst's L2 cache?
 - Cross-agent cache pollution risk?
 - Cache poisoning prevention?
@@ -57,6 +59,7 @@ Roles:
 ### 2. L3 Central Graph Write Access
 
 **Questions**:
+
 - Can agents write directly to Neo4j or only through API?
 - Who can create/delete Pattern nodes?
 - Who can modify credibility scores?
@@ -65,6 +68,7 @@ Roles:
 ### 3. Pattern Lifecycle Permissions
 
 **Questions**:
+
 - Pattern creation: Any agent or only Knowledge Base Agent?
 - Pattern validation: Human-only or automated?
 - Pattern deprecation: Who decides?
@@ -73,6 +77,7 @@ Roles:
 ### 4. Audit Trail
 
 **Questions**:
+
 - Log all memory writes?
 - Track pattern modification history?
 - Credibility score change audit?
