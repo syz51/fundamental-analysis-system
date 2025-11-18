@@ -19,12 +19,15 @@ Orchestrate overall workflow
 
 ### Responsibilities
 
-- Manage task assignments across all agents
-- Resolve conflicts between agents
-- Make go/no-go decisions at checkpoints
-- Ensure timeline adherence
-- Escalate to humans when needed
-- Prioritize work based on deadlines and dependencies
+- Workflow orchestration across 13 agent types
+- Agent lifecycle management (start, monitor, restart)
+- Message routing via central queue
+- **Pause/resume orchestration via PauseManager** (DD-012)
+- **Failure classification (Tier 1/2/3 routing)** (DD-012)
+- **Batch operation coordination via BatchManager** (DD-012)
+- Conflict resolution escalation
+- Human gate coordination
+- Performance monitoring
 
 ### Coordination Functions
 
@@ -218,6 +221,101 @@ The algorithm prevents deadlocks through:
 - Prepare decision materials
 - Send notifications and reminders
 - Track human response times
+
+---
+
+### Pause/Resume Components (DD-012)
+
+The Lead Coordinator integrates with three specialized components for workflow pause/resume operations:
+
+#### PauseManager
+
+**Purpose**: Orchestrates pause/resume operations, manages state transitions
+
+**Responsibilities**:
+- State machine management (RUNNING → PAUSING → PAUSED → RESUMING → RUNNING)
+- Timeout escalation (day 3/7/14/30 alerts)
+- Alert triggering (pause initiated, reminders, auto-resume)
+- Checkpoint integration (save on pause, load on resume via DD-011)
+
+**API**:
+- `pause_analysis(stock_id, reason, checkpoint_id, trigger_source)`
+- `resume_analysis(stock_id, resume_plan, notify)`
+- `get_pause_state(stock_id)`
+
+**Interactions**:
+- Calls checkpoint system (DD-011) for state persistence
+- Triggers alerts via alert system (Flaw #24)
+- Extends L1 memory TTL via memory system (Flaw #25)
+
+#### DependencyResolver
+
+**Purpose**: Analyzes agent dependencies, generates resume plans
+
+**Responsibilities**:
+- Build agent dependency DAG from pipeline configuration
+- Identify completed agents (skip on resume)
+- Identify failed agent + dependents (restart on resume)
+- Handle parallel in-progress agents (wait or restart)
+- Generate executable resume plans
+
+**Algorithm**:
+1. Load pipeline config, construct DAG
+2. Extract checkpoint state (completed agents)
+3. Mark failed agent + downstream dependents for restart
+4. Mark completed agents for skip
+5. Return `ResumePlan{restart: [], skip: [], wait: []}`
+
+**API**:
+- `resolve_dependencies(failed_agent, checkpoint) -> ResumePlan`
+- `create_resume_plan(stock_id) -> ResumePlan`
+
+**Interactions**:
+- Queries checkpoint system for agent completion status
+- Provides resume plans to PauseManager and orchestrator
+
+#### BatchManager
+
+**Purpose**: Coordinates concurrent pause/resume for multiple stocks
+
+**Responsibilities**:
+- Batch pause operations (parallel coordination)
+- Batch resume operations (priority queue, concurrency control)
+- Resource-aware scheduling (quota/capacity checks)
+- Failure isolation (batch pause if >50% fail)
+
+**API**:
+- `pause_batch(stock_ids, reason, max_concurrency=5)`
+- `resume_batch(stock_ids, concurrency_limit=5)`
+- `get_batch_status(batch_id) -> {total, paused, resumed, failed}`
+
+**Strategy**:
+- Priority queue: oldest pauses first, gate-timeouts prioritized
+- Concurrency: 5 parallel resumes default (configurable)
+- Resource checks: API quota, compute capacity, DB connections
+
+**Interactions**:
+- Calls PauseManager for individual stock operations
+- Monitors orchestrator resource utilization
+- Coordinates with alert system for batch notifications
+
+#### Message Types (Extended)
+
+**Existing Types**: Finding, Request, Challenge, Confirmation, Alert
+
+**New Types (DD-012)**:
+- **PAUSE_REQUEST**: `{stock_id, reason, checkpoint_id, trigger_source}`
+  - Sent by: Lead Coordinator (on Tier 2 failure)
+  - Recipient: PauseManager
+- **PAUSE_COMPLETE**: `{stock_id, paused_at, resume_dependencies}`
+  - Sent by: PauseManager
+  - Recipient: Lead Coordinator, Alert System
+- **RESUME_COMMAND**: `{stock_id, resume_plan, notify}`
+  - Sent by: Lead Coordinator or Human
+  - Recipient: PauseManager
+- **BATCH_PAUSE_REQUEST**: `{stock_ids, reason, batch_id, max_concurrency}`
+  - Sent by: Lead Coordinator
+  - Recipient: BatchManager
 
 ---
 

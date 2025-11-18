@@ -10,8 +10,8 @@ This folder contains **21 documented design flaws** identified through comprehen
 
 **Current Stats** (as of 2025-11-18):
 
-- **Active**: 11 flaws (3 critical, 6 high, 1 medium, 1 deferred)
-- **Resolved**: 10 flaws (through design decisions DD-001 through DD-009)
+- **Active**: 10 flaws (3 critical, 5 high, 1 medium, 1 deferred)
+- **Resolved**: 11 flaws (through design decisions DD-001 through DD-012)
 - **Deferred**: 1 flaw (subset of another flaw)
 - **Minor Issues**: 6 low-priority clarifications
 
@@ -30,10 +30,10 @@ docs/design-flaws/
 ├── resolve_flaw.py         # Auto-resolve script (moves, updates refs)
 ├── MINOR-ISSUES.md         # Low-priority clarifications
 │
-├── active/                 # Active flaws (11 files)
+├── active/                 # Active flaws (10 files)
 │   └── NN-flaw-name.md
 │
-└── resolved/               # Resolved flaws (10 files)
+└── resolved/               # Resolved flaws (11 files)
     └── NN-flaw-name.md
 
 docs/archive/design-flaws/  # Deprecated files (moved 2025-11-18)

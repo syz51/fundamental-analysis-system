@@ -7,7 +7,7 @@ phase: 2
 effort_weeks: 2
 impact: Infrastructure failures go unnoticed, analyses silently fail
 blocks: ['Production reliability', 'Human-in-the-loop effectiveness']
-depends_on: ['Flaw #23 (workflow pause/resume)']
+depends_on: ['DD-012 (workflow pause/resume)']
 domain: ['operations', 'human-integration']
 sub_issues:
   - id: C1
@@ -482,7 +482,7 @@ CREATE TABLE alert_acknowledgments (
 ## Dependencies
 
 - **Blocks**: Production reliability (human awareness of failures)
-- **Depends On**: Flaw #23 (workflow pause/resume - alerts trigger pause)
+- **Depends On**: DD-012 (workflow pause/resume) - Integrates with DD-012 pause/resume system for alert triggers (pause initiated, reminders, auto-resume notifications)
 - **Related**: Flaw #26 (multi-stock batching - batch alert strategy)
 
 ---

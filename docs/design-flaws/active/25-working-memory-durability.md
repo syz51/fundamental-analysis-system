@@ -340,12 +340,14 @@ class L1CacheRestorer:
 
 ### Extended TTL for Paused Analyses
 
+**Pause Integration**: Extends L1 TTL from 24h → 14d during pause per DD-012 timeout policy
+
 ```python
 class L1TTLManager:
     """Manage L1 TTL for paused vs. active analyses"""
 
-    ACTIVE_TTL_HOURS = 6  # Active analysis (normal operations)
-    PAUSED_TTL_DAYS = 7   # Paused analysis (awaiting human)
+    ACTIVE_TTL_HOURS = 24  # Active analysis (normal operations)
+    PAUSED_TTL_DAYS = 14   # Paused analysis (awaiting human, per DD-012)
 
     def extend_ttl_on_pause(self, agent_id):
         """Extend L1 TTL when analysis pauses"""

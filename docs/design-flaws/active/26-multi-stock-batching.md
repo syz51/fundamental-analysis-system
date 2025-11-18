@@ -7,7 +7,7 @@ phase: 2
 effort_weeks: 2
 impact: Inefficient recovery when shared failures affect multiple stocks
 blocks: ['Batch recovery efficiency']
-depends_on: ['Flaw #23 (pause/resume)', 'Flaw #24 (alerts)']
+depends_on: ['DD-012 (pause/resume)', 'Flaw #24 (alerts)']
 domain: ['operations']
 sub_issues:
   - id: E1
@@ -85,7 +85,9 @@ Desired Behavior: Detect correlation
 
 **Problem**: No specification for batch pausing multiple stocks at once.
 
-**Current Pause API** (from Flaw #23):
+**Batch Pause**: Uses BatchManager component from DD-012 for concurrent pause/resume operations (5 parallel default)
+
+**Current Pause API** (from DD-012):
 ```python
 # Individual pause only
 pause_analysis(stock_ticker='AAPL', reason='agent_failure')

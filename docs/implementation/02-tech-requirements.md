@@ -63,6 +63,7 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - `financial_data`: Statements, ratios, metrics
   - `market_data`: Prices, volumes, events
   - `metadata`: Companies, sectors, peers
+  - `workflow`: Pause/resume state, checkpoints, batch operations (DD-011, DD-012)
 
 #### MongoDB (Document Storage)
 
@@ -191,6 +192,204 @@ The system requires sophisticated infrastructure to support parallel agent execu
 **Technology Options**: [Apache Kafka, RabbitMQ, Redis Streams]
 **Decision**: TBD - Phase 2 implementation
 **Selection Criteria**: Reliability, operational complexity, existing infrastructure, throughput needs
+
+---
+
+## Database Schema Specification (DD-011, DD-012)
+
+### Workflow Schema (PostgreSQL)
+
+The `workflow` schema contains tables for agent checkpoints and workflow pause/resume state.
+
+#### Table 1: `agent_checkpoints` (DD-011)
+
+**Purpose**: Track agent execution state at subtask boundaries for failure recovery
+
+```sql
+CREATE TABLE agent_checkpoints (
+    id SERIAL PRIMARY KEY,
+    stock_ticker VARCHAR(10) NOT NULL,
+    agent_type VARCHAR(50) NOT NULL,
+    analysis_id UUID NOT NULL,
+    checkpoint_time TIMESTAMP NOT NULL,
+
+    -- Execution state
+    progress_pct DECIMAL(5,2),
+    current_subtask VARCHAR(100),
+    completed_subtasks TEXT[],
+    pending_subtasks TEXT[],
+
+    -- Context snapshot
+    working_memory JSONB,        -- L1 cache dump
+    interim_results JSONB,        -- Partial findings not yet in Neo4j
+    agent_config JSONB,           -- Agent configuration
+
+    -- Error details (if checkpoint due to failure)
+    failure_reason TEXT,
+    error_details JSONB,
+    retry_count INT DEFAULT 0,
+
+    -- Metadata
+    agent_version VARCHAR(20),    -- For backwards compatibility
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    INDEX idx_stock_agent (stock_ticker, agent_type),
+    INDEX idx_analysis (analysis_id),
+    UNIQUE (analysis_id, agent_type, checkpoint_time)
+);
+```
+
+**Retention Policy**:
+- Success: Delete immediately after analysis completes
+- Failure: Retain for 30 days
+- Manual override: Flag to preserve for debugging
+
+#### Table 2: `paused_analyses` (DD-012)
+
+**Purpose**: Track pause state for individual stock analyses
+
+```sql
+CREATE TABLE paused_analyses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    stock_id VARCHAR(10) NOT NULL,
+    pause_reason TEXT NOT NULL,
+    pause_trigger VARCHAR(20) NOT NULL
+        CHECK (pause_trigger IN ('AUTO_TIER2', 'MANUAL', 'GATE_TIMEOUT', 'GATE_REJECTION')),
+    pause_timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    resume_timestamp TIMESTAMP,
+    checkpoint_id UUID NOT NULL,  -- FK to agent_checkpoints.id
+    failed_agent VARCHAR(50),
+    resume_dependencies JSONB,  -- {restart: [], skip: [], wait: []}
+    status VARCHAR(20) NOT NULL
+        CHECK (status IN ('PAUSING', 'PAUSED', 'RESUMING', 'RESUMED', 'STALE', 'EXPIRED')),
+    created_by VARCHAR(100) NOT NULL,  -- Username or 'SYSTEM'
+    batch_id UUID,  -- FK to batch_pause_operations.id (nullable)
+    alert_day3_sent BOOLEAN DEFAULT FALSE,
+    alert_day7_sent BOOLEAN DEFAULT FALSE,
+    extended_until TIMESTAMP,  -- Grace period extension
+    extension_reason TEXT,
+
+    FOREIGN KEY (checkpoint_id) REFERENCES agent_checkpoints(id),
+    FOREIGN KEY (batch_id) REFERENCES batch_pause_operations(id)
+);
+
+CREATE INDEX idx_paused_stock_status ON paused_analyses(stock_id, status);
+CREATE INDEX idx_paused_timestamp ON paused_analyses(pause_timestamp);
+CREATE INDEX idx_paused_batch ON paused_analyses(batch_id) WHERE batch_id IS NOT NULL;
+CREATE INDEX idx_stale_candidates ON paused_analyses(pause_timestamp) WHERE status = 'PAUSED';
+CREATE INDEX idx_alert_day3 ON paused_analyses(pause_timestamp, alert_day3_sent)
+    WHERE status = 'PAUSED' AND alert_day3_sent = FALSE;
+CREATE INDEX idx_alert_day7 ON paused_analyses(pause_timestamp, alert_day7_sent)
+    WHERE status = 'PAUSED' AND alert_day7_sent = FALSE;
+```
+
+**Key Fields**:
+- `pause_trigger`: Distinguishes auto-pause (Tier 2 failure) vs manual vs gate timeout
+- `resume_dependencies`: JSONB storing `{restart: [...], skip: [...], wait: [...]}`
+- `alert_day3_sent`, `alert_day7_sent`: Prevent duplicate reminder alerts
+- `extended_until`: Grace period for human-requested pause extensions
+- `batch_id`: Links to batch operation (if part of batch pause)
+
+**Retention Policy**:
+- PAUSED/RESUMING: Until resume or expiration
+- RESUMED: Archive after 30 days to `paused_analyses_history`
+- STALE: Purge after 30 days from stale date (keep audit log)
+
+#### Table 3: `batch_pause_operations` (DD-012)
+
+**Purpose**: Track batch pause/resume operations for multiple stocks
+
+```sql
+CREATE TABLE batch_pause_operations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    batch_name VARCHAR(100) NOT NULL,
+    pause_reason TEXT NOT NULL,
+    stock_ids TEXT[] NOT NULL,
+    total_count INTEGER NOT NULL,
+    paused_count INTEGER DEFAULT 0,
+    resumed_count INTEGER DEFAULT 0,
+    failed_count INTEGER DEFAULT 0,
+    status VARCHAR(20) NOT NULL
+        CHECK (status IN ('IN_PROGRESS', 'COMPLETED', 'PARTIALLY_FAILED', 'FAILED')),
+    concurrency_limit INTEGER DEFAULT 5,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMP,
+
+    CHECK (total_count = array_length(stock_ids, 1))
+);
+
+CREATE INDEX idx_batch_name ON batch_pause_operations(batch_name);
+CREATE INDEX idx_batch_status ON batch_pause_operations(status);
+CREATE INDEX idx_batch_created ON batch_pause_operations(created_at);
+```
+
+**Key Fields**:
+- `stock_ids`: Array of tickers included in batch (denormalized for quick access)
+- `paused_count`, `resumed_count`, `failed_count`: Progress tracking
+- `concurrency_limit`: Max parallel operations for this batch
+
+**Retention Policy**: Archive after 90 days to cold storage
+
+#### Table 4: `resume_plans` (DD-012)
+
+**Purpose**: Store dependency-resolved resume execution plans
+
+```sql
+CREATE TABLE resume_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    paused_analysis_id UUID NOT NULL,  -- FK to paused_analyses.id
+    restart_agents TEXT[] NOT NULL,  -- Agents to restart from checkpoint
+    skip_agents TEXT[] NOT NULL,  -- Completed agents to skip
+    wait_agents TEXT[] NOT NULL,  -- In-progress agents to check
+    plan_created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    executed_at TIMESTAMP,
+    execution_status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+        CHECK (execution_status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED')),
+
+    FOREIGN KEY (paused_analysis_id) REFERENCES paused_analyses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_resume_paused_analysis ON resume_plans(paused_analysis_id);
+CREATE INDEX idx_resume_execution_status ON resume_plans(execution_status);
+```
+
+**Key Fields**:
+- `restart_agents`: Agents to re-execute (failed agent + dependents)
+- `skip_agents`: Completed agents (from checkpoint)
+- `wait_agents`: In-progress agents (check completion before deciding)
+
+**Retention Policy**:
+- COMPLETED: Purge after 30 days
+- FAILED: Keep for 90 days (debugging)
+
+### Archival Process
+
+**Monthly job** (runs on day 1 of each month):
+
+```sql
+-- Archive completed pauses
+INSERT INTO paused_analyses_history
+SELECT * FROM paused_analyses
+WHERE status = 'RESUMED' AND resume_timestamp < NOW() - INTERVAL '30 days';
+
+DELETE FROM paused_analyses
+WHERE status = 'RESUMED' AND resume_timestamp < NOW() - INTERVAL '30 days';
+
+-- Purge stale/expired
+DELETE FROM paused_analyses
+WHERE status IN ('STALE', 'EXPIRED')
+  AND pause_timestamp < NOW() - INTERVAL '30 days';
+
+-- Archive old batch operations
+INSERT INTO batch_operations_archive
+SELECT * FROM batch_pause_operations
+WHERE completed_at < NOW() - INTERVAL '90 days';
+
+DELETE FROM batch_pause_operations
+WHERE completed_at < NOW() - INTERVAL '90 days';
+```
+
+---
 
 ### API Integrations
 

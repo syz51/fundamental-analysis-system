@@ -110,6 +110,16 @@ The implementation follows an agile methodology with continuous integration of m
   - Importance-based propagation
   - Broadcast mechanism for urgent insights
 
+#### Pause/Resume Infrastructure (DD-012)
+
+- [ ] Implement pause/resume infrastructure (DD-012 design complete, 4 weeks implementation)
+  - **Components**: PauseManager, DependencyResolver, BatchManager
+  - **Database**: paused_analyses, batch_pause_operations, resume_plans tables
+  - **Integration**: Orchestrator adapter, checkpoint system (DD-011), alert system, L1 memory TTL extension (24h → 14d during pause)
+  - **Dependencies**:
+    - DD-011 checkpoint system (prerequisite for pause/resume)
+    - Alert system (Flaw #24) for pause notifications
+
 #### Collaboration System
 
 - [ ] Implement memory-enhanced debate facilitator with tiered escalation
@@ -127,6 +137,7 @@ The implementation follows an agile methodology with continuous integration of m
   - **Workload-aware debate routing (max 3 concurrent per expert)**
   - **Priority-based queue management (critical-path, valuation, supporting)**
   - **Timeout enforcement at each escalation level**
+  - **Pause/resume integration**: Provisional resolutions tracked for Gate review; Gate timeout triggers pause via PauseManager
 
 #### Human Gates
 
@@ -148,6 +159,23 @@ The implementation follows an agile methodology with continuous integration of m
   - Human review interface
   - Pattern approval workflow
 
+### Phase 2 Implementation Sequencing
+
+To prevent deadlocks and ensure proper integration, Phase 2 components implement in this order:
+
+**Month 3**:
+
+- Week 1-2: Alert system foundation (Flaw #24) - prerequisite for both pause/resume and debate escalation
+- Week 3-4: Begin pause/resume infrastructure (PauseManager, database tables)
+
+**Month 4**:
+
+- Week 1-2: Complete pause/resume (DependencyResolver, BatchManager, orchestrator integration)
+- Week 3-4: Debate resolution system with pause/resume integration
+  - Provisional resolutions integrate with pause/resume for Gate review
+  - Gate timeout triggers pause via PauseManager
+  - Conservative defaults work with pause state (provisional review at Gates 3/5)
+
 ### Success Criteria
 
 - 3 specialist agents operational with memory
@@ -158,6 +186,7 @@ The implementation follows an agile methodology with continuous integration of m
 - **Debate resolution system preventing pipeline deadlocks (zero blocking debates)**
 - **Fallback resolutions tested in all scenarios (human unavailable, concurrent overload, queue full)**
 - **Conservative defaults maintaining >85% accuracy in testing**
+- **Pause/resume + debate integration tested** (provisional review at gates, gate timeout triggers, paused state with conservative defaults)
 
 ### Debate Resolution Testing Scenarios
 

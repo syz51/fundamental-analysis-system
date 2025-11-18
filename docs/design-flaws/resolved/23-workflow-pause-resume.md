@@ -1,7 +1,7 @@
 ---
 flaw_id: 23
 title: Workflow Pause/Resume Infrastructure Undefined
-status: active
+status: resolved
 priority: high
 phase: 2
 effort_weeks: 4
@@ -20,9 +20,26 @@ sub_issues:
     severity: medium
     title: Parallel resume for batch failures undefined
 discovered: 2025-11-18
+resolved: 2025-11-18
 ---
 
 # Flaw #23: Workflow Pause/Resume Infrastructure Undefined
+
+---
+**RESOLVED**
+
+**Resolution Date**: 2025-11-18
+**Resolved By**: DD-012 (Workflow Pause/Resume Infrastructure)
+**Implementation Status**: Design Complete - Pending Phase 2 Implementation (4 weeks)
+**Design Decision**: See [DD-012](../design-decisions/DD-012_WORKFLOW_PAUSE_RESUME.md) for comprehensive architecture, API specs, state machine, database schema
+
+**Summary**: Design completed with 3-component architecture (PauseManager, DependencyResolver, BatchManager), 3-tier failure classification, 14-day timeout policy, tech-agnostic orchestrator integration. All sub-issues (B1, B2, B3) addressed.
+
+---
+
+[Original flaw content below]
+
+---
 
 **Status**: 🔴 ACTIVE
 **Priority**: High
@@ -44,11 +61,13 @@ No mechanism to pause/resume analyses mid-pipeline when agent failures occur:
 **Current State**: Pipeline runs to completion or fails entirely
 
 **Problem**: When agent fails for one stock (e.g., AAPL), cannot pause just that analysis:
+
 - Either entire system halts (blocks other stocks)
 - Or analysis silently continues incomplete (data integrity issue)
 - No "pause AAPL, continue MSFT/GOOGL" capability
 
 **Example Scenario**:
+
 ```text
 Day 5 - Phase 2 Parallel Analysis:
   AAPL: ❌ Strategy Analyst FAILED (Koyfin rate limit)
@@ -67,6 +86,7 @@ Desired Behavior: Pause AAPL only
 ```
 
 **Missing Components**:
+
 - Pipeline pause API (stop analysis for specific stock)
 - Pause state persistence (remember "AAPL paused at Phase 2 Day 5")
 - Other stocks isolation (MSFT analysis unaffected by AAPL pause)
@@ -79,6 +99,7 @@ Desired Behavior: Pause AAPL only
 **Problem**: When resuming paused analysis, which agents should restart? Which should wait?
 
 **Example Resume Scenario**:
+
 ```text
 AAPL paused at Phase 2 Day 5:
   ✅ Business Research: COMPLETED (findings in Neo4j)
@@ -107,6 +128,7 @@ Resume Questions:
 ```
 
 **Missing Dependency Logic**:
+
 ```python
 # Need to track agent dependencies for resume
 AGENT_DEPENDENCIES = {
@@ -134,6 +156,7 @@ AGENT_DEPENDENCIES = {
 **User Requirement** (from discussion): Allow parallel resume (no forced sequential)
 
 **Batch Resume Scenario**:
+
 ```text
 5 stocks paused due to Koyfin rate limit:
   AAPL - Strategy Analyst at 60%
@@ -158,6 +181,7 @@ Desired Behavior: Parallel resume
 ```
 
 **Missing Specification**:
+
 - Batch resume API (resume multiple stocks at once)
 - Concurrency limit enforcement (respect max 3 Strategy Analysts)
 - Queue management (which stocks start first if >concurrency limit?)
@@ -505,11 +529,13 @@ CREATE TABLE paused_analyses (
 ## Files Affected
 
 **New Files**:
+
 - `src/coordination/pause_manager.py` - Pause/resume logic
 - `src/coordination/dependency_resolver.py` - Dependency tracking
 - `migrations/xxx_paused_analyses.sql` - PostgreSQL schema
 
 **Modified Files**:
+
 - `src/coordination/lead_coordinator.py` - Add pause/resume API
 - `src/workflows/airflow_dags.py` - DAG pause/unpause support
 - `docs/operations/01-analysis-pipeline.md` - Document pause/resume workflow

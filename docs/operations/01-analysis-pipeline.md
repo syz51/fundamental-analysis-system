@@ -264,7 +264,7 @@ The QC Agent validates work at each phase:
 
 ## Failure Recovery & Pause/Resume
 
-The pipeline supports graceful failure recovery and workflow pause/resume using checkpoint-based state persistence ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)).
+The pipeline supports graceful failure recovery and workflow pause/resume using checkpoint-based state persistence ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md), [DD-012](../design-decisions/DD-012_WORKFLOW_PAUSE_RESUME.md)).
 
 ### Checkpoint-Based Recovery
 
@@ -281,6 +281,40 @@ Each specialist agent saves execution state after completing each subtask:
 
 - PostgreSQL (durable, permanent record)
 - Redis (fast recovery, 7-day TTL)
+
+### Failure Classification (3-Tier System)
+
+The system classifies failures into 3 tiers with different handling strategies:
+
+| Tier | Failure Type | Examples | Action | Rationale |
+|------|-------------|----------|--------|-----------|
+| 1 | Transient | Network timeout (<3x), rate limits (429), 5xx | Auto-retry | Self-resolving |
+| 2 | Recoverable | Agent crash, data quality, persistent API failure | Auto-pause | Needs investigation |
+| 3 | Irrecoverable | Data integrity violation, security breach, delisted ticker | Auto-fail | Not fixable |
+
+**Tier 1 (Auto-Retry)**:
+- Network timeouts (< 3 consecutive failures)
+- Rate limit errors (HTTP 429) with exponential backoff
+- Transient API unavailability (5xx with retry-after header)
+- **Handling**: Retry with exponential backoff, max 3 attempts
+- **Rationale**: High probability of self-resolution, low cost to retry
+
+**Tier 2 (Auto-Pause)**:
+- Agent crashes/unhandled exceptions
+- Data quality failures (missing required SEC filings, corrupt data)
+- Dependency failures (upstream agent failed, cannot proceed)
+- Resource exhaustion (OOM, disk full)
+- Persistent API failures (3+ consecutive timeouts on same endpoint)
+- **Handling**: Auto-pause with alert, save checkpoint, await resolution
+- **Rationale**: Requires investigation or external fix, resumable after resolution
+
+**Tier 3 (Auto-Fail)**:
+- Data integrity violations (contradictory checkpoint data)
+- Security violations (unauthorized access attempts)
+- Configuration errors blocking entire pipeline
+- Irrecoverable validation failures (ticker delisted, fundamentally flawed)
+- **Handling**: Mark failed, notify human, remove from pipeline
+- **Rationale**: Not fixable by pause/resume, requires redesign or stock removal
 
 ### Failure Recovery Workflow
 
@@ -319,36 +353,179 @@ Strategy Analyst - AAPL Analysis:
   ↳ Total recovery overhead: 3s vs 35 min restart
 ```
 
-### Manual Pause/Resume
+### Workflow Pause/Resume (DD-012)
+
+The system supports per-stock pause/resume without affecting parallel analyses. When an analysis is paused, other stocks continue unaffected.
 
 **Use Cases**:
 
-- Overnight pauses (extend L1 cache TTL)
+- Tier 2 failures (auto-pause with alert)
 - Human investigation needed (provisional decision review)
 - Resource constraints (prioritize different analysis)
 - External dependency (awaiting data provider response)
+- Gate timeouts (24h human response limit exceeded)
+
+**State Machine**:
+
+```
+                  Tier 2 Failure
+    ┌─────────────────┐
+    │                 │
+    ▼                 │
+RUNNING ──────► PAUSING ──────► PAUSED
+                                  │
+                                  │ Resume Triggered
+                                  │
+                                  ▼
+                              RESUMING ──────► RUNNING
+                                  │
+                                  │ 14 days
+                                  ▼
+                               STALE ──────► EXPIRED (30d)
+```
+
+**States**:
+- **RUNNING**: Normal analysis execution
+- **PAUSING**: Saving checkpoint, coordinating agent shutdown
+- **PAUSED**: Idle, awaiting manual/auto resume
+- **RESUMING**: Loading checkpoint, restarting agents per plan
+- **STALE**: Paused >14 days, marked for expiration
+- **EXPIRED**: Purged from active tables (audit log only)
 
 **Pause Workflow**:
 
-1. Human triggers pause via dashboard (or automatic on blocking issue)
-2. All active agents force-checkpoint current state
-3. Analysis marked "paused" with reason and timestamp
-4. Resources released (agents can work on other stocks)
+1. Tier 2 failure detected (or manual trigger)
+2. PauseManager saves checkpoint via DD-011
+3. Analysis marked "PAUSED" with reason and timestamp
+4. Alert sent to human (priority based on trigger)
+5. Resources released (agents can work on other stocks)
+6. L1 memory TTL extended from 24h → 14d
 
 **Resume Workflow**:
 
-1. Human triggers resume via dashboard (or automatic when blocker resolved)
-2. Lead Coordinator restores agent states from checkpoints
-3. Agents resume from next pending subtasks
-4. Pipeline continues from pause point
+1. Resume triggered (manual or auto when blocker resolved)
+2. DependencyResolver creates resume plan:
+   - **Skip**: Agents completed before pause (findings in Neo4j)
+   - **Restart**: Failed agent + downstream dependents
+   - **Continue**: Independent parallel agents (if checkpoint exists)
+3. Checkpoint loaded via DD-011
+4. Agents resume per plan
+5. Pipeline continues from pause point
+
+**Dependency Resolution Example**:
+
+```
+Scenario: Financial Analyst fails on Day 4 of 12-day pipeline
+
+State at Pause:
+- Screening Agent: COMPLETED (Day 1-2)
+- Business Research Agent: COMPLETED (Day 3-4)
+- Financial Analyst: FAILED (Day 4)
+- Strategy Analyst: IN_PROGRESS (Day 4, parallel)
+- News Monitor: IN_PROGRESS (Day 1-12, independent)
+
+Resume Plan Generated:
+- Skip: Screening, Business Research (already completed)
+- Restart: Financial Analyst (failed), Strategy Analyst (dependent), Valuation Agent (dependent)
+- Continue: News Monitor (independent, no dependency on failed agent)
+
+Result: Resume saves 2 days by skipping completed work, restarts 3 agents
+```
+
+**Batch Pause Scenario**:
+
+```
+Scenario: Koyfin API quota exhausted (10,000 requests/day)
+
+Day 0, 2pm: Quota reached after 8 stock analyses
+- 10 remaining stocks in batch encounter quota errors
+- Batch pause triggered: pause_batch(stock_ids=[...], reason="Koyfin quota exceeded")
+- All 10 stocks status: PAUSED
+- Alert sent: "10 stocks paused - Koyfin quota exhausted, resumes at midnight"
+
+Day 1, 12:01am: Quota reset detected
+- Auto-resume triggered: resume_batch(stock_ids=[...], concurrency_limit=5)
+- First 5 stocks resume concurrently
+- After completion, next 5 stocks resume
+- Alert sent: "Batch 'koyfin_quota_batch' resumed: 10/10 successful"
+
+Efficiency: Single batch operation vs 10 individual pause/resume cycles
+```
+
+**Timeout Escalation Timeline**:
+
+```
+Pause Timeout Lifecycle:
+
+Day 0:  Pause occurs → Alert: "Stock AAPL paused - Financial Analyst failed: data quality issue"
+Day 3:  Reminder → Alert: "3 stocks paused for 3+ days, review needed"
+Day 7:  Warning → Alert: "Approaching expiration: 2 stocks paused 7+ days"
+Day 14: Expiration → Status: STALE, moved to archive queue
+Day 30: Purge → Deleted from active tables (audit log retained)
+
+Grace Period: Human can extend to 30 days max with justification
+```
 
 **Integration with Human Gates**:
 
 Pause/resume particularly useful for:
 
-- **Gate 3** (Assumption Validation): Pause for extended human research (24hr+)
+- **Gate 3** (Assumption Validation): Auto-pause on 24h timeout
 - **Gate 4** (Debate Arbitration): Pause if human needs expert consultation
 - **Gate 5** (Final Decision): Pause for investment committee scheduling
+
+**Gate Timeout Example**:
+
+```
+Scenario: Gate 3 (Assumption Validation) times out after 24h
+
+Timeline:
+- Day 7, 9am: Valuation Agent reaches Gate 3, awaits human approval
+- Day 7, 9am-Day 8, 7am: Gate in WAITING_FOR_HUMAN state (22h elapsed)
+- Day 8, 7am-9am: Warning alerts sent, human not responsive (24h elapsed)
+- Day 8, 9am: Gate times out
+  - Action: Auto-pause analysis with reason "Gate 3 timeout, needs review"
+  - Checkpoint saved at Gate 3 entry
+  - Alert: "Gate 3 timeout for AAPL, analysis paused"
+
+Human Review:
+- Portfolio manager reviews pause queue
+- Sees "Gate 3 timeout" reason, reviews valuation assumptions
+- Validates assumptions manually, approves gate
+- Triggers resume: resume_analysis('AAPL', resume_plan, notify=True)
+
+Resume:
+- Checkpoint loaded at Gate 3 entry
+- Gate bypassed (already validated by human)
+- Valuation Agent continues to next step
+- Alert: "AAPL resumed - Gate 3 validated, analysis continuing"
+```
+
+**Checkpoint Integration (DD-011)**:
+
+- Pause triggers checkpoint save before state transition
+- Checkpoint includes: agent states, intermediate results, memory snapshots
+- Resume loads checkpoint and rehydrates agent state
+- If checkpoint corrupted → Tier 3 failure (auto-fail, no resume)
+
+**Orchestrator Integration (Tech-Agnostic)**:
+
+```python
+# Pause flow
+def handle_tier2_failure(stock_id, agent, reason):
+    checkpoint_id = checkpoint_system.save(stock_id)  # DD-011
+    pause_manager.pause_analysis(stock_id, reason, checkpoint_id)
+    orchestrator.pause_workflow(f"stock_{stock_id}")  # Generic API
+
+# Resume flow
+def handle_resume(stock_id):
+    resume_plan = dependency_resolver.create_resume_plan(stock_id)
+    checkpoint_system.load(stock_id, resume_plan.checkpoint_id)
+    orchestrator.resume_workflow(f"stock_{stock_id}")
+    pause_manager.resume_analysis(stock_id, resume_plan, notify=True)
+```
+
+Supports: Airflow (DAG pause), Prefect (flow pause), Temporal (signal), Custom
 
 ### Checkpoint Retention
 

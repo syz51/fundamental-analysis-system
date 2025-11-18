@@ -235,7 +235,6 @@ class AgentFailureHandler:
 
 ```yaml
 Message Queue Requirements:
-
   Reliability:
     - Delivery guarantee: At-least-once semantics
     - Persistent storage: Survive system restarts
@@ -334,7 +333,7 @@ class ContradictionResolver:
 - **Blocks**: Production reliability, multi-agent workflows
 - **Depends On**:
   - Flaw #22 (agent checkpoints) - REQUIRED for G1
-  - Flaw #23 (workflow pause/resume) - REQUIRED for G1
+  - DD-012 (workflow pause/resume) - Design complete. Implementation blocked until DD-012 implemented (Phase 2)
   - Flaw #24 (agent failure alerts) - REQUIRED for G1
   - Agent framework operational
 - **Related**: Flaw #8 (Debate Resolution - RESOLVED), Data management
