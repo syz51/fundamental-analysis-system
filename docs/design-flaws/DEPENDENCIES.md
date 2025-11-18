@@ -18,10 +18,10 @@ Foundation (Phase 1) ✅ COMPLETE
     │   ├── Flaw #16 🔴 → Timeline Conflicts (restructure needed)
     │   └── Flaw #19 🔴 → Partial Failures (blocks multi-agent)
     │       │
-    │       └── Phase 3: Quality & Learning (6 ACTIVE)
+    │       └── Phase 3: Quality & Learning (5 ACTIVE)
     │           ├── Flaw #3 ✅ → Pattern Validation (depends on #1)
     │           ├── Flaw #7 ✅ → Scalability Validation (depends on #2)
-    │           ├── Flaw #12 🔴 → Archive Lifecycle (blocks #9 post-mortem)
+    │           ├── Flaw #12 ✅ → Archive Lifecycle (DD-013 implemented)
     │           ├── Flaw #13 🔴 → Validation Gaps (blocks auto-approval)
     │           ├── Flaw #15 🔴 → Failure Modes (blocks memory reliability)
     │           └── Flaw #20 🔴 → Access Control (security)
@@ -55,7 +55,7 @@ Foundation (Phase 1) ✅ COMPLETE
 | #9 ✅  | #1, #3                           | -                                  | 4     | RESOLVED |
 | #10 ✅ | #1 (Gate 6)                      | -                                  | 4     | RESOLVED |
 | #11 ✅ | #8 (debate protocol)             | ~~Implementation pending~~         | 2     | RESOLVED |
-| #12 🔴 | DD-009, #9 (post-mortem)         | Post-mortem investigation          | 3-4   | ACTIVE   |
+| #12 ✅ | DD-009, #9 (post-mortem)         | ~~Post-mortem~~ (unblocked)        | 3     | RESOLVED |
 | #13 🔴 | Gate 6, DD-007 (pattern val)     | Auto-approval deployment           | 3     | ACTIVE   |
 | #14 🔴 | Agent perf data, debate protocol | Auto-resolution (#8)               | 2-3   | ACTIVE   |
 | #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                 | 3     | ACTIVE   |
@@ -77,11 +77,11 @@ Foundation (Phase 1) ✅ COMPLETE
 - **#3 (Pattern Validation)** unblocked → #9 (Negative Feedback)
 - **#8 (Debate Deadlock)** unblocked → Core agent testing (now operational)
 - **#11 (Algorithm Specs)** unblocked → Implementation of C1/M3/G5 algorithms (Phase 2+)
+- **#12 (Archive Lifecycle)** unblocked → Post-mortem investigation with full evidence, pattern re-validation with historical data
 
 ### What Active Flaws Are Blocking
 
 - **#8 (resolved)** + **#14 (active)** blocks → Auto-resolution implementation
-- **#12** blocks → Post-mortem investigation with full evidence
 - **#13** blocks → Auto-approval deployment (95% accuracy target)
 - **#14** blocks → Auto-resolution never triggers (n=5 sample size too low)
 - **#15** blocks → Memory reliability (infinite recursion risk)
@@ -90,6 +90,36 @@ Foundation (Phase 1) ✅ COMPLETE
 - **#19** blocks → Multi-agent reliability (undefined failure behavior)
 - **#20** blocks → Production security (no access control)
 - **#21** blocks → Scale to 1000+ stocks (need 18 FTE without fix)
+
+### DD-013 Archive Lifecycle Dependencies
+
+**Flaw #12 Resolution** (DD-013) introduces:
+
+**Infrastructure:**
+
+- Redis/ElasticSearch for cached archive index (5-10MB, negligible cost)
+- S3/cloud storage for cold archives (extends DD-009 tiered storage)
+- Regime detection service (FRED API for interest rates, macro indicators)
+
+**Components:**
+
+- `ArchiveIndexService` - Fast archive metadata lookups
+- `ArchiveQueryService` - Archive search and retrieval
+- `PromotionEngine` - Auto-promote archives on regime changes
+- `PromotionAlertService` - Human override notifications
+- `TieredStorageManager` - Extended from DD-009 with archive tier
+- `PatternLifecycleManager` - 18-month retention windows
+
+**Dependencies:**
+
+- Extends DD-009 (Data Retention & Pattern Evidence)
+- Requires DD-005 (Memory Scalability) for pattern storage
+- Integrates with DD-007 (Pattern Validation) for lifecycle states
+
+**Unblocks:**
+
+- Post-mortem investigation with full historical evidence (DD-006)
+- Pattern re-validation across market regimes (DD-007)
 
 ---
 
@@ -101,10 +131,10 @@ Foundation (Phase 1) ✅ COMPLETE
 #1 (Gate 6) ✅
   → #3 (Pattern Validation) ✅
     → #9 (Negative Feedback) ✅
-      → #12 (Archive Lifecycle) 🔴
+      → #12 (Archive Lifecycle) ✅
 ```
 
-**Status**: 3/4 complete, #12 blocked by DD-009 + #9
+**Status**: 4/4 complete ✅ (DD-013 archive lifecycle implemented)
 
 ### Chain 2: Memory System
 
@@ -122,12 +152,12 @@ Foundation (Phase 1) ✅ COMPLETE
 
 ```text
 #7 (Memory Scalability) ✅
-  → #12 (Archive Lifecycle) 🔴
+  → #12 (Archive Lifecycle) ✅
     → #17 (Data Tier Mgmt) 🔴
       → #21 (Scalability Bottlenecks) 🔴
 ```
 
-**Status**: 1/4 complete, 3 active blockers in series
+**Status**: 2/4 complete, 2 active blockers in series (#17 → #21)
 
 ---
 
@@ -175,10 +205,6 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 - [ ] #13 (Validation Gaps) - 6w
 - [ ] #20 (Access Control) - 4w
-
-**Weeks 11-17:**
-
-- [ ] #12 (Archive Lifecycle) - 7w
 
 ### Phase 4 (Months 7-8)
 
