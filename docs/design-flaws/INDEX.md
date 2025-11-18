@@ -3,8 +3,8 @@
 ## At a Glance
 
 - **Total**: 26 flaws + 6 minor issues
-- **Active**: 5 (2 critical, 2 high, 1 medium, 2 deferred)
-- **Resolved**: 19
+- **Active**: 4 (2 critical, 1 high, 1 medium, 2 deferred)
+- **Resolved**: 20
 - **Deferred**: 2
 
 ---
@@ -20,7 +20,7 @@ Blocks MVP or production deployment:
 
 ---
 
-## High Priority Active Flaws (2)
+## High Priority Active Flaws (1)
 
 <details>
 <summary><b>Should fix before MVP</b></summary>
@@ -28,7 +28,6 @@ Blocks MVP or production deployment:
 | # | Flaw | Impact | Phase | Effort | Dependencies |
 |---|------|--------|-------|--------|--------------|
 | [17](active/17-data-tier-mgmt.md) | Data Tier Management Gaps | Performance degradation, no corruption recovery | 4 | 4w | DD-009 tiered storage, Neo4j operational |
-| [19](active/19-partial-failures.md) | Partial Failure Handling Undefined | Undefined behavior when subset of agents fail | 2 | 4w | Multi-agent workflows operational |
 
 </details>
 
@@ -61,7 +60,7 @@ Blocks MVP or production deployment:
 
 ---
 
-## ✅ Resolved Flaws by Phase (19)
+## ✅ Resolved Flaws by Phase (20)
 
 <details>
 <summary><b>Phase 1: Foundation (2 resolved)</b></summary>
@@ -74,13 +73,14 @@ Blocks MVP or production deployment:
 </details>
 
 <details>
-<summary><b>Phase 2: Core Systems (8 resolved)</b></summary>
+<summary><b>Phase 2: Core Systems (9 resolved)</b></summary>
 
 | # | Flaw | Resolution | Completed |
 |---|------|-----------|-----------|
 | [8](resolved/08-debate-deadlock.md) | Debate Resolution Deadlock Scenario | 5-level tiered escalation system | 2025-11-17 |
 | [11](resolved/11-algorithm-specs.md) | Missing Algorithm Specifications | All algorithms documented in main architecture docs | 2025-11-17 |
 | [16](resolved/16-timeline-conflicts.md) | Timeline & Dependency Conflicts | N/A | 2025-11-18 |
+| [19](resolved/19-partial-failures.md) | Partial Failure Handling Undefined | Hard-stop approach via DD-011/DD-012/DD-015 (G1), DD-010 (M6), tech-agnostic spec (G2) | 2025-11-18 |
 | [22](resolved/22-agent-checkpoints.md) | Agent Checkpoint System Missing | Design Decision DD-011 addresses all sub-issues | 2025-11-18 |
 | [23](resolved/23-workflow-pause-resume.md) | Workflow Pause/Resume Infrastructure Undefined | N/A | 2025-11-18 |
 | [24](resolved/24-agent-failure-alerts.md) | Agent Failure Human Alerts Missing | N/A | 2025-11-18 |
@@ -168,16 +168,14 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Agent System (6 flaws: 1 active, 5 resolved)</b></summary>
-
-**Active:**
-- [#19](active/19-partial-failures.md) - Partial Failure Handling Undefined (H, Phase 2)
+<summary><b>Agent System (6 flaws: 0 active, 6 resolved)</b></summary>
 
 **Resolved:**
 - [#4](resolved/04-credibility-scoring.md)✅ - Agent Credibility Scoring - No Temporal Decay
 - [#8](resolved/08-debate-deadlock.md)✅ - Debate Resolution Deadlock Scenario
 - [#11](resolved/11-algorithm-specs.md)✅ - Missing Algorithm Specifications
 - [#14](resolved/14-statistical-reliability.md)✅ - Statistical Reliability Issues
+- [#19](resolved/19-partial-failures.md)✅ - Partial Failure Handling Undefined
 - [#22](resolved/22-agent-checkpoints.md)✅ - Agent Checkpoint System Missing
 
 </details>
@@ -207,10 +205,9 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Architecture (9 flaws: 3 active, 6 resolved)</b></summary>
+<summary><b>Architecture (9 flaws: 2 active, 7 resolved)</b></summary>
 
 **Active:**
-- [#19](active/19-partial-failures.md) - Partial Failure Handling Undefined (H, Phase 2)
 - [#20](active/20-access-control.md) - Memory System Access Control Undefined (M, Phase 3)
 - [#21](active/21-scalability.md) - Scalability Architecture Bottlenecks (C, Phase 4)
 
@@ -218,6 +215,7 @@ Navigate by system component:
 - [#8](resolved/08-debate-deadlock.md)✅ - Debate Resolution Deadlock Scenario
 - [#11](resolved/11-algorithm-specs.md)✅ - Missing Algorithm Specifications
 - [#16](resolved/16-timeline-conflicts.md)✅ - Timeline & Dependency Conflicts
+- [#19](resolved/19-partial-failures.md)✅ - Partial Failure Handling Undefined
 - [#22](resolved/22-agent-checkpoints.md)✅ - Agent Checkpoint System Missing
 - [#23](resolved/23-workflow-pause-resume.md)✅ - Workflow Pause/Resume Infrastructure Undefined
 - [#25](resolved/25-working-memory-durability.md)✅ - Working Memory Insufficient for Long Pauses
@@ -229,9 +227,6 @@ Navigate by system component:
 ## 📊 Quick Filters
 
 ### By Phase
-
-**Phase 2 (Immediate - Months 3-4):** 1 active
-- [19](active/19-partial-failures.md) Partial Failure Handling Undefined (H, 4w)
 
 **Phase 3 (Months 5-6):** 2 active
 - [15](active/15-failure-modes.md) Query & Sync Failure Modes (C, 4w)
@@ -245,10 +240,9 @@ Navigate by system component:
 
 **Quick wins (<3 weeks):** 0 flaws
 
-**Medium (3-5 weeks):** 4 flaws
+**Medium (3-5 weeks):** 3 flaws
 - [15](active/15-failure-modes.md) - 4w
 - [17](active/17-data-tier-mgmt.md) - 4w
-- [19](active/19-partial-failures.md) - 4w
 - [20](active/20-access-control.md) - 4w
 
 **Large (>5 weeks):** 1 flaws
@@ -258,8 +252,7 @@ Navigate by system component:
 
 **Unblocked (ready to start):** 0 flaws
 
-**Waiting on 1 dependency:** 2 flaws
-- [19](active/19-partial-failures.md) - Multi-agent workflows operational
+**Waiting on 1 dependency:** 1 flaws
 - [20](active/20-access-control.md) - Memory system operational (L1/L2/L3)
 
 **Waiting on 2+ dependencies:** 3 flaws

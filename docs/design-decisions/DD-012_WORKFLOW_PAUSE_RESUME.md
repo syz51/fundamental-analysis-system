@@ -624,7 +624,7 @@ If pause/resume system has critical bugs:
 ## References
 
 - [Flaw #23: Workflow Pause/Resume Infrastructure](../design-flaws/resolved/23-workflow-pause-resume.md) - resolved by DD-012
-- [Flaw #19: Partial Failures](../design-flaws/active/19-partial-failures.md) - enabled by pause/resume
+- [Flaw #19: Partial Failures](../design-flaws/resolved/19-partial-failures.md) - enabled by pause/resume
 - [DD-015: Agent Failure Alert System](DD-015_AGENT_FAILURE_ALERT_SYSTEM.md) - integrates with pause alerts, resolves Flaw #24
 - [Flaw #25: Working Memory Durability](../design-flaws/resolved/25-working-memory-durability.md) - extends L1 TTL during pause
 - [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) - implements L1 snapshot/restore on pause/resume

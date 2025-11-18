@@ -1,35 +1,119 @@
 ---
 flaw_id: 19
 title: Partial Failure Handling Undefined
-status: active
+status: resolved
 priority: high
 phase: 2
 effort_weeks: 4
 impact: Undefined behavior when subset of agents fail
-blocks: ['Multi-agent reliability']
-depends_on: ['Multi-agent workflows operational']
-domain: ['agents', 'architecture']
+blocks:
+- Multi-agent reliability
+depends_on:
+- Multi-agent workflows operational
+domain:
+- agents
+- architecture
 sub_issues:
-  - id: G1
-    severity: high
-    title: Agent failure quorum undefined
-    status: pending
-  - id: G2
-    severity: high
-    title: Message protocol implementation missing
-    status: resolved
-    resolution: Tech-agnostic message queue spec defined (see tech-requirements.md)
-  - id: M6
-    severity: medium
-    title: Data contradiction resolution timeout missing
-    status: resolved
-    resolution: 4-level tiered escalation with source credibility tracking (see DD-010)
+- id: G1
+  severity: high
+  title: Agent failure quorum undefined
+  status: resolved
+  resolution: Hard-stop approach replaces quorum - any failure pauses analysis with checkpoint-based resumption (DD-011/DD-012/DD-015)
+- id: G2
+  severity: high
+  title: Message protocol implementation missing
+  status: resolved
+  resolution: Tech-agnostic message queue spec defined (see tech-requirements.md)
+- id: M6
+  severity: medium
+  title: Data contradiction resolution timeout missing
+  status: resolved
+  resolution: 4-level tiered escalation with source credibility tracking (see DD-010)
 discovered: 2025-11-17
+resolved: '2025-11-18'
+resolution: Hard-stop approach via DD-011/DD-012/DD-015 (G1), DD-010 (M6), tech-agnostic
+  spec (G2)
 ---
-
 # Flaw #19: Partial Failure Handling Undefined
 
-**Status**: 🔴 ACTIVE
+## Resolution Summary
+
+**Status**: RESOLVED ✅
+**Resolved Date**: 2025-11-18
+**Resolution**: Hard-stop approach via DD-011/DD-012/DD-015 (G1), DD-010 (M6), tech-agnostic spec (G2)
+
+### How Design Decisions Resolve This Flaw
+
+All three sub-issues resolved by recent design decisions that collectively implement a **hard-stop approach** superior to the originally proposed quorum system.
+
+#### G1: Agent Failure Quorum (RESOLVED)
+
+**Resolved by**: DD-011 (Agent Checkpoint System) + DD-012 (Workflow Pause/Resume) + DD-015 (Agent Failure Alert System)
+
+**Original problem**: If 4 of 5 specialist agents complete, should analysis proceed or retry?
+
+**Resolution approach**: Hard-stop instead of quorum
+- **Any agent failure** triggers immediate pause (DD-012 PauseManager)
+- Checkpoint saved at subtask boundary (DD-011)
+- Human alerted via multi-channel notification <30s (DD-015)
+- Analysis **paused until human resolves** root cause
+- Resume from checkpoint after fix (zero duplicate work)
+- **No partial completion accepted** - all agents must finish
+
+**Why superior to quorum**: For fundamental investment analysis, incomplete data leads to incorrect decisions. Hard-stop + checkpoint-based resumption ensures:
+- Complete data integrity (all agents must complete)
+- Zero duplicate work (resume from exact checkpoint)
+- Human awareness (immediate alerts, no silent failures)
+- Graceful degradation (pause isolates per-stock failures)
+- Root cause resolution (fix issue before continuing)
+
+**Related design decisions**:
+- [DD-011: Agent Checkpoint System](../../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)
+- [DD-012: Workflow Pause/Resume Infrastructure](../../design-decisions/DD-012_WORKFLOW_PAUSE_RESUME.md)
+- [DD-015: Agent Failure Alert System](../../design-decisions/DD-015_AGENT_FAILURE_ALERT_SYSTEM.md)
+
+#### G2: Message Protocol Implementation (RESOLVED)
+
+**Resolved by**: Tech-agnostic specification complete, implementation intentionally deferred to Phase 2
+
+**Original problem**: Message queue retry/ordering/delivery guarantees undefined
+
+**Resolution**:
+- Tech-agnostic message queue requirements specified ([tech-requirements.md](../../implementation/02-tech-requirements.md))
+- JSON schema for message structure defined
+- Message types specified (Finding, Request, Challenge, Confirmation, Alert)
+- Event-driven memory sync (DD-002) addresses critical stale data concerns:
+  - Critical messages (debates, human gates, challenges) force immediate 2s sync
+  - High priority messages sync at 10s
+  - Normal messages use 5min interval
+- **Implementation deferred to Phase 2** (technology selection: RabbitMQ vs Kafka vs Redis Streams)
+
+**Why acceptable**: Event-driven sync mitigates critical stale data issues during debates/gates. Message queue implementation can proceed in Phase 2 using existing comprehensive spec (lines 232-270 of original flaw document).
+
+**Related design decisions**:
+- [DD-002: Event-Driven Memory Sync](../../design-decisions/DD-002_EVENT_DRIVEN_MEMORY_SYNC.md)
+- Tech requirements: [02-tech-requirements.md](../../implementation/02-tech-requirements.md)
+
+#### M6: Data Contradiction Resolution Timeout (RESOLVED)
+
+**Resolved by**: DD-010 (Data Contradiction Resolution)
+
+**Original problem**: When agents disagree on data (e.g., revenue figures), no timeout policy for resolution
+
+**Resolution**: 4-level tiered escalation with 6-hour timeout
+1. **Level 1**: Evidence quality evaluation (SEC filing beats blog post)
+2. **Level 2**: Source credibility auto-resolution (>0.25 differential)
+3. **Level 3**: Human arbitration with **6-hour timeout**
+4. **Level 4**: Credibility-weighted fallback if timeout expires
+
+**Fallback mechanism**: If human unavailable at 6hr timeout, system uses credibility-weighted provisional resolution and continues pipeline. Provisionals reviewed at Gate 3 for validation/override.
+
+**Related design decision**:
+- [DD-010: Data Contradiction Resolution](../../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md)
+
+---
+
+**Status**: ✅ RESOLVED
 **Priority**: High
 **Impact**: Undefined behavior when subset of agents fail
 **Phase**: Phase 2 (Months 3-4)

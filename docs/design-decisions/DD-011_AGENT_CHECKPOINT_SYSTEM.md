@@ -408,7 +408,7 @@ If checkpoint system has critical bugs:
 ## References
 
 - [Flaw #22: Agent Checkpoint System Missing](../design-flaws/resolved/22-agent-checkpoints.md)
-- [Flaw #19: Partial Failures](../design-flaws/active/19-partial-failures.md) - requires checkpoints for resumption
+- [Flaw #19: Partial Failures](../design-flaws/resolved/19-partial-failures.md) - requires checkpoints for resumption
 - [Flaw #23: Workflow Pause/Resume](../design-flaws/resolved/23-workflow-pause-resume.md) - depends on checkpoints
 - [Flaw #25: Working Memory Durability](../design-flaws/resolved/25-working-memory-durability.md) - extends checkpoints for overnight pauses
 - [DD-016: L1 Memory Durability](DD-016_L1_MEMORY_DURABILITY.md) - implements L1 snapshot/restore on checkpoint events

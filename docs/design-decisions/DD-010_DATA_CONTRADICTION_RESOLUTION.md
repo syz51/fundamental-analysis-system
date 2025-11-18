@@ -740,7 +740,7 @@ How to determine "source A was correct" in contradiction?
 
 **Internal Documentation**:
 
-- [Design Flaw #19, M6: Data Contradiction Resolution Timeout](../design-flaws/active/19-partial-failures.md) - Original problem specification
+- [Design Flaw #19, M6: Data Contradiction Resolution Timeout](../design-flaws/resolved/19-partial-failures.md) - Original problem specification
 - [Data Management](../operations/03-data-management.md) - Contradiction resolution protocols
 - [Human Integration](../operations/02-human-integration.md) - Gate 3 provisional review
 - [DD-003: Debate Deadlock Resolution](DD-003_DEBATE_DEADLOCK_RESOLUTION.md) - 4-level escalation pattern
