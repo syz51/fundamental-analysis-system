@@ -40,7 +40,7 @@ System learning, pattern discovery, and continuous improvement.
 
 Roadmap, technical requirements, and deployment considerations.
 
-- [01 - Roadmap](implementation/01-roadmap.md) - 5 phases (Months 1-12), key milestones
+- [01 - Roadmap](implementation/01-roadmap.md) - 5 phases, key milestones
 - [02 - Technical Requirements](implementation/02-tech-requirements.md) - Tech stack, infrastructure, compute/storage needs
 - [03 - Risks & Compliance](implementation/03-risks-compliance.md) - Risk assessment, regulatory considerations
 - [04 - Glossary](implementation/04-glossary.md) - Terms and definitions
@@ -58,8 +58,7 @@ Deep dives into specific complex architectural choices.
 Known design issues and resolutions tracked in `design-flaws/`:
 
 - [Index](design-flaws/INDEX.md) - All flaws by priority/domain/phase
-- [Dependencies](design-flaws/DEPENDENCIES.md) - Dependency graph and critical path
-- [Roadmap](design-flaws/ROADMAP.md) - Phase timeline and implementation plan
+- [Status](design-flaws/STATUS.md) - Current blocker tracking by phase
 - [Navigation Guide](design-flaws/README.md) - How to use the design-flaws folder
 
 ---

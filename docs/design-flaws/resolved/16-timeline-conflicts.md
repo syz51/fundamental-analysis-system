@@ -39,7 +39,7 @@ Roadmap has timeline conflicts and missing allocations:
 
 ### Sub-Issue H1: Phase 2-4 Credibility Dependency
 
-**Files**: `docs/implementation/01-roadmap.md:112-157`, `docs/design-flaws/ROADMAP.md`
+**Files**: `docs/implementation/01-roadmap.md:112-157`, `docs/design-flaws/STATUS.md`
 
 **Problem**: Debate Resolution (Phase 2) needs comprehensive credibility scoring (Phase 4).
 

@@ -4,7 +4,7 @@ Autonomous AI agent system for stock fundamental analysis. Mimics human analyst 
 
 > **⚠️ Status: Design Phase Only**
 >
-> This repository contains comprehensive architectural documentation and design specifications. **No implementation code exists yet.** Implementation planned for Phases 1-4 (Months 1-8).
+> This repository contains comprehensive architectural documentation and design specifications. **No implementation code exists yet.** Implementation planned for Phases 1-4.
 
 ## Quick Start
 
@@ -61,10 +61,10 @@ python main.py  # Currently prints "Hello from fundamental-analysis-system!"
 
 ## Roadmap
 
-- **Month 4**: MVP (10 stocks end-to-end)
-- **Month 6**: Beta (50 stocks, 80% accuracy)
-- **Month 8**: Production (200 stocks, <24hr turnaround)
-- **Month 12**: Scale (1000+ stocks)
+- **MVP**: Initial stocks end-to-end
+- **Beta**: Expanded coverage, 80% accuracy
+- **Production**: Operational workload, <24hr turnaround
+- **Scale**: Large-scale coverage (1000+ stocks)
 
 ## Documentation
 

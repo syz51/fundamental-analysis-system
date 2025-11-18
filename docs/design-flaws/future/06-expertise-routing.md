@@ -602,8 +602,8 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 **Primary**:
 
 - `docs/design-flaws/future/06-expertise-routing.md` (this file)
-- `docs/design-flaws/ROADMAP.md` (roadmap tracking)
-- `docs/design-flaws/INDEX.md` (status tracking)
+- `docs/design-flaws/STATUS.md` (status tracking)
+- `docs/design-flaws/INDEX.md` (index)
 
 **Requires Updates When Implemented**:
 

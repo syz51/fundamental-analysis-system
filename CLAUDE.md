@@ -62,7 +62,7 @@ See [Human Integration](docs/operations/02-human-integration.md) for details.
 - 99.95% availability (46hr downtime reduction annually)
 - Cross-region backup (AWS S3 + GCP Cloud Storage)
 - Cost: $2,250/mo ($1,700 premium over single instance)
-- Implementation: Phase 4 (Months 7-8)
+- Implementation: Phase 4
 - See [DD-021: Neo4j HA](docs/design-decisions/DD-021_NEO4J_HA.md)
 
 ## Tech Stack
@@ -172,25 +172,25 @@ Prevents deadlocks via fallbacks when human unavailable. Challenges include: cha
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation (Months 1-2)
+### Phase 1: Foundation
 
 - Data infrastructure, data collector agent
 - Screening agent, basic dashboard
 - Message protocols
 
-### Phase 2: Core Agents (Months 3-4)
+### Phase 2: Core Agents
 
 - Financial analyst, business research agents
 - Debate facilitator, human gate system
 - Integration testing
 
-### Phase 3: Advanced (Months 5-6)
+### Phase 3: Advanced
 
 - Strategy analyst, valuation agent
 - QC, report writer
 - Full system testing
 
-### Phase 4: Optimization (Months 7-8)
+### Phase 4: Optimization
 
 - Parameter tuning, workflow optimization
 - Learning loops, benchmarking
@@ -198,10 +198,10 @@ Prevents deadlocks via fallbacks when human unavailable. Challenges include: cha
 
 ### Key Milestones
 
-- Month 4: MVP (initial stocks end-to-end)
-- Month 6: Beta (expanded workload, 80% accuracy)
-- Month 8: Production (operational workload, <24hr)
-- Month 12+: Scale phase (large-scale coverage)
+- MVP: Initial stocks end-to-end
+- Beta: Expanded workload, 80% accuracy
+- Production: Operational workload, <24hr
+- Scale: Large-scale coverage
 
 ## Key Metrics & Ratios
 
