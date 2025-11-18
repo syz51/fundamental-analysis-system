@@ -34,8 +34,8 @@ Foundation (Phase 1) ✅ COMPLETE
     │                   └── Flaw #21 🔴 → Scalability (CRITICAL - blocks 1000+ stocks)
     │                       │
     │                       └── Phase 5: Refinement
-    │                           ├── Flaw #6 🟢 → Dynamic Expertise Routing
-    │                           └── Flaw #18 🟢 → Learning Asymmetry (subset of #6)
+    │                           ├── Flaw #6 🔮 → Dynamic Expertise Routing
+    │                           └── Flaw #18 🔮 → Learning Asymmetry (subset of #6)
 ```
 
 ---
@@ -49,7 +49,7 @@ Foundation (Phase 1) ✅ COMPLETE
 | #3 ✅  | #1                               | #9                                     | 3     | RESOLVED |
 | #4 ✅  | Operational agents               | -                                      | 4     | RESOLVED |
 | #5 ✅  | Pattern storage                  | -                                      | 4     | RESOLVED |
-| #6 🟢  | Human gate data                  | -                                      | 5     | DEFERRED |
+| #6 🔮  | Human gate data                  | -                                      | 5     | FUTURE   |
 | #7 ✅  | #2, operational agents           | -                                      | 3     | RESOLVED |
 | #8 ✅  | #2                               | ~~Core agent testing~~ (unblocked)     | 2     | RESOLVED |
 | #9 ✅  | #1, #3                           | -                                      | 4     | RESOLVED |
@@ -61,7 +61,7 @@ Foundation (Phase 1) ✅ COMPLETE
 | #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                     | 3     | ACTIVE   |
 | #16 ✅ | - (roadmap only)                 | ~~Phase 2 implementation~~ (unblocked) | 2     | RESOLVED |
 | #17 ✅ | DD-009, Neo4j, DD-019            | ~~Production reliability~~ (unblocked) | 4     | RESOLVED |
-| #18 🟢 | Human gate data, #6              | -                                      | 5     | DEFERRED |
+| #18 🔮 | Human gate data, #6              | -                                      | 5     | FUTURE   |
 | #19 🔴 | Multi-agent workflows            | Multi-agent reliability                | 2     | ACTIVE   |
 | #20 🔴 | Memory system (L1/L2/L3)         | Production security                    | 3     | ACTIVE   |
 | #21 🔴 | Neo4j, DD-004 auto-approval      | Scale to 1000+ stocks                  | 4     | ACTIVE   |

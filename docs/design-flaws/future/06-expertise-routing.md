@@ -1,7 +1,7 @@
 ---
 flaw_id: 6
 title: Static Human Expertise Routing
-status: deferred
+status: future
 priority: low
 phase: 5
 effort_weeks: 3
@@ -14,7 +14,7 @@ discovered: 2025-11-17
 
 # Flaw #6: Static Human Expertise Routing
 
-**Status**: UNRESOLVED ⚠️
+**Status**: 🔮 FUTURE
 **Priority**: Low
 **Impact**: Sub-optimal human expertise matching for complex decisions
 
@@ -601,7 +601,7 @@ Collaboration-protocols.md (lines 212-230) shows workload management (max 3 conc
 
 **Primary**:
 
-- `docs/design-flaws/active/06-expertise-routing.md` (this file)
+- `docs/design-flaws/future/06-expertise-routing.md` (this file)
 - `docs/design-flaws/ROADMAP.md` (roadmap tracking)
 - `docs/design-flaws/INDEX.md` (status tracking)
 

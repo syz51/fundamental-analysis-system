@@ -1,21 +1,21 @@
 ---
 flaw_id: 18
 title: Learning Asymmetry - Human Expertise Not Tracked
-status: deferred
+status: future
 priority: medium
 phase: 5
 effort_weeks: 3
 impact: Suboptimal human-AI task division
 blocks: []
-depends_on: ["Human gates operational", "#6 implementation"]
-domain: ["learning", "human-gates"]
-related_flaws: ["#6"]
+depends_on: ['Human gates operational', '#6 implementation']
+domain: ['learning', 'human-gates']
+related_flaws: ['#6']
 discovered: 2025-11-17
 ---
 
 # Flaw #18: Learning Asymmetry - Human Expertise Not Tracked
 
-**Status**: 🟢 DEFERRED (Related to Flaw #6)
+**Status**: 🔮 FUTURE (Related to Flaw #6)
 **Priority**: Medium
 **Impact**: Suboptimal human-AI task division, agents penalized but humans not learned from
 **Phase**: Phase 5 (Months 9-12)
@@ -25,12 +25,14 @@ discovered: 2025-11-17
 ## Problem Description
 
 **Files**:
+
 - `docs/learning/02-feedback-loops.md:199-243`
 - `docs/operations/02-human-integration.md:170-189`
 
 **Problem**: Override rate tracked and used to penalize agent credibility, but NOT used to build human expertise profiles or improve routing.
 
 **Current State**:
+
 ```yaml
 # feedback-loops.md L199-243
 override_rate = human_overrides / total_recommendations
@@ -50,11 +52,13 @@ elif override_rate > 0.20:
 ```
 
 **Logic Trap**:
+
 - Agents tracked comprehensively (credibility, regime, context)
 - Humans tracked minimally (override rate only)
 - Asymmetric: Penalize agents without learning where humans add value
 
 **Example Asymmetry**:
+
 ```text
 Agent A: Financial Analyst
   - Overall credibility: 0.75
@@ -79,6 +83,7 @@ System penalizes agent but doesn't learn Sarah's tech expertise
 This issue is a **subset of Flaw #6 (Static Human Expertise Routing)**, which is deferred to Phase 5.
 
 **Flaw #6 Scope**:
+
 - Dynamic human expertise profiling
 - Adaptive routing based on performance
 - Human credibility tracking by domain
@@ -89,11 +94,11 @@ This issue is a **subset of Flaw #6 (Static Human Expertise Routing)**, which is
 
 ## Impact Assessment
 
-| Aspect           | Impact                                          |
-| ---------------- | ----------------------------------------------- |
-| Agent Credibility| Overly penalized (global penalty for local gaps)|
-| Human Utilization| Suboptimal (experts not routed to strength areas)|
-| System Learning  | One-sided (learn agent weaknesses not human strengths)|
+| Aspect            | Impact                                                 |
+| ----------------- | ------------------------------------------------------ |
+| Agent Credibility | Overly penalized (global penalty for local gaps)       |
+| Human Utilization | Suboptimal (experts not routed to strength areas)      |
+| System Learning   | One-sided (learn agent weaknesses not human strengths) |
 
 **Severity**: MEDIUM (deferred because incremental improvement, not blocking MVP)
 
