@@ -59,6 +59,14 @@ def get_all_flaws():
             if metadata:
                 flaws.append(metadata)
 
+    # Future flaws (future/ directory)
+    future_dir = DESIGN_FLAWS_DIR / "future"
+    if future_dir.exists():
+        for filepath in future_dir.glob("*.md"):
+            metadata = parse_frontmatter(filepath)
+            if metadata:
+                flaws.append(metadata)
+
     return sorted(flaws, key=lambda f: f["flaw_id"])
 
 
@@ -66,7 +74,7 @@ def categorize_flaws(flaws):
     """Categorize flaws by status and priority."""
     active = [f for f in flaws if f["status"] == "active"]
     resolved = [f for f in flaws if f["status"] == "resolved"]
-    deferred = [f for f in flaws if f["status"] == "deferred"]
+    future = [f for f in flaws if f["status"] == "future"]
 
     # Further categorize active by priority
     critical = [f for f in active if f["priority"] == "critical"]
@@ -77,7 +85,7 @@ def categorize_flaws(flaws):
     return {
         "active": active,
         "resolved": resolved,
-        "deferred": deferred,
+        "future": future,
         "critical": critical,
         "high": high,
         "medium": medium,
@@ -116,10 +124,10 @@ def generate_index(flaws):
     content.append("")
     content.append(f"- **Total**: {len(flaws)} flaws + 6 minor issues")
     content.append(
-        f"- **Active**: {len(cats['active'])} ({len(cats['critical'])} critical, {len(cats['high'])} high, {len(cats['medium'])} medium, {len(cats['deferred'])} deferred)"
+        f"- **Active**: {len(cats['active'])} ({len(cats['critical'])} critical, {len(cats['high'])} high, {len(cats['medium'])} medium, {len(cats['low'])} low)"
     )
     content.append(f"- **Resolved**: {len(cats['resolved'])}")
-    content.append(f"- **Deferred**: {len(cats['deferred'])}")
+    content.append(f"- **Future**: {len(cats['future'])}")
     content.append("")
     content.append("---")
     content.append("")
@@ -180,29 +188,33 @@ def generate_index(flaws):
     content.append("---")
     content.append("")
 
-    # Low/Deferred
-    low_and_deferred = [
-        f
-        for f in flaws
-        if f["status"] == "deferred"
-        or (f["status"] == "active" and f["priority"] == "low")
-    ]
-    content.append("## Low Priority & Deferred (%d)" % len(low_and_deferred))
+    # Low Priority
+    content.append("## Low Priority (%d)" % len(cats["low"]))
     content.append("")
     content.append("<details>")
     content.append("<summary><b>Future optimization</b></summary>")
     content.append("")
-    content.append("| # | Flaw | Status | Phase | Notes |")
-    content.append("|---|------|--------|-------|-------|")
-    for f in low_and_deferred:
+    content.append("| # | Flaw | Impact | Phase | Effort |")
+    content.append("|---|------|--------|-------|--------|")
+    for f in cats["low"]:
         path = get_relative_path(f["filepath"])
-        status = f["status"].capitalize()
-        notes = f["impact"]
         content.append(
-            f"| [{f['flaw_id']}]({path}) | {f['title']} | {status} | {f['phase']} | {notes} |"
+            f"| [{f['flaw_id']}]({path}) | {f['title']} | {f['impact']} | {f['phase']} | {format_effort(f['effort_weeks'])} |"
         )
     content.append("")
     content.append("</details>")
+    content.append("")
+    content.append("---")
+    content.append("")
+
+    # Future Flaws (stats only)
+    content.append("## 🔮 Future Flaws (%d)" % len(cats["future"]))
+    content.append("")
+    content.append("Potential improvements tracked for future consideration:")
+    content.append("")
+    for f in cats["future"]:
+        path = get_relative_path(f["filepath"])
+        content.append(f"- [#{f['flaw_id']}]({path}) - {f['title']}")
     content.append("")
     content.append("---")
     content.append("")
@@ -215,17 +227,18 @@ def generate_index(flaws):
 
     content.append("## ✅ Resolved Flaws by Phase (%d)" % len(cats["resolved"]))
     content.append("")
+    phase_names = {
+        1: "Foundation & Basic Memory",
+        2: "Core Agents with Memory",
+        3: "Advanced Memory Features",
+        4: "Optimization & Learning",
+        5: "Continuous Evolution",
+    }
+
     for phase in sorted(
         resolved_by_phase.keys(), key=lambda p: (int(str(p).split("-")[0]), str(p))
     ):
         flaws_in_phase = resolved_by_phase[phase]
-        phase_names = {
-            1: "Foundation",
-            2: "Core Systems",
-            3: "Quality & Learning",
-            4: "Optimization",
-            5: "Refinement",
-        }
         phase_name = phase_names.get(phase, f"Phase {phase}")
 
         content.append("<details>")
@@ -335,16 +348,7 @@ def generate_index(flaws):
         active_by_phase.keys(), key=lambda p: (int(str(p).split("-")[0]), str(p))
     ):
         flaws_in_phase = active_by_phase[phase]
-        phase_desc = {
-            1: "Foundation",
-            2: "Immediate - Months 3-4",
-            3: "Months 5-6",
-            4: "Months 7-8",
-            5: "Months 9-12",
-            "2-3": "Months 3-6",
-            "3-4": "Months 5-8",
-        }
-        desc = phase_desc.get(phase, f"Phase {phase}")
+        desc = phase_names.get(phase, f"Phase {phase}")
         content.append(f"**Phase {phase} ({desc}):** {len(flaws_in_phase)} active")
         for f in flaws_in_phase:
             path = get_relative_path(f["filepath"])
@@ -419,15 +423,14 @@ def generate_index(flaws):
     # Footer
     content.append("## 🔗 Related Documentation")
     content.append("")
-    content.append(
-        "- [DEPENDENCIES.md](DEPENDENCIES.md) - Full dependency graph and matrix"
-    )
-    content.append("- [ROADMAP.md](ROADMAP.md) - Phase timeline and critical path")
     content.append("- [README.md](README.md) - How to navigate and use this folder")
+    content.append("- [STATUS.md](STATUS.md) - Current status and progress tracking")
+    content.append("- [RESOLVING.md](RESOLVING.md) - Resolution workflow and guidelines")
     content.append("- [Minor Issues](MINOR-ISSUES.md) - 6 low-priority clarifications")
     content.append(
         "- [Design Decisions](../design-decisions/) - DD-XXX resolution documents"
     )
+    content.append("- [Implementation Roadmap](../implementation/01-roadmap.md) - Phase timeline")
     content.append("")
     content.append("---")
     content.append("")
@@ -454,7 +457,7 @@ def main():
     print(f"✅ Generated {output_path}")
     print(f"   - {len([f for f in flaws if f['status'] == 'active'])} active flaws")
     print(f"   - {len([f for f in flaws if f['status'] == 'resolved'])} resolved flaws")
-    print(f"   - {len([f for f in flaws if f['status'] == 'deferred'])} deferred flaws")
+    print(f"   - {len([f for f in flaws if f['status'] == 'future'])} future flaws")
 
 
 if __name__ == "__main__":

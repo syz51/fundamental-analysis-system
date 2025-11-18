@@ -2,10 +2,10 @@
 
 ## At a Glance
 
-- **Total**: 24 flaws + 6 minor issues
-- **Active**: 0 (0 critical, 0 high, 0 medium, 0 deferred)
+- **Total**: 27 flaws + 6 minor issues
+- **Active**: 0 (0 critical, 0 high, 0 medium, 0 low)
 - **Resolved**: 24
-- **Deferred**: 0
+- **Future**: 3
 
 ---
 
@@ -42,22 +42,32 @@ Blocks MVP or production deployment:
 
 ---
 
-## Low Priority & Deferred (0)
+## Low Priority (0)
 
 <details>
 <summary><b>Future optimization</b></summary>
 
-| #   | Flaw | Status | Phase | Notes |
-| --- | ---- | ------ | ----- | ----- |
+| #   | Flaw | Impact | Phase | Effort |
+| --- | ---- | ------ | ----- | ------ |
 
 </details>
+
+---
+
+## 🔮 Future Flaws (3)
+
+Potential improvements tracked for future consideration:
+
+- [#6](future/06-expertise-routing.md) - Static Human Expertise Routing
+- [#18](future/18-learning-asymmetry.md) - Learning Asymmetry - Human Expertise Not Tracked
+- [#22](future/22-queue-management.md) - Human Gate Queue Management
 
 ---
 
 ## ✅ Resolved Flaws by Phase (24)
 
 <details>
-<summary><b>Phase 1: Foundation (2 resolved)</b></summary>
+<summary><b>Phase 1: Foundation & Basic Memory (2 resolved)</b></summary>
 
 | #                                      | Flaw                                                 | Resolution                                 | Completed  |
 | -------------------------------------- | ---------------------------------------------------- | ------------------------------------------ | ---------- |
@@ -67,7 +77,7 @@ Blocks MVP or production deployment:
 </details>
 
 <details>
-<summary><b>Phase 2: Core Systems (9 resolved)</b></summary>
+<summary><b>Phase 2: Core Agents with Memory (9 resolved)</b></summary>
 
 | #                                              | Flaw                                           | Resolution                                                                             | Completed  |
 | ---------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- | ---------- |
@@ -93,7 +103,7 @@ Blocks MVP or production deployment:
 </details>
 
 <details>
-<summary><b>Phase 3: Quality & Learning (5 resolved)</b></summary>
+<summary><b>Phase 3: Advanced Memory Features (5 resolved)</b></summary>
 
 | #                                      | Flaw                                      | Resolution                               | Completed  |
 | -------------------------------------- | ----------------------------------------- | ---------------------------------------- | ---------- |
@@ -115,7 +125,7 @@ Blocks MVP or production deployment:
 </details>
 
 <details>
-<summary><b>Phase 4: Optimization (6 resolved)</b></summary>
+<summary><b>Phase 4: Optimization & Learning (6 resolved)</b></summary>
 
 | #                                       | Flaw                                           | Resolution                                            | Completed  |
 | --------------------------------------- | ---------------------------------------------- | ----------------------------------------------------- | ---------- |
@@ -151,7 +161,7 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Learning System (7 flaws: 0 active, 7 resolved)</b></summary>
+<summary><b>Learning System (9 flaws: 0 active, 7 resolved)</b></summary>
 
 **Resolved:**
 
@@ -191,7 +201,7 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Human Gates (3 flaws: 0 active, 3 resolved)</b></summary>
+<summary><b>Human Gates (6 flaws: 0 active, 3 resolved)</b></summary>
 
 **Resolved:**
 
@@ -244,10 +254,12 @@ Navigate by system component:
 
 ## 🔗 Related Documentation
 
-- [STATUS.md](STATUS.md) - Current blocker status by phase
 - [README.md](README.md) - How to navigate and use this folder
+- [STATUS.md](STATUS.md) - Current status and progress tracking
+- [RESOLVING.md](RESOLVING.md) - Resolution workflow and guidelines
 - [Minor Issues](MINOR-ISSUES.md) - 6 low-priority clarifications
 - [Design Decisions](../design-decisions/) - DD-XXX resolution documents
+- [Implementation Roadmap](../implementation/01-roadmap.md) - Phase timeline
 
 ---
 
