@@ -3,7 +3,7 @@
 **Status**: Implemented
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
-**Related Docs**: [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md), [Agents Coordination](../docs/architecture/05-agents-coordination.md), [Human Integration](../docs/operations/02-human-integration.md)
+**Related Docs**: [Collaboration Protocols](../architecture/07-collaboration-protocols.md), [Agents Coordination](../architecture/05-agents-coordination.md), [Human Integration](../operations/02-human-integration.md)
 **Related Decisions**: DD-001 (Gate 6 Learning), DD-002 (Event-Driven Memory Sync)
 
 ---
@@ -216,10 +216,10 @@ Rejected Option 1 (human-only) due to deadlock risk. Rejected Option 2 (agent-on
 
 ## References
 
-- [Design Flaw #8: Debate Deadlock](../docs/design-flaws/resolved/08-debate-deadlock.md) - Original problem analysis
-- [Updated Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md) - Full escalation protocol specification
-- [Updated Human Integration](../docs/operations/02-human-integration.md) - Gate 4 timeout enforcement
-- [Implementation Roadmap - Phase 2](../docs/implementation/01-roadmap.md#debate-resolution-testing-scenarios) - Testing plan
+- [Design Flaw #8: Debate Deadlock](../design-flaws/resolved/08-debate-deadlock.md) - Original problem analysis
+- [Updated Collaboration Protocols](../architecture/07-collaboration-protocols.md) - Full escalation protocol specification
+- [Updated Human Integration](../operations/02-human-integration.md) - Gate 4 timeout enforcement
+- [Implementation Roadmap - Phase 2](../implementation/01-roadmap.md#debate-resolution-testing-scenarios) - Testing plan
 
 ---
 

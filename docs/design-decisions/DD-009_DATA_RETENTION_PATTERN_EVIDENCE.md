@@ -5,9 +5,9 @@
 **Decider(s)**: System Architect
 **Related Docs**:
 
-- [Memory System](../docs/architecture/02-memory-system.md)
-- [Data Management](../docs/operations/03-data-management.md)
-- [Learning Systems](../docs/learning/01-learning-systems.md)
+- [Memory System](../architecture/02-memory-system.md)
+- [Data Management](../operations/03-data-management.md)
+- [Learning Systems](../learning/01-learning-systems.md)
 - [Pattern Validation](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)
   **Related Decisions**: DD-005 (Memory Scalability), DD-006 (Negative Feedback), DD-007 (Pattern Validation)
 
@@ -440,7 +440,7 @@ None - all critical questions resolved during design:
 
 ## References
 
-- **Design Flaws**: [Flaw #5 - Data Retention Policy Conflict](../docs/design-flaws/resolved/05-data-retention.md)
+- **Design Flaws**: [Flaw #5 - Data Retention Policy Conflict](../design-flaws/resolved/05-data-retention.md)
 - **Related Decisions**:
   - DD-005: Memory Scalability Optimization (archive storage strategy)
   - DD-006: Negative Feedback System (mentions "Pattern evidence retained for re-validation")

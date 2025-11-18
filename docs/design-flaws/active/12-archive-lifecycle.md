@@ -6,9 +6,9 @@ priority: high
 phase: 3-4
 effort_weeks: 7
 impact: Data loss risk for deprecated patterns, no archive promotion
-blocks: ["Post-mortem investigation"]
-depends_on: ["DD-009 implemented", "#9 post-mortem system"]
-domain: ["memory", "data"]
+blocks: ['Post-mortem investigation']
+depends_on: ['DD-009 implemented', '#9 post-mortem system']
+domain: ['memory', 'data']
 sub_issues:
   - id: C2
     severity: critical
@@ -38,12 +38,14 @@ DD-009 implements pattern-aware retention and selective archiving, but has two c
 ### Sub-Issue C2: Circular Deletion Dependency
 
 **Files**:
+
 - `docs/operations/03-data-management.md:446-455`
 - `design-decisions/DD-009:203-225`
 
 **Problem**: Pattern-aware retention prevents deleting files that support active patterns, but logic unclear for deprecated patterns, risking data loss or retention bloat.
 
 **Current State**:
+
 ```yaml
 # DD-009 L203-225
 Before deleting aging evidence from Cold tier:
@@ -54,6 +56,7 @@ Before deleting aging evidence from Cold tier:
 ```
 
 **Circular Dependency Scenario**:
+
 ```text
 Year 1: Pattern "High R&D predicts growth" identified
   - Evidence: 15 filings supporting pattern
@@ -89,6 +92,7 @@ PROBLEM: Deleted evidence needed for failure investigation
 ```
 
 **Missing Logic**:
+
 - Deprecated pattern evidence retention rules
 - Post-mortem evidence requirements for non-active patterns
 - Archive sufficiency determination
@@ -97,23 +101,25 @@ PROBLEM: Deleted evidence needed for failure investigation
 ### Sub-Issue A3: No Archive Promotion Path
 
 **Files**:
+
 - `docs/architecture/02-memory-system.md:986-1008`
 - `design-decisions/DD-009`
 
 **Problem**: Memories archived to cold storage (S3, data warehouse) can't be promoted back to active graph when needed, limiting long-term learning.
 
 **Current State**:
+
 ```yaml
 # memory-system.md L1000-1001
 3. Archive full detail to cold storage (S3, data warehouse)
 4. Remove full detail from L3 graph
-
 # One-way flow: Active graph → Archive (no reverse path)
 ```
 
 **Scenarios Requiring Re-Promotion**:
 
 **Scenario 1: Regime Change Reactivates Old Pattern**
+
 ```text
 Year 1-3: Pattern "Debt-funded buybacks boost EPS" active (low rate regime)
 Year 3: Archived as "stable, well-validated pattern"
@@ -132,6 +138,7 @@ CURRENT STATE: Pattern in S3 archive, not queryable by graph algorithms
 ```
 
 **Scenario 2: Post-Mortem Investigation**
+
 ```text
 Year 5: Major sector failure (tech growth stocks underperform)
 Year 6: Post-mortem investigating pattern failures
@@ -148,6 +155,7 @@ CURRENT STATE: Archives not integrated with graph queries
 ```
 
 **Scenario 3: Pattern Re-Validation**
+
 ```text
 Year 4: Pattern archived after meeting validation criteria
 Year 6: Blind testing framework enhanced (better holdout methodology)
@@ -163,6 +171,7 @@ CURRENT STATE: No batch re-validation interface
 ```
 
 **Missing Components**:
+
 - Archive query interface (SQL/S3 Select for structured queries)
 - Promotion triggers (access frequency spike, regime change)
 - Re-hydration procedure (S3 → L3 graph)
@@ -173,12 +182,13 @@ CURRENT STATE: No batch re-validation interface
 
 ## Impact Assessment
 
-| Sub-Issue | Severity | Risk                                  | Consequence           |
-| --------- | -------- | ------------------------------------- | --------------------- |
-| C2        | CRITICAL | Data loss for post-mortem evidence    | Can't investigate why |
-| A3        | MEDIUM   | Limits long-term learning from past   | Re-learn vs leverage  |
+| Sub-Issue | Severity | Risk                                | Consequence           |
+| --------- | -------- | ----------------------------------- | --------------------- |
+| C2        | CRITICAL | Data loss for post-mortem evidence  | Can't investigate why |
+| A3        | MEDIUM   | Limits long-term learning from past | Re-learn vs leverage  |
 
 **Aggregate Impact**:
+
 - C2: Evidence deletion blocks root cause analysis (critical for Flaw #9 - Negative Feedback)
 - A3: Archived knowledge inaccessible limits multi-year learning evolution
 - Combined: Pattern lifecycle incomplete, can't learn from long-term history
@@ -557,12 +567,14 @@ class PatternRehydration:
 ## Success Criteria
 
 ### C2: Deprecated Pattern Retention
+
 - ✅ Zero evidence loss for patterns under post-mortem investigation
 - ✅ Deprecated pattern evidence retained 3yr minimum
 - ✅ Archive sufficiency correctly assessed (validated on 50 patterns)
 - ✅ Retention status explainable (API response <100ms)
 
 ### A3: Archive Promotion
+
 - ✅ Archive queries complete <500ms (1000 pattern scan)
 - ✅ Promotion triggered within 24hr of regime change
 - ✅ Re-hydration completes <3s per pattern
@@ -582,7 +594,7 @@ class PatternRehydration:
 
 ## Related Documentation
 
-- [DD-009: Data Retention & Pattern Evidence](../../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)
+- [DD-009: Data Retention & Pattern Evidence](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)
 - [Memory System](../../architecture/02-memory-system.md)
 - [Data Management](../../operations/03-data-management.md)
 - [Learning Systems](../../learning/01-learning-systems.md)

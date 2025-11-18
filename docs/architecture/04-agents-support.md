@@ -125,7 +125,7 @@ Key capabilities include:
 - Calculate average accuracy
 - Aggregate lessons learned
 
-**Identify Patterns** (with 3-Tier Validation - see [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
+**Identify Patterns** (with 3-Tier Validation - see [DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
 
 - Discover candidate patterns from historical outcomes
 - Run hold-out validation (train/val/test split)
@@ -147,7 +147,7 @@ This prevents confirmation bias loops and self-fulfilling prophecies (see [Flaw 
 
 ### Performance Optimization (NEW - v2.0 Scalability)
 
-To maintain <500ms memory retrieval at scale (1000+ stocks, 15K+ analyses), the Knowledge Base Agent implements query budgets and optimization strategies (see [DD-005](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md)):
+To maintain <500ms memory retrieval at scale (1000+ stocks, 15K+ analyses), the Knowledge Base Agent implements query budgets and optimization strategies (see [DD-005](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md)):
 
 **Query Budget Enforcement**:
 
@@ -199,4 +199,4 @@ To maintain <500ms memory retrieval at scale (1000+ stocks, 15K+ analyses), the 
 - [Specialist Agents](./03-agents-specialist.md) - Core analysis agents
 - [Coordination Agents](./05-agents-coordination.md) - Workflow orchestration
 - [Output Agents](./06-agents-output.md) - Report and watchlist generation
-- [DD-005: Memory Scalability Optimization](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
+- [DD-005: Memory Scalability Optimization](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design

@@ -112,7 +112,7 @@ Relationships:
 
 ### Pattern Validation Knowledge Graph Extensions
 
-To support the 3-tier pattern validation system ([DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)), the knowledge graph includes specialized nodes and relationships for tracking validation metadata:
+To support the 3-tier pattern validation system ([DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)), the knowledge graph includes specialized nodes and relationships for tracking validation metadata:
 
 ```yaml
 Additional Nodes for Pattern Validation:
@@ -460,7 +460,7 @@ This precedent context enables:
 
 ### Post-Mortem Knowledge Graph Extensions
 
-To support negative feedback mechanisms ([DD-006](../../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)), the knowledge graph includes nodes and relationships for tracking failure investigations and lessons learned:
+To support negative feedback mechanisms ([DD-006](../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)), the knowledge graph includes nodes and relationships for tracking failure investigations and lessons learned:
 
 ```yaml
 Additional Nodes for Post-Mortem System:
@@ -628,7 +628,7 @@ When post-mortem completed, lessons propagated via:
 
 ### Pattern Evidence Archive Knowledge Graph Extensions
 
-To support data retention and pattern validation over time ([DD-009](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)), the knowledge graph includes nodes and relationships for tracking pattern evidence archives:
+To support data retention and pattern validation over time ([DD-009](../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)), the knowledge graph includes nodes and relationships for tracking pattern evidence archives:
 
 ```yaml
 Pattern Node Extensions for Evidence Archiving:
@@ -872,7 +872,7 @@ The system determines which agents need immediate notification based on:
 
 ## Scalability & Performance Optimization
 
-The system implements comprehensive optimization strategies to maintain performance targets (<500ms memory retrieval) at production scale (1000+ stocks, 15K+ analyses). See [DD-005](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) for complete design rationale.
+The system implements comprehensive optimization strategies to maintain performance targets (<500ms memory retrieval) at production scale (1000+ stocks, 15K+ analyses). See [DD-005](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) for complete design rationale.
 
 ### Performance Targets
 
@@ -1045,4 +1045,4 @@ Performance validation at each scale milestone:
 - [Specialist Agents](./03-agents-specialist.md) - Agents using memory systems
 - [Knowledge Base Agent](./04-agents-support.md#knowledge-base-agent) - Memory management agent
 - [Collaboration Protocols](./07-collaboration-protocols.md) - Memory-enhanced communication
-- [DD-005: Memory Scalability Optimization](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
+- [DD-005: Memory Scalability Optimization](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design

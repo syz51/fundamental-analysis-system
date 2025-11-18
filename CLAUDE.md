@@ -241,7 +241,7 @@ Design docs organized into modular files for easier iteration:
 - **[docs/operations/](docs/operations/)** - Pipeline, human integration, data (3 docs)
 - **[docs/learning/](docs/learning/)** - Learning systems, feedback, metrics (3 docs)
 - **[docs/implementation/](docs/implementation/)** - Roadmap, tech, compliance (4 docs)
-- **[design-decisions/](design-decisions/)** - Architectural decisions with template
+- **[docs/design-decisions/](docs/design-decisions/)** - Architectural decisions with template
 - **[examples/](examples/)** - Code samples (to be populated)
 
 Quick links: [System Overview](docs/architecture/01-system-overview.md) | [Roadmap](docs/implementation/01-roadmap.md)

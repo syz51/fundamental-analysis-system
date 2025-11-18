@@ -52,7 +52,7 @@ python main.py
 ## Project Structure
 
 - `/docs` - Architecture and design documentation
-- `/design-decisions` - Architectural decision records
+- `/docs/design-decisions` - Architectural decision records
 - `/examples` - Code samples (to be populated)
 
 ## Roadmap
@@ -70,7 +70,7 @@ python main.py
 - **[Operations](docs/operations/)** - 12-day analysis pipeline, 6 human gates, data management
 - **[Learning](docs/learning/)** - Pattern recognition, feedback loops, performance metrics
 - **[Implementation](docs/implementation/)** - Roadmap, tech stack, compliance, glossary
-- **[Design Decisions](design-decisions/)** - DD-XXX architectural decision records
+- **[Design Decisions](docs/design-decisions/)** - DD-XXX architectural decision records
 - **[Design Flaws](docs/design-flaws/)** - Active issues tracking, resolved flaws
 - **[Examples](examples/)** - Code samples (to be populated)
 

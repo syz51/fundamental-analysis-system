@@ -50,8 +50,8 @@ Roadmap, technical requirements, and deployment considerations.
 
 Deep dives into specific complex architectural choices.
 
-- [Index of All Decisions](../design-decisions/INDEX.md) - All design decisions with status (3 implemented)
-- [Template](../design-decisions/TEMPLATE.md) - Standard format for documenting new decisions
+- [Index of All Decisions](design-decisions/INDEX.md) - All design decisions with status (3 implemented)
+- [Template](design-decisions/TEMPLATE.md) - Standard format for documenting new decisions
 
 ### ⚠️ Design Flaws
 
@@ -84,12 +84,12 @@ Practical implementation samples are in `/examples`:
 ├── /operations                   # Day-to-day workflows (3 docs)
 ├── /learning                     # Learning systems (3 docs)
 ├── /implementation               # Roadmap & tech specs (5 docs)
+├── /design-decisions             # Design deep-dives
 ├── /design-flaws                 # Design issues & resolutions
 └── /archive
     ├── /historical-design        # Previous design versions
     └── /design-flaws             # Archived design flaw docs
 
-/design-decisions                 # Design deep-dives
 /examples                         # Code samples
 ```
 

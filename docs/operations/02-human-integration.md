@@ -326,7 +326,7 @@ Humans make the final go/no-go decision with full transparency into AI reasoning
 - Urgency escalates if 75+ outcomes or 45+ days (prompts faster review)
 - Whichever threshold reached first (after cooldown) triggers validation
 
-**Pattern Validation Architecture** ([DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
+**Pattern Validation Architecture** ([DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
 
 All patterns presented at Gate 6 have already passed 3-tier statistical validation:
 
@@ -450,7 +450,7 @@ When "Request more evidence" selected:
 - **Deadline evaluation**: Auto-approve if correlation holds, reject if degrades or insufficient evidence
 - **Total maximum**: Original duration + 180 days (prevents indefinite probation)
 
-**Anti-Confirmation Bias Mechanisms** ([DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
+**Anti-Confirmation Bias Mechanisms** ([DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)):
 
 All patterns undergo 3-tier validation before Gate 6 review:
 

@@ -643,7 +643,7 @@ To support 1000+ stocks and <24hr analysis turnaround, the system implements com
 - **Memory Architecture**: See `../architecture/02-memory-system.md` for memory system details with scalability optimizations
 - **Risk Assessment**: See `03-risks-compliance.md` for technical risks and mitigation
 - **Agent Specifications**: See main design doc Section 4 for agent requirements
-- **DD-005: Memory Scalability Optimization**: See `../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md` for performance optimization design
+- **DD-005: Memory Scalability Optimization**: See `../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md` for performance optimization design
 
 ---
 

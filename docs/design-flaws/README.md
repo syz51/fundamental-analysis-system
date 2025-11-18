@@ -410,7 +410,7 @@ python docs/design-flaws/generate_index.py && git add docs/design-flaws/INDEX.md
 - [../architecture/](../architecture/) - System architecture docs
 - [../learning/](../learning/) - Learning systems specs
 - [../operations/](../operations/) - Operational procedures
-- [../../design-decisions/](../../design-decisions/) - Resolution documents (DD-XXX)
+- [../design-decisions/](../design-decisions/) - Resolution documents (DD-XXX)
 - [../implementation/01-roadmap.md](../implementation/01-roadmap.md) - Overall project timeline
 
 ---

@@ -151,7 +151,7 @@ Classification:
 - Agents receive lesson updates to prevent recurrence
 - Dashboard tracks "lessons learned from failures" by category
 
-Complete specification: [DD-006: Negative Feedback System](../../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)
+Complete specification: [DD-006: Negative Feedback System](../design-decisions/DD-006_NEGATIVE_FEEDBACK_SYSTEM.md)
 
 ### Post-Mortem Priority Algorithm (Queue Management)
 
@@ -369,7 +369,7 @@ Based on investigation, patterns receive validity conditions:
 
 ### Implementation Requirements
 
-Complete 3-tier validation architecture specified in [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md). Implementation requires:
+Complete 3-tier validation architecture specified in [DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md). Implementation requires:
 
 **Core Components**:
 
@@ -404,7 +404,7 @@ Complete 3-tier validation architecture specified in [DD-007](../../design-decis
 
 ### Evidence Requirements for Pattern Validation
 
-Pattern validation and re-validation require access to supporting evidence over time ([DD-009](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)). The system implements tiered storage and selective archiving to ensure evidence availability:
+Pattern validation and re-validation require access to supporting evidence over time ([DD-009](../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)). The system implements tiered storage and selective archiving to ensure evidence availability:
 
 **Evidence Lifecycle**:
 
@@ -524,7 +524,7 @@ def on_investment_decision(pattern, decision):
 
 ### Anti-Confirmation Bias Mechanisms
 
-Multiple safeguards prevent false pattern acceptance (see [DD-007](../../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md) for complete architecture):
+Multiple safeguards prevent false pattern acceptance (see [DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md) for complete architecture):
 
 #### 1. Hold-Out Validation
 

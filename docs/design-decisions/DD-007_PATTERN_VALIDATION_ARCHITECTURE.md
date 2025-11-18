@@ -3,7 +3,7 @@
 **Status**: Implemented
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
-**Related Docs**: [Learning Systems](../docs/learning/01-learning-systems.md), [Memory System](../docs/architecture/02-memory-system.md), [Knowledge Base Agent](../docs/architecture/04-agents-support.md)
+**Related Docs**: [Learning Systems](../learning/01-learning-systems.md), [Memory System](../architecture/02-memory-system.md), [Knowledge Base Agent](../architecture/04-agents-support.md)
 **Related Decisions**: DD-001 (Gate 6 Learning Validation)
 
 ---
@@ -327,10 +327,10 @@ None - specification complete, ready for implementation.
 
 ## References
 
-- [Flaw #3: Pattern Validation Confirmation Bias Loop](../docs/design-flaws/resolved/03-pattern-validation.md) - Original problem analysis
+- [Flaw #3: Pattern Validation Confirmation Bias Loop](../design-flaws/resolved/03-pattern-validation.md) - Original problem analysis
 - [DD-001: Gate 6 Learning Validation](DD-001_GATE_6_LEARNING_VALIDATION.md) - Human oversight layer
-- [Learning Systems](../docs/learning/01-learning-systems.md) - Anti-confirmation bias mechanisms
-- [Knowledge Base Agent](../docs/architecture/04-agents-support.md) - Pattern storage and lifecycle
+- [Learning Systems](../learning/01-learning-systems.md) - Anti-confirmation bias mechanisms
+- [Knowledge Base Agent](../architecture/04-agents-support.md) - Pattern storage and lifecycle
 
 ---
 

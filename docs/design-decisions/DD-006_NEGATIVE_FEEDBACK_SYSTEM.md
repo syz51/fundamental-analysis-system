@@ -3,7 +3,7 @@
 **Status**: Approved
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
-**Related Docs**: [Learning Systems](../docs/learning/01-learning-systems.md), [Memory Architecture](../docs/architecture/04-memory-architecture.md), [Feedback Loops](../docs/learning/02-feedback-loops.md)
+**Related Docs**: [Learning Systems](../learning/01-learning-systems.md), [Memory Architecture](../architecture/04-memory-architecture.md), [Feedback Loops](../learning/02-feedback-loops.md)
 **Related Decisions**: DD-001 (Gate 6 Learning Validation), DD-007 (Pattern Validation)
 
 ---
@@ -261,11 +261,11 @@ None - all design parameters specified.
 
 ## References
 
-- [Flaw #9: Negative Feedback Mechanism](../docs/design-flaws/resolved/09-negative-feedback.md) - Original problem analysis
+- [Flaw #9: Negative Feedback Mechanism](../design-flaws/resolved/09-negative-feedback.md) - Original problem analysis
 - [DD-001: Gate 6 Learning Validation](DD-001_GATE_6_LEARNING_VALIDATION.md) - Pattern validation dependency
 - [DD-007: Pattern Validation Architecture](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md) - Pattern context
-- [Learning Systems](../docs/learning/01-learning-systems.md) - Checkpoint review system
-- [Feedback Loops](../docs/learning/02-feedback-loops.md) - Agent error correction
+- [Learning Systems](../learning/01-learning-systems.md) - Checkpoint review system
+- [Feedback Loops](../learning/02-feedback-loops.md) - Agent error correction
 
 ---
 

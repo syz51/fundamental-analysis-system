@@ -5,11 +5,11 @@
 **Decider(s)**: System Architecture Team
 **Related Docs**:
 
-- [Feedback Loops](../docs/learning/02-feedback-loops.md)
-- [Memory System](../docs/architecture/02-memory-system.md)
-- [Coordination Agents](../docs/architecture/05-agents-coordination.md)
-- [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md)
-- [Credibility System Implementation](../docs/implementation/05-credibility-system.md)
+- [Feedback Loops](../learning/02-feedback-loops.md)
+- [Memory System](../architecture/02-memory-system.md)
+- [Coordination Agents](../architecture/05-agents-coordination.md)
+- [Collaboration Protocols](../architecture/07-collaboration-protocols.md)
+- [Credibility System Implementation](../implementation/05-credibility-system.md)
 
 **Related Decisions**:
 
@@ -1017,12 +1017,12 @@ Current: R² > 0.3 for trend extrapolation
 
 **Internal Documentation**:
 
-- [Flaw #4: Agent Credibility Scoring](../docs/design-flaws/resolved/04-credibility-scoring.md) - Original flaw specification
-- [Feedback Loops](../docs/learning/02-feedback-loops.md) - Time-weighted scoring implementation
-- [Memory System](../docs/architecture/02-memory-system.md) - AgentCredibility schema
-- [Coordination Agents](../docs/architecture/05-agents-coordination.md) - Debate credibility logic
-- [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md) - Credibility weighting
-- [Credibility System Implementation](../docs/implementation/05-credibility-system.md) - Technical specification
+- [Flaw #4: Agent Credibility Scoring](../design-flaws/resolved/04-credibility-scoring.md) - Original flaw specification
+- [Feedback Loops](../learning/02-feedback-loops.md) - Time-weighted scoring implementation
+- [Memory System](../architecture/02-memory-system.md) - AgentCredibility schema
+- [Coordination Agents](../architecture/05-agents-coordination.md) - Debate credibility logic
+- [Collaboration Protocols](../architecture/07-collaboration-protocols.md) - Credibility weighting
+- [Credibility System Implementation](../implementation/05-credibility-system.md) - Technical specification
 - [DD-003: Debate Deadlock Resolution](DD-003_DEBATE_DEADLOCK_RESOLUTION.md) - Auto-resolution logic
 - [DD-005: Memory Scalability Optimization](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance constraints
 - [DD-006: Negative Feedback System](DD-006_NEGATIVE_FEEDBACK_SYSTEM.md) - Post-mortem credibility updates

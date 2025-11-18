@@ -3,7 +3,7 @@
 **Status**: Implemented
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
-**Related Docs**: [Memory System](../docs/architecture/02-memory-system.md), [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md)
+**Related Docs**: [Memory System](../architecture/02-memory-system.md), [Collaboration Protocols](../architecture/07-collaboration-protocols.md)
 **Related Decisions**: DD-001 (Gate 6 Learning), DD-003 (Debate Deadlock Resolution)
 
 ---
@@ -196,9 +196,9 @@ async def initialize_debate(debate_topic, participants):
 
 ## References
 
-- [Flaw #2: Memory Sync Timing](../docs/design-flaws/resolved/02-memory-sync-timing.md) - Original problem analysis
-- [Memory System Architecture](../docs/architecture/02-memory-system.md) - Updated with event-driven sync
-- [Collaboration Protocols](../docs/architecture/07-collaboration-protocols.md) - Debate protocol with sync
+- [Flaw #2: Memory Sync Timing](../design-flaws/resolved/02-memory-sync-timing.md) - Original problem analysis
+- [Memory System Architecture](../architecture/02-memory-system.md) - Updated with event-driven sync
+- [Collaboration Protocols](../architecture/07-collaboration-protocols.md) - Debate protocol with sync
 - Related: DD-003 (debate deadlock uses critical sync for human gates)
 
 ---

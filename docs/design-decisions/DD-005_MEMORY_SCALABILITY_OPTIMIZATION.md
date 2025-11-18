@@ -3,9 +3,9 @@
 **Status**: Approved
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
-**Related Docs**: [Memory System](../docs/architecture/02-memory-system.md), [System Overview](../docs/architecture/01-system-overview.md), [Knowledge Base Agent](../docs/architecture/04-agents-support.md), [Tech Requirements](../docs/implementation/02-tech-requirements.md)
+**Related Docs**: [Memory System](../architecture/02-memory-system.md), [System Overview](../architecture/01-system-overview.md), [Knowledge Base Agent](../architecture/04-agents-support.md), [Tech Requirements](../implementation/02-tech-requirements.md)
 **Related Decisions**: DD-002 (Event-Driven Memory Sync)
-**Resolves**: [Flaw #7: Memory Scalability](../docs/design-flaws/resolved/07-memory-scalability.md)
+**Resolves**: [Flaw #7: Memory Scalability](../design-flaws/resolved/07-memory-scalability.md)
 
 ---
 
@@ -385,12 +385,12 @@ LIMIT 10
 
 ## References
 
-- [Flaw #7: Memory Scalability](../docs/design-flaws/resolved/07-memory-scalability.md) - Original problem analysis with detailed math
-- [Memory System Architecture](../docs/architecture/02-memory-system.md) - Updated with optimization strategies
-- [System Overview](../docs/architecture/01-system-overview.md) - Performance targets
-- [Knowledge Base Agent](../docs/architecture/04-agents-support.md) - Query budget implementation
-- [Tech Requirements](../docs/implementation/02-tech-requirements.md) - Infrastructure specs
-- [Roadmap](../docs/implementation/01-roadmap.md) - Phased optimization deployment
+- [Flaw #7: Memory Scalability](../design-flaws/resolved/07-memory-scalability.md) - Original problem analysis with detailed math
+- [Memory System Architecture](../architecture/02-memory-system.md) - Updated with optimization strategies
+- [System Overview](../architecture/01-system-overview.md) - Performance targets
+- [Knowledge Base Agent](../architecture/04-agents-support.md) - Query budget implementation
+- [Tech Requirements](../implementation/02-tech-requirements.md) - Infrastructure specs
+- [Roadmap](../implementation/01-roadmap.md) - Phased optimization deployment
 - DD-002 (Event-Driven Memory Sync) - Related memory system enhancement
 
 ---

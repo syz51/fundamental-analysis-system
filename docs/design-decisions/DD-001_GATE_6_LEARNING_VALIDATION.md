@@ -3,7 +3,7 @@
 **Status**: Implemented
 **Date**: 2025-11-17
 **Decider(s)**: System Architect
-**Related Docs**: [Human Integration](../docs/operations/02-human-integration.md), [Learning Systems](../docs/learning/01-learning-systems.md)
+**Related Docs**: [Human Integration](../operations/02-human-integration.md), [Learning Systems](../learning/01-learning-systems.md)
 **Related Decisions**: DD-002 (Event-Driven Memory Sync), DD-003 (Debate Deadlock Resolution), DD-004 (Gate 6 Parameter Optimization)
 
 ---
@@ -200,10 +200,10 @@ class LearningValidationGate:
 
 ## References
 
-- [Flaw #1: Missing Human Gate](../docs/design-flaws/resolved/01-missing-human-gate.md) - Original problem analysis
+- [Flaw #1: Missing Human Gate](../design-flaws/resolved/01-missing-human-gate.md) - Original problem analysis
 - [DD-004: Gate 6 Parameter Optimization](DD-004_GATE_6_PARAMETER_OPTIMIZATION.md) - Resolves Flaw #10 parameter tuning
-- [Human Integration](../docs/operations/02-human-integration.md) - Gate 6 in pipeline
-- [Learning Systems](../docs/learning/01-learning-systems.md) - Learning architecture
+- [Human Integration](../operations/02-human-integration.md) - Gate 6 in pipeline
+- [Learning Systems](../learning/01-learning-systems.md) - Learning architecture
 
 ---
 

@@ -360,7 +360,7 @@ Final analysis products.
 
 #### Traditional Data with Tiered Storage
 
-The system uses graduated storage tiers to balance cost with accessibility ([DD-009](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)):
+The system uses graduated storage tiers to balance cost with accessibility ([DD-009](../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)):
 
 **Storage Tiers**:
 

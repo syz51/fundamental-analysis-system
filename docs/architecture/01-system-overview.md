@@ -183,7 +183,7 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 
 ## System Performance Constraints
 
-To support ambitious scale targets (1000+ stocks, <24hr analysis turnaround), the system implements performance optimization strategies across the memory and coordination layers. See [DD-005](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) for complete design.
+To support ambitious scale targets (1000+ stocks, <24hr analysis turnaround), the system implements performance optimization strategies across the memory and coordination layers. See [DD-005](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) for complete design.
 
 ### Performance Targets
 
@@ -230,4 +230,4 @@ See [Memory Architecture](./02-memory-system.md#scalability--performance-optimiz
 - [Coordination Agents](./05-agents-coordination.md) - Workflow orchestration agents
 - [Output Agents](./06-agents-output.md) - Report and watchlist agents
 - [Collaboration Protocols](./07-collaboration-protocols.md) - Inter-agent communication
-- [DD-005: Memory Scalability Optimization](../../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
+- [DD-005: Memory Scalability Optimization](../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md) - Performance optimization design
