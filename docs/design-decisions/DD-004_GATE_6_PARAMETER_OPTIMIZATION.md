@@ -144,6 +144,7 @@ LOW_PRIORITY (review last):
 - Track auto-approval accuracy (target >95%, measured by human override rate on spot-checks)
 - If accuracy <90%, pause auto-approval increases
 - Monthly review of auto-approved items (10% random sample)
+- **Validation Framework**: See [DD-014](DD-014_VALIDATION_GAPS_RESOLUTION.md) for shadow mode validation and continuous monitoring specifications
 
 ---
 
@@ -550,6 +551,7 @@ If auto-approval accuracy falls below 90% or human time exceeds 20 hrs/month:
 ## References
 
 - [DD-001: Gate 6 Learning Validation](DD-001_GATE_6_LEARNING_VALIDATION.md) - Base implementation
+- [DD-014: Validation Gaps Resolution](DD-014_VALIDATION_GAPS_RESOLUTION.md) - Auto-approval validation framework
 - [Flaw #10: Gate 6 Parameter Optimization](../design-flaws/resolved/10-gate-6-parameters.md) - Problem analysis
 - [Human Integration](../operations/02-human-integration.md) - Gate 6 in workflow
 - [Learning Systems](../learning/01-learning-systems.md) - Learning architecture

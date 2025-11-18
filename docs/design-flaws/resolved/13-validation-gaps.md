@@ -1,10 +1,10 @@
 ---
 flaw_id: 13
 title: Learning System Validation Gaps
-status: active
+status: resolved
 priority: critical
 phase: 3
-effort_weeks: 6
+effort_weeks: 8
 impact: Auto-approval without validation, blind testing contamination
 blocks: ['Auto-approval deployment']
 depends_on: ['Gate 6 operational', 'DD-007 pattern validation']
@@ -17,14 +17,18 @@ sub_issues:
     severity: high
     title: Blind testing contamination risk
 discovered: 2025-11-17
+resolved_date: 2025-11-18
+resolved_by: DD-014
+resolution_type: design_decision
 ---
 
 # Flaw #13: Learning System Validation Gaps
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED
 **Priority**: Critical
 **Impact**: Auto-approval without validation, blind testing contamination
 **Phase**: Phase 3 (Months 5-6)
+**Resolved**: 2025-11-18 via [DD-014](../../design-decisions/DD-014_VALIDATION_GAPS_RESOLUTION.md)
 
 ---
 
@@ -229,3 +233,69 @@ class BlindTestingQuarantine:
 - **Blocks**: Gate 6 auto-approval (DD-004), Pattern validation (DD-007)
 - **Depends On**: Gate 6 operational, blind testing framework
 - **Related**: Flaw #3 (Pattern Validation - RESOLVED), DD-004, DD-007
+
+---
+
+## Resolution
+
+**Resolved**: 2025-11-18
+**Resolution**: [DD-014: Validation Gaps Resolution](../../design-decisions/DD-014_VALIDATION_GAPS_RESOLUTION.md)
+**Type**: Design Decision
+
+### Solution Summary
+
+DD-014 implements two-tier validation framework with conservative parameters:
+
+**C3: Auto-Approval Validation Framework**
+- Shadow mode: 90 days AND ≥100 decisions (both required)
+- Accuracy target: >95% with statistical significance (p < 0.05)
+- Conservative error rates: ≤1% false positive, ≤5% false negative
+- Continuous monitoring: 14-day rolling window, weekly spot-checks
+- Automatic rollback: 94% triggers investigation, 92% auto-disables
+
+**H4: Blind Testing Quarantine System**
+- Pattern quarantine with multi-layer isolation (cache + logs + knowledge graph + agents)
+- Zero contamination tolerance
+- Automated checks after every blind test
+- Weekly manual audits (first 6 months), then monthly
+- Contamination response: invalidate test, fix vector, restart
+
+### Conservative Parameters Adopted
+
+After analysis, adopted conservative approach:
+- 1% FP rate (vs 2-5% industry standard) - prioritizes safety
+- 94% rollback threshold with 14-day window (vs 93%/7-day) - early warning, reduces false alarms
+- Zero contamination tolerance (vs "minimal") - ensures statistical validity
+- Sequential implementation (C3 → H4, 8 weeks) - thorough testing
+
+### Implementation Timeline
+
+- **Phase 3 (Months 5-6)**: Build validation framework (8 weeks)
+- **Phase 4 (Months 7-9)**: Run shadow mode, collect validation data
+- **Phase 5 (Months 9-12)**: Enable auto-approval if validated, continuous monitoring
+
+### Documentation Updates
+
+- Created [DD-014](../../design-decisions/DD-014_VALIDATION_GAPS_RESOLUTION.md)
+- Updated [learning/01-learning-systems.md](../../learning/01-learning-systems.md#auto-approval-validation-framework)
+- Updated [operations/02-human-integration.md](../../operations/02-human-integration.md) auto-approval section
+- Updated [DD-004](../../design-decisions/DD-004_GATE_6_PARAMETER_OPTIMIZATION.md) with DD-014 reference
+
+### Success Criteria
+
+All original success criteria addressed:
+
+- ✅ C3: Shadow mode framework (90d + 100 decisions)
+- ✅ C3: Validation metrics (>95% with p<0.05, FP≤1%, FN≤5%)
+- ✅ C3: Rollback triggers (94% investigation, 92% auto-disable)
+- ✅ H4: Quarantine system (cache/logs/knowledge graph/agents isolation)
+- ✅ H4: Contamination detection (automated + weekly manual audits)
+- ✅ H4: Zero contamination tolerance enforced
+
+### Validation
+
+Flaw analysis confirmed valid and critical:
+- C3 gap blocks safe production auto-approval deployment
+- H4 gap compromises pattern validation statistical rigor
+- Both prerequisites (Gate 6, DD-007) resolved - flaw unblocked
+- Conservative parameters ensure safety over speed

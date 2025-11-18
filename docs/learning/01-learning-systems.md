@@ -402,6 +402,125 @@ Complete 3-tier validation architecture specified in [DD-007](../design-decision
 
 **Implementation Phase**: Phase 3 (Months 5-6), estimated 6-8 weeks
 
+### Auto-Approval Validation Framework
+
+Gate 6 implements auto-approval for low-risk learnings (DD-004: credibility changes <0.05, high-confidence lessons) to manage human bandwidth at scale (target 50-60% auto-approval in production). However, auto-approval without validation creates critical risk: deploying untested auto-approval that propagates incorrect learnings system-wide.
+
+**Validation Requirements** (DD-014): Auto-approval must pass two-stage validation before production deployment:
+
+#### Shadow Mode Validation (Pre-Deployment)
+
+Before enabling auto-approval, run 90-day shadow mode:
+
+- **Duration**: 90 days AND ≥100 decisions (both required, no early exit)
+- **Process**: Compute auto-approval decision but send all items to human anyway
+- **Comparison**: Compare auto-approval recommendation vs human decision after review
+- **Validation**: Achieve >95% agreement with statistical significance (p < 0.05)
+
+**Conservative Error Rate Targets**:
+- False positive rate ≤1% (auto-approve when shouldn't - most dangerous)
+- False negative rate ≤5% (send to human when could auto-approve - inefficient but safe)
+- Overall accuracy >95% required before enabling
+
+**Rationale**: False positives propagate incorrect learnings to all agents, degrading decision quality. Conservative 1% FP threshold (vs 2-5% industry standard) prioritizes correctness. Shadow mode ensures auto-approval tested on real decisions before deployment.
+
+#### Continuous Monitoring (Post-Deployment)
+
+After enabling auto-approval, continuous monitoring with automatic rollback:
+
+- **Accuracy tracking**: 14-day rolling window (conservative, smooths short-term volatility)
+- **Rollback trigger**: 94% accuracy (1% buffer below 95% target, triggers investigation)
+- **Auto-disable**: 92% accuracy (hard floor, immediate shutdown without human intervention)
+- **Spot-check audits**: 10% random sample, weekly (catches errors monitoring might miss)
+
+**Rollback Actions**:
+
+| Accuracy (14d) | Action                     | Timeline  |
+| -------------- | -------------------------- | --------- |
+| ≥95%           | Continue normally          | N/A       |
+| 94-95%         | Trigger investigation      | 48 hrs    |
+| 92-94%         | Reduce auto-approval % 10-15pts | Immediate |
+| <92%           | Auto-disable, full audit   | Immediate |
+
+**Rationale**: 14-day window (vs 7-day) reduces false alarms from short-term fluctuations. 94% threshold provides early warning before disabling. 92% hard floor prevents runaway quality degradation. Weekly spot-checks verify automated monitoring accuracy.
+
+#### Implementation
+
+```python
+class AutoApprovalValidator:
+    """Shadow mode validation before enabling"""
+    SHADOW_MODE_DURATION_DAYS = 90
+    MIN_DECISIONS_FOR_VALIDATION = 100
+    TARGET_ACCURACY = 0.95
+    MAX_FALSE_POSITIVE_RATE = 0.01
+    MAX_FALSE_NEGATIVE_RATE = 0.05
+
+class AutoApprovalMonitor:
+    """Post-deployment continuous monitoring"""
+    ROLLBACK_THRESHOLD = 0.94
+    HARD_FLOOR = 0.92
+    ROLLING_WINDOW_DAYS = 14
+    SPOT_CHECK_SAMPLE_RATE = 0.10
+    AUDIT_FREQUENCY_DAYS = 7
+```
+
+**Timeline**: Shadow mode runs in Phase 4 (months 7-9), auto-approval enabled in Phase 5 if validated. Conservative parameters ensure safety over speed. See [DD-014](../design-decisions/DD-014_VALIDATION_GAPS_RESOLUTION.md) for complete specifications.
+
+### Blind Testing Quarantine System
+
+Pattern blind testing (DD-007) requires agents unaware of patterns during validation for statistical validity. However, shared infrastructure creates contamination risks: logs exposing pattern usage, L2 cache persistence, knowledge graph queries surfacing patterns, debugging output visibility.
+
+**Contamination Impact**: Blind tests with contamination create circular validation (agents already aware of pattern), invalidating statistical rigor. Prevents detection of false patterns.
+
+**Quarantine Requirements** (DD-014): Zero contamination tolerance during blind tests:
+
+#### Pattern Isolation
+
+When pattern enters blind testing:
+
+1. **Quarantine marking**: Flag pattern as quarantined in knowledge base
+2. **Cache flushing**: Remove pattern from all L2/L3 caches (verify zero residual)
+3. **Log filtering**: Block pattern ID from logs during test period (scrub debugging output)
+4. **Knowledge graph blocking**: Prevent pattern queries (zero accesses during test)
+5. **Isolated agents**: Spawn clean agent instances with no pattern history
+
+**Isolation Verification**:
+- Automated checks after every blind test (all vectors verified)
+- Manual audits weekly during first 6 months (catches subtle contamination)
+- Zero tolerance: any contamination detected → invalidate test, restart
+
+#### Contamination Detection
+
+```python
+class BlindTestingQuarantine:
+    """Isolate patterns during blind testing"""
+    CONTAMINATION_TOLERANCE = 0.0  # Zero tolerance
+
+    def quarantine_pattern(self, pattern_id):
+        """Mark pattern, prevent agent access, flush caches, filter logs"""
+        pass
+
+    def verify_isolation(self, pattern_id):
+        """Confirm zero contamination (cache/logs/knowledge graph/agents)"""
+        # All checks must pass (zero tolerance)
+        return all([cache_clear, logs_filtered, kg_blocked, agents_isolated])
+
+class ContaminationDetector:
+    """Detect blind test contamination"""
+
+    def detect_contamination(self, blind_test_results):
+        """Scan logs, cache access, knowledge graph queries"""
+        # Any contamination signal invalidates test
+        return 'CONTAMINATED' if any(signals.values()) else 'CLEAN'
+```
+
+**Audit Protocol**:
+- Automated checks: Every blind test (100% coverage)
+- Manual audits: Weekly for 6 months, then monthly (verify automated checks working)
+- Response: Contamination detected → invalidate test, fix vector, strengthen isolation
+
+**Rationale**: Zero contamination (vs "minimal") ensures statistical validity. Defense in depth (cache + logs + knowledge graph + agents) provides redundancy. Automated checks scale, manual audits catch edge cases. See [DD-014](../design-decisions/DD-014_VALIDATION_GAPS_RESOLUTION.md) for complete quarantine specifications.
+
 ### Evidence Requirements for Pattern Validation
 
 Pattern validation and re-validation require access to supporting evidence over time ([DD-009](../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)). The system implements tiered storage and selective archiving to ensure evidence availability:

@@ -384,6 +384,23 @@ Items that bypass human review (accuracy target >95%):
 
 Phase-based auto-approval: MVP 0% → Beta 20-30% → Production 40-50% → Scale 50-60%
 
+**Auto-Approval Validation Requirements** (DD-014):
+
+Before enabling auto-approval in production, must complete validation:
+
+- **Shadow Mode**: 90 days AND ≥100 decisions (compute auto-decision, compare with human)
+- **Accuracy Target**: >95% agreement with statistical significance (p < 0.05)
+- **Error Rates**: ≤1% false positive (auto-approve when shouldn't), ≤5% false negative
+- **Timeline**: Shadow mode runs Phase 4 (months 7-9), enabled Phase 5 if validated
+
+Post-deployment continuous monitoring with automatic rollback:
+
+- **Accuracy Tracking**: 14-day rolling window, weekly spot-check audits (10% sample)
+- **Rollback Trigger**: 94% accuracy → investigation (48hrs), 92% → auto-disable
+- **Monitoring**: Track FP/FN rates, audit sample for errors, dashboard alerts
+
+Conservative thresholds prioritize safety (1% FP vs 2-5% industry standard). Shadow mode prevents deploying untested auto-approval. See [DD-014](../design-decisions/DD-014_VALIDATION_GAPS_RESOLUTION.md) for complete validation specifications.
+
 Human Actions:
   Pattern Validation:
     - Approve pattern (use in future decisions)
