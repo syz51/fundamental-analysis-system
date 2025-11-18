@@ -260,17 +260,48 @@ else:                         # No match
 
 **6. Confidence Intervals**
 
-Calculate statistical significance based on sample size:
+Calculate statistical significance based on sample size using **Wilson score interval** (more robust than standard error at extreme values):
 
 ```python
-# Wilson score interval for binomial proportion (95% confidence)
-confidence_interval = 1.96 * sqrt((credibility * (1-credibility)) / sample_size)
+def wilson_confidence_interval(credibility: float, sample_size: int) -> float:
+    """
+    Wilson score interval for binomial proportion (95% confidence)
 
-# Auto-resolution threshold includes confidence
+    More robust than standard error formula, especially when:
+    - Sample size is small (n < 30)
+    - Credibility is near 0.0 or 1.0 (standard error undefined at extremes)
+
+    Formula derivation:
+    - z = 1.96 for 95% confidence
+    - denominator = 1 + z²/n
+    - center = (p + z²/2n) / denominator
+    - margin = z × sqrt(p(1-p)/n + z²/4n²) / denominator
+    - bounds = [max(0, center - margin), min(1, center + margin)]
+
+    Returns half-width of interval for threshold calculations
+    """
+    if sample_size == 0:
+        return 0.5  # Maximum uncertainty
+
+    z = 1.96
+    p = credibility
+    n = sample_size
+
+    denominator = 1 + z**2 / n
+    center = (p + z**2 / (2 * n)) / denominator
+    margin = z * sqrt((p * (1 - p) / n + z**2 / (4 * n**2))) / denominator
+
+    lower = max(0.0, center - margin)
+    upper = min(1.0, center + margin)
+
+    return (upper - lower) / 2  # Return half-width
+
+# Auto-resolution threshold includes confidence intervals
+# Base threshold 0.25, adjusted upward for statistical uncertainty
 min_differential = max(0.25, agent_A_CI + agent_B_CI)
 ```
 
-**Prevents premature auto-resolution**: Small sample sizes (N<10) have wide confidence intervals, forcing human review
+**Prevents premature auto-resolution**: Small sample sizes (N<15) have wide confidence intervals, forcing human review even with apparent credibility differentials
 
 ---
 

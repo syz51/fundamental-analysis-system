@@ -202,8 +202,8 @@ When expert queue reaches capacity (3/3) and new debate arrives:
 
 1. **High-Priority Debates** (critical-path blocking):
 
-   - If credibility differential >0.25: Auto-resolve via facilitator (Level 2)
-   - If credibility differential <0.25: Apply conservative default (Level 4)
+   - If credibility differential >threshold (dynamic: max(0.25, CI_A + CI_B)): Auto-resolve via facilitator (Level 2)
+   - If credibility differential <threshold: Apply conservative default (Level 4)
    - Never queue high-priority debates beyond 3
 
 2. **Medium-Priority Debates** (valuation impact):

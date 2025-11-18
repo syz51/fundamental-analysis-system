@@ -38,18 +38,18 @@ Timeline for addressing design flaws across development phases.
 - ✅ 5-tier debate escalation system
 - ✅ Algorithms documented (C1, M3, G5)
 
-### Active Blockers (2/5)
+### Active Blockers (1/5)
 
-| Flaw                                 | Priority | Effort | Status    | Blocks                  |
-| ------------------------------------ | -------- | ------ | --------- | ----------------------- |
-| [#14](14-statistical-reliability.md) | High     | 4w     | 🔴 ACTIVE | Auto-resolution         |
-| [#19](19-partial-failures.md)        | High     | 4w     | 🔴 ACTIVE | Multi-agent reliability |
+| Flaw                              | Priority | Effort | Status    | Blocks                  |
+| --------------------------------- | -------- | ------ | --------- | ----------------------- |
+| [#19](19-partial-failures.md)     | High     | 4w     | 🔴 ACTIVE | Multi-agent reliability |
 
 **Recently Resolved:**
 
-| Flaw                                      | Priority | Effort | Resolved   | Resolution                         |
-| ----------------------------------------- | -------- | ------ | ---------- | ---------------------------------- |
-| [#16](resolved/16-timeline-conflicts.md)  | High     | 2w     | 2025-11-18 | Phased credibility + roadmap updates |
+| Flaw                                            | Priority | Effort | Resolved   | Resolution                                  |
+| ----------------------------------------------- | -------- | ------ | ---------- | ------------------------------------------- |
+| [#14](resolved/14-statistical-reliability.md)   | High     | 4w     | 2025-11-18 | Wilson score + n=15 + dynamic threshold     |
+| [#16](resolved/16-timeline-conflicts.md)        | High     | 2w     | 2025-11-18 | Phased credibility + roadmap updates        |
 
 **Required Before Phase 3:**
 
@@ -57,16 +57,16 @@ Timeline for addressing design flaws across development phases.
   - [x] Add phased credibility (simplified Phase 2, comprehensive Phase 4)
   - [x] Add benchmark sprints (1 week each phase)
   - [x] Update timeline dependencies
-- [ ] Fix statistical reliability (#14)
-  - [ ] Standardize Wilson score confidence intervals
-  - [ ] Increase min sample size 5→15
-  - [ ] Update all credibility calculations
+- [x] Fix statistical reliability (#14) - RESOLVED 2025-11-18
+  - [x] Standardize Wilson score confidence intervals
+  - [x] Increase min sample size 5→15
+  - [x] Update all credibility calculations
 - [ ] Define partial failure handling (#19)
   - [ ] Agent quorum requirements
   - [ ] RabbitMQ message queue setup
   - [ ] Contradiction resolution fallback
 
-**Estimated Completion:** 10 weeks (2w + 4w + 4w, some parallel)
+**Estimated Completion:** 4 weeks (#19 only, can parallelize with #15)
 
 ---
 
@@ -206,11 +206,11 @@ Timeline for addressing design flaws across development phases.
 - ✅ Gate 6 operational
 - ✅ Memory sync working
 - ✅ Debate deadlock resolved
-- 🔴 Statistical reliability fixed (#14)
-- 🔴 Timeline restructured (#16)
+- ✅ Statistical reliability fixed (#14)
+- ✅ Timeline restructured (#16)
 - 🔴 Partial failures handled (#19)
 
-**Status:** 4/6 complete, **2 active blockers**
+**Status:** 5/6 complete, **1 active blocker**
 
 ### Month 6: Beta (50 stocks, 80% accuracy)
 
@@ -257,11 +257,11 @@ Timeline for addressing design flaws across development phases.
    - [ ] Add benchmark sprints (1 week each phase)
    - [ ] Update timeline dependencies
 
-2. **Flaw #14: Fix statistical reliability** (4 weeks)
+2. **Flaw #14: Fix statistical reliability** (4 weeks) - ✅ RESOLVED 2025-11-18
 
-   - [ ] Standardize Wilson score confidence intervals
-   - [ ] Increase min sample size 5→15
-   - [ ] Update all credibility calculations
+   - [x] Standardize Wilson score confidence intervals
+   - [x] Increase min sample size 5→15
+   - [x] Update all credibility calculations
 
 3. **Flaw #19: Partial failure handling** (4 weeks)
    - [ ] Agent quorum requirements

@@ -165,7 +165,7 @@ Rejected Option 1 (human-only) due to deadlock risk. Rejected Option 2 (agent-on
 ### Escalation Levels
 
 1. **Agent Negotiation** (15min): Direct evidence exchange
-2. **Facilitator Mediation** (1hr): Auto-resolve if credibility differential >0.25, min 15 historical datapoints per agent
+2. **Facilitator Mediation** (1hr): Auto-resolve if credibility differential >0.25 (dynamic: max(0.25, CI_A + CI_B)), min 15 historical datapoints per agent
 3. **Human Arbitration** (6hr): Priority routing, 3 concurrent max, workload-aware assignment
 4. **Conservative Default** (provisional): Most cautious position, override window until next gate
 5. **Gate Review**: Validate/override provisionals at Gates 3/5
@@ -176,7 +176,7 @@ Rejected Option 1 (human-only) due to deadlock risk. Rejected Option 2 (agent-on
 
 ### Key Parameters
 
-- **Auto-resolution threshold**: 0.25 credibility differential
+- **Auto-resolution threshold**: 0.25 base credibility differential (dynamic: max(0.25, CI_A + CI_B) adjusts for statistical uncertainty)
 - **Queue limit**: 3 concurrent debates/expert
 - **Timeout sequence**: 15min → 1hr → 6hr → provisional
 - **Override window**: Flexible until next gate

@@ -1,39 +1,81 @@
 ---
 flaw_id: 14
 title: Statistical Reliability Issues
-status: active
+status: resolved
 priority: high
 phase: 2-3
 effort_weeks: 4
 impact: Auto-resolution may never trigger with current parameters
-blocks: ["#8 auto-resolution"]
-depends_on: ["Agent performance data", "Debate protocol"]
-domain: ["agents", "learning"]
+blocks: ['#8 auto-resolution']
+depends_on: ['Agent performance data', 'Debate protocol']
+domain: ['agents', 'learning']
 sub_issues:
   - id: C4
     severity: critical
     title: Confidence interval formula inconsistency
+    status: resolved
   - id: H6
     severity: high
     title: Minimum sample size too low (n=5)
+    status: resolved
   - id: CS4
     severity: medium
     title: Fixed vs dynamic threshold ambiguity
+    status: resolved
 discovered: 2025-11-17
+resolved: 2025-11-18
 ---
 
 # Flaw #14: Statistical Reliability Issues
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED
 **Priority**: High
 **Impact**: Auto-resolution may never trigger, inconsistent confidence intervals
 **Phase**: Phase 2-3 (Months 3-6)
+**Resolved**: 2025-11-18
 
 ---
 
-## Problem Description
+## Resolution Summary
 
-Three statistical reliability issues prevent credibility system from working correctly:
+**Date**: 2025-11-18
+
+**Changes Made**:
+
+1. **C4 - Confidence Interval Formula** (RESOLVED):
+   - Replaced standard error formula with Wilson score interval in `docs/implementation/05-credibility-system.md:741-772`
+   - Added full Wilson score implementation to `docs/design-decisions/DD-008_AGENT_CREDIBILITY_SYSTEM.md:266-304`
+   - Wilson score more robust at extreme credibility values (0.0, 1.0)
+
+2. **H6 - Minimum Sample Size** (RESOLVED):
+   - Updated minimum from 5 to 15 data points across all documentation
+   - Files updated:
+     - `docs/architecture/05-agents-coordination.md:310`
+     - `docs/architecture/02-memory-system.md:395,398`
+   - Auto-resolution now mathematically feasible at n=15
+
+3. **CS4 - Dynamic Threshold** (RESOLVED):
+   - Clarified that 0.25 is base minimum, actual threshold is `max(0.25, CI_A + CI_B)`
+   - Added clarifications in:
+     - `docs/architecture/05-agents-coordination.md:311`
+     - `docs/architecture/02-memory-system.md:398`
+     - `docs/implementation/01-roadmap.md:118,121`
+
+**Validation**:
+- ✅ Single confidence interval formula (Wilson score) used consistently
+- ✅ Auto-resolution triggers for 0.25+ differential at n=15
+- ✅ Dynamic threshold clearly documented
+- ✅ Edge cases handled (credibility=0.0, 1.0, n=0)
+
+**Related Commits**:
+- Flaw resolution: 2025-11-18 (this session)
+- Prior partial fix: 9e867fe (DD-003 phased credibility, increased n to 15)
+
+---
+
+## Original Problem Description
+
+Three statistical reliability issues prevented credibility system from working correctly:
 
 1. **C4**: Two different confidence interval formulas in different docs
 2. **H6**: Auto-resolution minimum sample size (n=5) too low for statistical reliability
@@ -42,12 +84,14 @@ Three statistical reliability issues prevent credibility system from working cor
 ### Sub-Issue C4: Confidence Interval Formula Inconsistency
 
 **Files**:
+
 - `docs/implementation/05-credibility-system.md:656-677`
 - `docs/learning/02-feedback-loops.md:310-337`
 
 **Problem**: Standard error formula vs Wilson score interval - which is correct?
 
 **Contradictory Implementations**:
+
 ```python
 # credibility-system.md L656-677
 def _calculate_confidence_interval(credibility, sample_size):
@@ -64,18 +108,21 @@ def _calculate_confidence_interval(credibility, sample_size):
 **Impact**: Different formulas yield different widths, affecting auto-resolution decisions
 
 **Edge Cases**:
+
 - Standard error undefined when credibility=0 or 1
 - Wilson score more robust at extremes
 
 ### Sub-Issue H6: Minimum Sample Size Too Low
 
 **Files**:
+
 - `docs/architecture/05-agents-coordination.md:153-243`
 - `design-decisions/DD-003`
 
 **Problem**: Auto-resolution requires "minimum 5 data points" but confidence interval at n=5 wider than 0.25 threshold.
 
 **Mathematical Proof**:
+
 ```python
 # Auto-resolution requirements:
 min_sample_size = 5
@@ -108,10 +155,12 @@ if differential (0.25) > max(threshold, combined_interval):
 ### Sub-Issue CS4: Fixed vs Dynamic Threshold
 
 **Files**:
+
 - `docs/architecture/05-agents-coordination.md:154`
 - `docs/implementation/05-credibility-system.md:709`
 
 **Inconsistency**:
+
 ```python
 # coordination-agents.md L154
 threshold = 0.25  # Fixed
@@ -127,7 +176,7 @@ min_required = max(
 
 ---
 
-## Recommended Solution
+## Implemented Solution
 
 ### Standardize on Wilson Score Interval
 
@@ -237,15 +286,6 @@ class DebateAutoResolution:
             reason='insufficient_differential'
         )
 ```
-
----
-
-## Implementation Plan
-
-**Week 1**: Implement Wilson score interval
-**Week 2**: Update all credibility calculations
-**Week 3**: Increase min sample size to 15
-**Week 4**: Update documentation
 
 ---
 

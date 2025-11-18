@@ -80,7 +80,7 @@ graph TB
     C --> D[Structured Challenge with Precedents]
     D --> E[Evidence + Historical Support]
     E --> F[Facilitator Weighs by Track Record]
-    F --> G{Credibility Gap >0.25?}
+    F --> G{Credibility Gap >Threshold?}
     G -->|Yes| H[Auto-Resolve to Higher Credibility]
     G -->|No| I[Human Arbitration with Context]
     I --> J{Human Response?}
@@ -96,7 +96,7 @@ graph TB
 
 1. Each agent presents findings
 2. Structured challenges issued (15min ack, 1hr evidence)
-3. **Facilitator applies credibility-weighted auto-resolution if gap >0.25**
+3. **Facilitator applies credibility-weighted auto-resolution if gap >threshold** (dynamic: max(0.25, CI_A + CI_B))
 4. If unresolved, escalate to human (6hr timeout)
 5. **If human unavailable, apply conservative default (provisional)**
 6. **Pipeline continues with provisional resolution**
@@ -109,7 +109,7 @@ The system ensures debates never block pipeline progress:
 **_Path A: Direct Resolution (No Human Needed)_**
 
 - Agent consensus reached → Continue immediately
-- Credibility gap >0.25 → Facilitator auto-resolves → Continue immediately
+- Credibility gap >threshold (dynamic: max(0.25, CI_A + CI_B)) → Facilitator auto-resolves → Continue immediately
 
 **_Path B: Human Resolution (Standard)_**
 

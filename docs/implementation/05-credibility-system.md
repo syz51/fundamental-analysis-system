@@ -744,21 +744,32 @@ class ComprehensiveCredibilitySystem:
         sample_size: int
     ) -> float:
         """
-        Calculate 95% confidence interval for credibility score
+        Calculate 95% confidence interval width for credibility score
 
-        Uses Wilson score interval for binomial proportion
+        Uses Wilson score interval for binomial proportion (robust at extremes)
+        Returns the half-width of the confidence interval
         """
-        if sample_size < 5:
-            return 0.5  # Very wide interval for small samples
+        if sample_size == 0:
+            return 0.5  # Maximum uncertainty for zero samples
 
-        # 95% confidence (z = 1.96)
-        z = 1.96
+        # Wilson score interval calculation
+        z = 1.96  # 95% confidence level
+        p_hat = credibility
+        n = sample_size
 
-        interval = z * np.sqrt(
-            (credibility * (1 - credibility)) / sample_size
-        )
+        # Wilson score formula components
+        denominator = 1 + z**2 / n
+        center = (p_hat + z**2 / (2 * n)) / denominator
+        margin = z * np.sqrt(
+            (p_hat * (1 - p_hat) / n + z**2 / (4 * n**2))
+        ) / denominator
 
-        return interval
+        # Calculate bounds
+        lower = max(0.0, center - margin)
+        upper = min(1.0, center + margin)
+
+        # Return half-width of interval
+        return (upper - lower) / 2
 ```
 
 ---

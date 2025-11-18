@@ -1089,7 +1089,9 @@ Pattern 3: "Overrides during Gate 5 more accurate than Gate 3"
 
 The system learns the optimal credibility differential threshold for auto-resolution:
 
-**Current Threshold**: 0.25
+**Current Base Threshold**: 0.25 (actual threshold is dynamic: max(0.25, CI_A + CI_B) to account for statistical uncertainty)
+
+**Note**: This analysis focuses on optimizing the base threshold value. The actual auto-resolution threshold adjusts upward based on confidence interval widths.
 
 **Learning Objective**: Minimize (false_auto_resolutions + missed_auto_resolutions)
 

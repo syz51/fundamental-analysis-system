@@ -307,8 +307,8 @@ The Debate Facilitator has authority to resolve debates automatically when human
 **Trigger Conditions**:
 
 - Agents fail to reach consensus after 1 hour
-- Both agents have sufficient historical data (minimum 5 data points)
-- Credibility differential >0.25
+- Both agents have sufficient historical data (minimum 15 data points)
+- Credibility differential >0.25 (dynamic threshold: `max(0.25, CI_A + CI_B)`)
 
 **Process**:
 
@@ -346,8 +346,20 @@ The Debate Facilitator has authority to resolve debates automatically when human
    else:
        override_penalty = 1.00
 
-   # Confidence interval (based on sample size)
-   confidence_interval = 1.96 * sqrt((credibility * (1-credibility)) / sample_size)
+   # Confidence interval (Wilson score for statistical robustness)
+   # See DD-008 for full implementation
+   if sample_size == 0:
+       confidence_interval = 0.5
+   else:
+       z = 1.96
+       p = credibility
+       n = sample_size
+       denominator = 1 + z**2 / n
+       center = (p + z**2 / (2 * n)) / denominator
+       margin = z * sqrt((p * (1 - p) / n + z**2 / (4 * n**2))) / denominator
+       lower = max(0.0, center - margin)
+       upper = min(1.0, center + margin)
+       confidence_interval = (upper - lower) / 2
 
    # Final credibility score
    credibility_score = (
@@ -391,8 +403,8 @@ The Debate Facilitator has authority to resolve debates automatically when human
 
 **Requirements for Auto-Resolution**:
 
-- Minimum 5 historical data points per agent in similar context
-- Clear credibility differential (>0.25)
+- Minimum 15 historical data points per agent in similar context
+- Clear credibility differential (>0.25, dynamic: max(0.25, CI_A + CI_B))
 - No critical-path blocking status (those escalate to human)
 - Both agents provided evidence in good faith
 

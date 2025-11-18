@@ -392,10 +392,10 @@ credibility_score = (
 
 **Credibility Requirements**:
 
-- Minimum 5 data points for basic credibility (domain-level)
+- Minimum 15 data points for basic credibility (domain-level)
 - Minimum 50 data points for regime-specific scoring
 - Minimum 52 weeks of data for trend detection (statistically meaningful regression)
-- Auto-resolution requires minimum 10 data points with credibility differential >0.25
+- Auto-resolution requires minimum 15 data points with credibility differential >0.25 (dynamic: `max(0.25, CI_A + CI_B)`)
 
 **Bias Correction Storage**:
 

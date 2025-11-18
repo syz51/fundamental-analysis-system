@@ -11,10 +11,10 @@ Foundation (Phase 1) ✅ COMPLETE
 ├── Flaw #1 ✅ → Gate 6 Learning Validation
 └── Flaw #2 ✅ → Event-Driven Memory Sync
     │
-    ├── Phase 2: Core Systems (CRITICAL - 3 ACTIVE BLOCKERS)
+    ├── Phase 2: Core Systems (CRITICAL - 2 ACTIVE BLOCKERS)
     │   ├── Flaw #8 ✅ → Debate Deadlock Resolution
     │   ├── Flaw #11 ✅ → Algorithm Specs (specs documented)
-    │   ├── Flaw #14 🔴 → Statistical Reliability (blocks #8 auto-resolution)
+    │   ├── Flaw #14 ✅ → Statistical Reliability (RESOLVED 2025-11-18)
     │   ├── Flaw #16 ✅ → Timeline Conflicts (RESOLVED 2025-11-18)
     │   └── Flaw #19 🔴 → Partial Failures (blocks multi-agent)
     │       │
@@ -57,7 +57,7 @@ Foundation (Phase 1) ✅ COMPLETE
 | #11 ✅ | #8 (debate protocol)             | ~~Implementation pending~~             | 2     | RESOLVED |
 | #12 ✅ | DD-009, #9 (post-mortem)         | ~~Post-mortem~~ (unblocked)            | 3     | RESOLVED |
 | #13 🔴 | Gate 6, DD-007 (pattern val)     | Auto-approval deployment               | 3     | ACTIVE   |
-| #14 🔴 | Agent perf data, debate protocol | Auto-resolution (#8)                   | 2-3   | ACTIVE   |
+| #14 ✅ | Agent perf data, debate protocol | ~~Auto-resolution~~ (unblocked)        | 2-3   | RESOLVED |
 | #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                     | 3     | ACTIVE   |
 | #16 ✅ | - (roadmap only)                 | ~~Phase 2 implementation~~ (unblocked) | 2     | RESOLVED |
 | #17 🔴 | DD-009, Neo4j                    | Production reliability                 | 4     | ACTIVE   |
@@ -78,12 +78,11 @@ Foundation (Phase 1) ✅ COMPLETE
 - **#8 (Debate Deadlock)** unblocked → Core agent testing (now operational)
 - **#11 (Algorithm Specs)** unblocked → Implementation of C1/M3/G5 algorithms (Phase 2+)
 - **#12 (Archive Lifecycle)** unblocked → Post-mortem investigation with full evidence, pattern re-validation with historical data
+- **#14 (Statistical Reliability)** unblocked → Auto-resolution implementation (Wilson score + n=15)
 
 ### What Active Flaws Are Blocking
 
-- **#8 (resolved)** + **#14 (active)** blocks → Auto-resolution implementation
 - **#13** blocks → Auto-approval deployment (95% accuracy target)
-- **#14** blocks → Auto-resolution never triggers (n=5 sample size too low)
 - **#15** blocks → Memory reliability (infinite recursion risk)
 - **#16** ~~blocks~~ → Phase 2 implementation START (RESOLVED - phased credibility)
 - **#17** blocks → Production reliability (corruption recovery missing)
@@ -142,11 +141,11 @@ Foundation (Phase 1) ✅ COMPLETE
 #2 (Memory Sync) ✅
   → #7 (Memory Scalability) ✅
   → #8 (Debate Deadlock) ✅
-    → #14 (Statistical Reliability) 🔴
+    → #14 (Statistical Reliability) ✅
       → Auto-resolution implementation
 ```
 
-**Status**: 3/4 complete, #14 blocks auto-resolution
+**Status**: 4/4 complete ✅ (Auto-resolution unblocked)
 
 ### Chain 3: Scalability
 
@@ -172,7 +171,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 **_Stream B: Agent Systems_**
 
-- #14 (Statistical Reliability) - 4 weeks
+- #14 (Statistical Reliability) - 4 weeks _(RESOLVED 2025-11-18)_
 - #19 (Partial Failures) - 4 weeks
 
 **_Stream C: Timeline & Planning_**
@@ -195,7 +194,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 **Week 3-6 (Parallel):**
 
-- [ ] #14 (Statistical Reliability) - 4w
+- [x] #14 (Statistical Reliability) - 4w **[RESOLVED 2025-11-18 - Auto-resolution unblocked]**
 - [ ] #19 (Partial Failures) - 4w
 - [ ] #15 (Failure Modes) - 4w _(can overlap)_
 
@@ -227,10 +226,8 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 ### High Risk (Should Fix Before MVP)
 
-1. **Flaw #14** (Statistical Reliability) - auto-resolution never triggers at n=5
-2. **Flaw #19** (Partial Failures) - undefined behavior when agents fail
-3. **Flaw #12** (Archive Lifecycle) - data loss risk for post-mortem evidence
-4. **Flaw #15** (Failure Modes) - system hangs from infinite recursion
+1. **Flaw #19** (Partial Failures) - undefined behavior when agents fail
+2. **Flaw #15** (Failure Modes) - system hangs from infinite recursion
 
 ### Medium Risk (Fix Before Production)
 

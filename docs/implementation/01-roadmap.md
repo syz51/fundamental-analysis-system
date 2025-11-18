@@ -115,9 +115,10 @@ The implementation follows an agile methodology with continuous integration of m
 - [ ] Implement memory-enhanced debate facilitator with tiered escalation
   - Structured debate protocols (5-level escalation)
   - Historical context loading
-  - **Credibility-weighted auto-resolution (Level 2, >0.25 threshold)**
+  - **Credibility-weighted auto-resolution (Level 2, dynamic >0.25 threshold)**
     - **Phase 2 Simple Credibility** (DD-008): Overall accuracy + temporal decay (2yr half-life) + Wilson confidence intervals
     - Min 15 historical datapoints per agent
+    - Dynamic threshold: `max(0.25, CI_A + CI_B)` adjusts for statistical uncertainty
     - No regime/trend/override/context adjustments (Phase 4 enhancements)
   - **Conservative default fallback logic (Level 4)**
   - **Provisional resolution tracking and override mechanisms**
@@ -189,9 +190,9 @@ Critical testing required for debate deadlock resolution system:
 4. **Credibility-Weighted Auto-Resolution**:
 
    - Test with credibility differentials: 0.20, 0.25, 0.30, 0.35, 0.40
-   - Verify auto-resolution triggers at >0.25 threshold
+   - Verify auto-resolution triggers at >0.25 threshold (dynamic: max(0.25, CI_A + CI_B))
    - Confirm escalation to human when <0.25
-   - Test minimum data requirement (5 historical points)
+   - Test minimum data requirement (15 historical points)
    - Measure: Auto-resolution accuracy >80%
 
 5. **Conservative Default Logic**:
