@@ -334,12 +334,20 @@ Final analysis products.
    - Annual: Full knowledge base audit
    - Continuous: Outcome tracking
 
-4. **Contradiction resolution protocols**
+4. **Contradiction resolution protocols** ([DD-010](../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md))
 
-   - Identify conflicting memories
-   - Weight by recency and credibility
-   - Escalate unresolvable conflicts to human
-   - Document resolution rationale
+   - Identify conflicting memories (data sources, agent findings)
+   - 4-level tiered escalation with timeout/fallback:
+     1. Evidence quality evaluation (SEC filing > Bloomberg > news)
+     2. Source credibility auto-resolution (differential >0.25)
+     3. Human arbitration (6hr timeout, max 3 concurrent, priority routing)
+     4. Credibility-weighted fallback (provisional, reviewed at Gate 3)
+   - Source credibility tracked via 3-component formula:
+     - Base accuracy (historical contradiction outcomes)
+     - Source type hierarchy (SEC=1.0, Bloomberg=0.95, Reuters=0.90, etc.)
+     - Temporal decay (4.5-year half-life exponential weighting)
+   - Critical data contradictions (revenue, margins) block analysis if unresolved at Gate 3
+   - Document resolution rationale and update source credibility
 
 5. **Memory versioning and rollback capability**
    - Version all pattern updates

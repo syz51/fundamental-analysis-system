@@ -26,6 +26,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-007 | [Pattern Validation Architecture](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)        | Implemented | 2025-11-17 | Learning, Quality Assurance          | [Learning Systems](../learning/01-learning-systems.md), [Memory System](../architecture/02-memory-system.md), [Flaw #3](../design-flaws/resolved/03-pattern-validation.md)                                                                                                           |
 | DD-008 | [Agent Credibility System](DD-008_AGENT_CREDIBILITY_SYSTEM.md)                      | Implemented | 2025-11-17 | Learning, Collaboration              | [Feedback Loops](../learning/02-feedback-loops.md), [Memory System](../architecture/02-memory-system.md), [Credibility Implementation](../implementation/05-credibility-system.md), [Flaw #4](../design-flaws/resolved/04-credibility-scoring.md)                                    |
 | DD-009 | [Data Retention & Pattern Evidence](DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)      | Approved    | 2025-11-17 | Data Management, Learning            | [Memory System](../architecture/02-memory-system.md), [Data Management](../operations/03-data-management.md), [Learning Systems](../learning/01-learning-systems.md), [Flaw #5](../design-flaws/resolved/05-data-retention.md)                                                       |
+| DD-010 | [Data Contradiction Resolution](DD-010_DATA_CONTRADICTION_RESOLUTION.md)            | Implemented | 2025-11-18 | Data Management, Operations          | [Data Management](../operations/03-data-management.md), [Human Integration](../operations/02-human-integration.md), [Collaboration Protocols](../architecture/07-collaboration-protocols.md), [Flaw #19-M6](../design-flaws/active/19-partial-failures.md)                          |
 | DD-013 | [Pattern Archive Lifecycle Management](DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md)      | Approved    | 2025-11-18 | Memory Architecture, Data Management | [Memory System](../architecture/02-memory-system.md), [Learning Systems](../learning/01-learning-systems.md), [DD-005](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md), [DD-009](DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md), [Flaw #12](../design-flaws/resolved/12-archive-lifecycle.md) |
 | DD-014 | [Learning System Validation Gaps Resolution](DD-014_VALIDATION_GAPS_RESOLUTION.md)  | Approved    | 2025-11-18 | Learning, Quality Assurance          | [DD-001](DD-001_GATE_6_LEARNING_VALIDATION.md), [DD-004](DD-004_GATE_6_PARAMETER_OPTIMIZATION.md), [DD-007](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md), [Flaw #13](../design-flaws/resolved/13-validation-gaps.md)                                                                   |
 
@@ -42,6 +43,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-005**: Memory Scalability Optimization (tiered cache, query optimization)
 - **DD-007**: Pattern Validation Architecture (3-tier statistical validation)
 - **DD-008**: Agent Credibility System (multi-factor temporal decay, regime-specific, trend detection)
+- **DD-010**: Data Contradiction Resolution (4-level escalation, source credibility tracking, timeout fallback)
 
 ### 🟢 Approved (Pending Implementation)
 
@@ -73,6 +75,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 ### Operations
 
 - **Collaboration & Debate Resolution**: DD-003
+- **Data Contradiction Resolution**: DD-010
 
 ### Learning & Feedback
 
@@ -89,6 +92,7 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 ### Data Management
 
 - **Retention & Storage Strategy**: DD-009, DD-013
+- **Data Quality & Contradiction Resolution**: DD-010
 
 ### Cross-Cutting Concerns
 
@@ -152,4 +156,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-18 (added DD-013, DD-014; resolved Flaws #12, #13)
+**Last Updated**: 2025-11-18 (added DD-010, DD-013, DD-014; resolved Flaw #19-M6, Flaws #12, #13)

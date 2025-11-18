@@ -137,6 +137,36 @@ Human Actions:
 
 The system shows historical accuracy of similar assumptions, enabling humans to adjust for systematic biases while applying their macro and sector-specific insights.
 
+**Provisional Contradiction Review** ([DD-010](../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md)):
+
+Gate 3 includes review of data contradictions that were provisionally resolved via timeout fallback (Level 4 escalation):
+
+```yaml
+Display:
+  - Contradiction count: "2 provisional contradictions require review"
+  - For each contradiction:
+      * Data field: "AAPL Revenue Q3 2024"
+      * Source A: "SEC 10-Q: $95.3B (credibility 0.88)"
+      * Source B: "Bloomberg: $94.8B (credibility 0.82)"
+      * Provisional resolution: "Using SEC 10-Q ($95.3B, confidence 0.75)"
+      * Resolution reason: "Human timeout, credibility-weighted fallback"
+      * Valuation impact: "±$2.50/share if override to Bloomberg"
+      * Priority: "CRITICAL" | "HIGH" | "MEDIUM"
+
+Human Actions:
+  - Confirm provisional (becomes final, confidence → 0.90)
+  - Override to other source (triggers data refetch, downstream updates)
+  - Mark uncertain (use conservative estimates, confidence → 0.50)
+  - Request investigation (pause analysis, escalate to data team)
+
+Blocking Behavior:
+  - CRITICAL contradictions unresolved → "CANNOT PROCEED" button disabled
+  - HIGH/MEDIUM contradictions → "PROCEED WITH PROVISIONAL" button enabled
+  - Warning: "N provisional resolutions will be used, reviewable at Gate 5"
+```
+
+**Critical Data Blocking**: Revenue, net income, operating margin, gross margin, debt, cash flow contradictions must be resolved before proceeding. Supporting data contradictions (capex, depreciation, working capital) can proceed provisionally.
+
 ### Gate 4: Debate Arbitration with Historical Context
 
 **Input Required**: Resolve significant disagreements

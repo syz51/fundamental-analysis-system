@@ -22,7 +22,8 @@ sub_issues:
   - id: M6
     severity: medium
     title: Data contradiction resolution timeout missing
-    status: pending
+    status: resolved
+    resolution: 4-level tiered escalation with source credibility tracking (see DD-010)
 discovered: 2025-11-17
 ---
 

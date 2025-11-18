@@ -68,6 +68,25 @@ This document defines the communication and collaboration protocols that enable 
 
 ---
 
+## Data Handling Protocols
+
+### Data Source Contradictions vs Agent Debates
+
+This document focuses on **inter-agent collaboration protocols** (agent-to-agent communication and debates over analytical conclusions).
+
+For **data source contradictions** (conflicting data from different providers like SEC vs Bloomberg), see:
+
+- **[DD-010: Data Contradiction Resolution](../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md)** - 4-level escalation system with source credibility
+- **[Data Management](../operations/03-data-management.md)** - Operational procedures for contradiction resolution
+- **[Memory System](./02-memory-system.md)** - SourceCredibility and DataContradiction nodes in knowledge graph
+
+**Key Distinction**:
+
+- **Agent debates** (this document): Disagreements over interpretation, methodology, or analytical conclusions between specialist agents
+- **Data contradictions** (DD-010): Conflicting raw data from multiple external sources requiring source credibility evaluation
+
+---
+
 ## Debate Protocol
 
 ### Challenge Format

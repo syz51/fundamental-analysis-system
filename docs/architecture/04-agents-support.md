@@ -27,6 +27,9 @@ Manage data acquisition and storage
 - Handle API rate limiting and retries
 - Ensure data quality and validation
 - Version control for data changes
+- Track source metadata and credibility for contradiction resolution ([DD-010](../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md))
+- Record source type and timestamp for temporal decay calculations
+- Update source credibility scores based on contradiction resolution outcomes
 
 ### Data Sources
 

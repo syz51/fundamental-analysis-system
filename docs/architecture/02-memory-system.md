@@ -99,6 +99,32 @@ Nodes:
     - accuracy_scores: object
     - total_decisions: integer
 
+  SourceCredibility:
+    - source_name: string
+    - source_type: string
+    - base_accuracy: float
+    - hierarchy_weight: float
+    - temporal_decay_halflife: float
+    - contradiction_count: integer
+    - resolution_outcomes: object
+    - last_updated: datetime
+
+  DataContradiction:
+    - id: string
+    - data_point: string
+    - source_a: string
+    - source_b: string
+    - value_a: float
+    - value_b: float
+    - resolution_level: enum [1_evidence, 2_credibility, 3_human, 4_fallback]
+    - resolution_method: string
+    - final_value: float
+    - credibility_differential: float
+    - timestamp: datetime
+    - priority: enum [CRITICAL, HIGH, MEDIUM, LOW]
+    - provisional: boolean
+    - reviewed_at_gate3: boolean
+
 Relationships:
   - Company -[HAS_ANALYSIS]-> Analysis
   - Analysis -[IDENTIFIED_PATTERN]-> Pattern
@@ -108,6 +134,9 @@ Relationships:
   - Agent -[MADE]-> Decision
   - Pattern -[SIMILAR_TO]-> Pattern
   - Company -[PEER_OF]-> Company
+  - DataContradiction -[RESOLVED_BY_SOURCE]-> SourceCredibility
+  - Analysis -[HAS_CONTRADICTION]-> DataContradiction
+  - SourceCredibility -[PROVIDED_DATA_FOR]-> Analysis
 ```
 
 ### Pattern Validation Knowledge Graph Extensions
@@ -807,6 +836,98 @@ The archive system works in conjunction with tiered data storage:
 - If any active patterns reference file, retain in Cold tier
 - If file archived for pattern, safe to delete from tiered storage
 - Estimated cost: ~$5/mo for 750GB tiered + $0.22/mo for archives
+
+### Data Contradiction Resolution Knowledge Graph Extensions
+
+To support data source contradiction resolution with timeout and fallback ([DD-010](../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md)), the knowledge graph includes nodes and relationships for tracking source credibility and contradiction resolution history.
+
+**Key Nodes** (already added to base schema above):
+
+- **SourceCredibility**: Tracks reliability of data sources (SEC, Bloomberg, Reuters, etc.) with 3-component credibility formula
+- **DataContradiction**: Records contradiction events, resolution methods, and outcomes
+
+**Source Credibility 3-Component Formula**:
+
+```python
+# Component 1: Base accuracy (historical contradiction outcomes)
+base_accuracy = correct_resolutions / total_contradictions_involving_source
+
+# Component 2: Source type hierarchy (hard-coded trust levels)
+hierarchy_weights = {
+    "SEC_EDGAR": 1.00,
+    "Bloomberg": 0.95,
+    "Refinitiv": 0.90,
+    "Reuters": 0.90,
+    "Company_IR": 0.85,
+    "News": 0.70
+}
+
+# Component 3: Temporal decay (4.5-year half-life exponential weighting)
+temporal_weight = 0.5 ** (age_years / 4.5)
+
+# Final source credibility score
+credibility_score = (
+    base_accuracy * 0.40 +
+    hierarchy_weights[source_type] * 0.40 +
+    temporal_weight * 0.20
+)
+```
+
+**Contradiction Resolution Workflow Storage**:
+
+The system stores complete contradiction resolution histories including:
+
+- Data point discrepancies (metric name, conflicting values, sources)
+- 4-level escalation path (evidence quality → credibility auto-resolution → human arbitration → fallback)
+- Resolution outcomes and methods
+- Provisional resolutions pending Gate 3 review
+- Human override patterns for critical data
+
+**Query Capabilities**:
+
+```cypher
+# Retrieve source credibility for data provider
+MATCH (sc:SourceCredibility)
+WHERE sc.source_name = "Bloomberg"
+RETURN sc.base_accuracy, sc.hierarchy_weight, sc.contradiction_count
+
+# Find provisional contradictions pending Gate 3 review
+MATCH (dc:DataContradiction)
+WHERE dc.provisional = true
+  AND dc.reviewed_at_gate3 = false
+  AND dc.priority = 'CRITICAL'
+RETURN dc.data_point, dc.source_a, dc.source_b, dc.final_value
+ORDER BY dc.timestamp ASC
+
+# Calculate source credibility win rate
+MATCH (sc:SourceCredibility)<-[:RESOLVED_BY_SOURCE]-(dc:DataContradiction)
+WHERE sc.source_name = $source_name
+RETURN sc.source_name,
+       COUNT(dc) as total_contradictions,
+       sc.base_accuracy as win_rate
+
+# Find contradictions that required human arbitration
+MATCH (dc:DataContradiction)
+WHERE dc.resolution_level = '3_human'
+  AND dc.timestamp > datetime() - duration({months: 6})
+RETURN dc.data_point, dc.source_a, dc.source_b, dc.credibility_differential
+ORDER BY dc.timestamp DESC
+```
+
+**Gate 3 Integration**:
+
+During Gate 3 (Assumption Validation), human reviews all provisional contradiction resolutions:
+
+- Display: Data point, conflicting sources, credibility scores, fallback value used
+- Actions: Confirm fallback / Override with new value / Mark uncertain / Request investigation
+- Impact: Show valuation sensitivity to contradiction resolution
+- Blocking: CRITICAL contradictions (revenue, margins) block analysis if unresolved
+
+**Cross-References**:
+
+- See [DD-010](../design-decisions/DD-010_DATA_CONTRADICTION_RESOLUTION.md) for complete design rationale
+- See [Data Management](../operations/03-data-management.md) for operational procedures
+- See [Human Integration](../operations/02-human-integration.md) for Gate 3 UI specifications
 
 ---
 
