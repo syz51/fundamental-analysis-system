@@ -27,7 +27,6 @@ docs/design-flaws/
 ├── RESOLVING.md            # Guide for resolving flaws (using script)
 ├── generate_index.py       # Auto-generates INDEX.md
 ├── resolve_flaw.py         # Auto-resolve script (moves, updates refs)
-├── MINOR-ISSUES.md         # Low-priority clarifications
 │
 ├── active/                 # Active flaws (0 files - all resolved!)
 │   └── NN-flaw-name.md
@@ -35,8 +34,9 @@ docs/design-flaws/
 ├── future/                 # Deferred flaws (3 files)
 │   └── NN-flaw-name.md
 │
-└── resolved/               # Resolved flaws (24 files)
-    └── NN-flaw-name.md
+└── resolved/               # Resolved flaws (25 files)
+    ├── NN-flaw-name.md
+    └── MINOR-ISSUES.md     # Low-priority clarifications (all resolved)
 
 docs/archive/design-flaws/  # Deprecated files (moved 2025-11-18)
 ├── 00-SUMMARY.md           # → see INDEX.md

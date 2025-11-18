@@ -257,7 +257,7 @@ Navigate by system component:
 - [README.md](README.md) - How to navigate and use this folder
 - [STATUS.md](STATUS.md) - Current status and progress tracking
 - [RESOLVING.md](RESOLVING.md) - Resolution workflow and guidelines
-- [Minor Issues](MINOR-ISSUES.md) - 6 low-priority clarifications
+- [Minor Issues](resolved/MINOR-ISSUES.md) - 6 low-priority clarifications (all resolved 2025-11-18)
 - [Design Decisions](../design-decisions/) - DD-XXX resolution documents
 - [Implementation Roadmap](../implementation/01-roadmap.md) - Phase timeline
 

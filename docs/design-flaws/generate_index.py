@@ -426,7 +426,7 @@ def generate_index(flaws):
     content.append("- [README.md](README.md) - How to navigate and use this folder")
     content.append("- [STATUS.md](STATUS.md) - Current status and progress tracking")
     content.append("- [RESOLVING.md](RESOLVING.md) - Resolution workflow and guidelines")
-    content.append("- [Minor Issues](MINOR-ISSUES.md) - 6 low-priority clarifications")
+    content.append("- [Minor Issues](resolved/MINOR-ISSUES.md) - 6 low-priority clarifications (all resolved 2025-11-18)")
     content.append(
         "- [Design Decisions](../design-decisions/) - DD-XXX resolution documents"
     )
