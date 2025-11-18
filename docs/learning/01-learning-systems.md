@@ -522,6 +522,275 @@ def on_investment_decision(pattern, decision):
 - **Agent Training**: New agents learn from historical pattern examples
 - **Cost-Effective**: Selective archiving (10-20%) vs archiving all evidence (100%)
 
+### Pattern Archive Lifecycle and Promotion
+
+Deprecated patterns archived to cold storage can be promoted back to active status when they become relevant again ([DD-013](../design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md)). This enables multi-year learning evolution and regime adaptation.
+
+#### Deprecated Pattern Retention
+
+When patterns are deprecated (performance degradation >20%), the system retains supporting evidence for 18 months to enable post-mortem investigations:
+
+**Retention Logic**:
+
+```yaml
+Deprecated Pattern Evidence Retention:
+  Early-stage deprecated (candidate/statistically_validated):
+    - Retention: 18 months
+    - Archive requirement: Tier 1 (lightweight) sufficient
+
+  Late-stage deprecated (human_approved/active/probationary):
+    - Retention: 18 months
+    - Archive requirement: Tier 2 (full) required
+    - Blocks deletion if Tier 2 missing
+
+  Under Investigation:
+    - Retention: Unlimited (until investigation completes)
+    - Post-mortem lock prevents deletion regardless of age
+```
+
+**Example - Post-Mortem Protection**:
+
+```text
+2023: Pattern "SaaS margin expansion" validated and active
+2024: Pattern performance degrades, moved to probationary
+2025 Q1: Pattern deprecated after repeated failures
+  - Deprecation date recorded
+  - Evidence retained for 18 months (expires 2026 Q3)
+  - Tier 2 archive verified (full evidence + agent analysis)
+
+2025 Q3: Post-mortem investigation triggered
+  - Pattern flagged: under_investigation = true
+  - Retention lock applied (blocks expiration)
+  - Root cause analysis accesses full evidence trail
+
+2025 Q4: Post-mortem completes
+  - Investigation flag cleared
+  - Evidence retention resumes normal 18mo countdown
+```
+
+#### Archive Promotion System
+
+Archived patterns can be automatically promoted back to active status when market conditions change, enabling the system to leverage historical knowledge:
+
+**Promotion Triggers**:
+
+1. **Regime Change Detection**: Market shifts make old patterns relevant
+   - Interest rate changes >2% in 6 months
+   - Inflation regime shifts >1% in quarter
+   - Industry cycle transitions
+
+2. **Access Frequency**: Pattern accessed 3+ times in 30 days
+   - Multiple agents requesting same archived pattern
+   - Signals current relevance
+
+3. **Post-Mortem Request**: Human explicitly requests for investigation
+
+4. **Re-Validation Request**: Pattern validation system needs historical comparison
+
+**Example - Regime Change Promotion**:
+
+```text
+2020: Pattern "Bank profitability in high-rate environment"
+  - Active during 2015-2020 (pre-pandemic)
+  - Confidence: 0.82, Accuracy: 75%
+  - Based on 12 financial institutions analysis
+
+2021: Interest rates drop to near-zero, pattern deprecated
+  - Archived to cold storage (S3)
+  - Cached index entry created:
+    - regime_tags: ["high_interest_rate", "financials"]
+    - industry_tags: ["banking", "lending"]
+    - confidence_score: 0.82
+    - historical_accuracy: 0.75
+
+2024: Interest rates spike to 5%+
+  - Regime detector: Interest rate change = +4.5% in 8mo (exceeds 2% threshold)
+  - Promotion engine queries index: search_by_regime(["high_interest_rate"])
+  - Pattern matches: confidence 0.82 > 0.6 threshold
+  - **Auto-promote immediately**:
+    1. Retrieve full archive from S3 (~3s)
+    2. Validate integrity
+    3. Re-hydrate to L3 knowledge graph
+    4. Status: "deprecated" → "active_from_archive"
+    5. Add staleness metadata:
+       - archived_at: 2021-03-15
+       - promoted_at: 2024-11-18
+       - promotion_trigger: "regime_change_interest_rate"
+    6. Alert human for review (48hr window)
+  - Pattern immediately available for agent use
+  - Human notified for override review
+```
+
+#### Human Override Procedures
+
+Auto-promoted patterns subject to human review within 48-hour window:
+
+**Alert Format**:
+
+```yaml
+Pattern Promotion Alert:
+  trigger: "Regime change: Interest rates increased 4.5% in 8mo"
+  promoted_count: 5 patterns
+
+  patterns:
+    - pattern: "Bank profitability in high-rate environment"
+      confidence: 0.82
+      historical_accuracy: 75%
+      last_used: "2020-03-15"
+      evidence_age: 4.7 years
+
+  action_required: "Review by 2024-11-20 14:30 UTC"
+  default_action: "Promotion approved (no action = approval)"
+  override_options:
+    - Approve (no action needed)
+    - Reject individual pattern
+    - Reject entire trigger batch
+    - Adjust trigger sensitivity
+```
+
+**Override Actions**:
+
+1. **Approve Promotion** (Default):
+   - No action required (promotion permanent after 48hr)
+   - Pattern stays "active_from_archive"
+   - Requires re-validation on new data before investment decisions
+
+2. **Reject Promotion**:
+   - Pattern demoted back to archive
+   - Trigger cooldown: 6 months for this pattern+trigger combo
+   - Rejection reason logged (false_regime_signal, pattern_obsolete, etc)
+   - Pattern unavailable for agent use
+
+3. **Adjust Trigger Sensitivity**:
+   - Modify regime threshold (e.g., interest rate 2% → 3%)
+   - Applies to future promotions
+   - Reduces false positives
+
+**Example - Override Workflow**:
+
+```text
+Day 0: Auto-promotion triggered (5 patterns promoted)
+  - Human receives alert via dashboard + email
+  - Patterns immediately active for agent queries
+
+Day 1: Human reviews batch
+  - Pattern A: "Bank profitability" → APPROVE (regime clearly changed)
+  - Pattern B: "Lending margin expansion" → REJECT (market structure changed)
+  - Pattern C-E: APPROVE (no action, default approval)
+
+Day 1 (continued): System processes override
+  - Pattern B demoted to archive
+  - Pattern B + "regime_change_interest_rate" cooldown = 6 months
+  - Override logged: reason = "Commercial lending dynamics fundamentally changed due to fintech competition"
+  - Agents notified: Pattern B no longer available
+
+Day 3 (48hr expires): Remaining patterns (A, C, D, E) promotions permanent
+  - Status: "active_from_archive" maintained
+  - Enter probationary period (3-6 months)
+  - Require 2 successful validations before investment use
+```
+
+#### Re-Hydration and Probationary Status
+
+Promoted patterns enter probationary status requiring validation before investment decisions:
+
+**Re-Hydration Process**:
+
+```python
+# Pseudocode for archive promotion
+def promote_pattern_from_archive(pattern_id, trigger_reason):
+    # 1. Retrieve from S3
+    archive = s3.get_object(f"archives/{pattern_id}/tier2/")
+
+    # 2. Validate integrity
+    if archive.version != current_version:
+        warn_migration_needed(archive)
+
+    # 3. Restore to knowledge graph
+    pattern_node = knowledge_graph.create_pattern(
+        pattern_data=archive.pattern_definition,
+        validation_history=archive.validation_results,
+        evidence_refs=archive.evidence_files  # May warn if evidence aged out
+    )
+
+    # 4. Add staleness metadata
+    pattern_node.update({
+        'status': 'active_from_archive',
+        'archived_at': archive.archived_date,
+        'promoted_at': now(),
+        'promotion_trigger': trigger_reason,
+        'staleness_warning': archive.evidence_age > 7  # Evidence >7yr old
+    })
+
+    # 5. Set probationary requirements
+    pattern_node.set_probationary({
+        'period': '6_months',
+        'validations_required': 2,
+        'validation_confidence_min': 0.65,
+        'investment_use_blocked': True  # Until probation passes
+    })
+
+    return pattern_node
+```
+
+**Probationary Period**:
+
+- **Duration**: 3-6 months or 2 successful validations (whichever first)
+- **Investment Use**: Blocked until probation complete
+- **Agent Use**: Available for analysis and hypothesis generation
+- **Re-validation**: Pattern tested on recent data
+- **Exit Criteria**:
+  - 2+ successful validations (correlation >0.65)
+  - No contradictory evidence
+  - Human approval at next Gate 6
+- **Failure**: If pattern fails re-validation, demoted back to archive
+
+**Cooldown Logic**:
+
+Prevents promotion/demotion thrashing:
+
+- Promoted patterns observed minimum 6 months
+- Cannot re-deprecate until 2+ validation failures
+- Human-rejected promotions: 6-month trigger cooldown
+- Prevents same pattern re-promoting within cooldown window
+
+#### Cached Index for Fast Queries
+
+Archive metadata stored in Redis/ElasticSearch for <100ms queries without S3 access:
+
+**Index Schema**:
+
+```yaml
+Pattern Archive Index Entry:
+  pattern_id: uuid-1234
+  pattern_name: "Bank profitability in high-rate environment"
+  status: "deprecated"
+  deprecation_date: 2021-03-15
+  archive_tier: 2
+
+  # Searchable metadata
+  regime_tags: ["high_interest_rate", "financials"]
+  industry_tags: ["banking", "lending"]
+  confidence_score: 0.82
+  historical_accuracy: 0.75
+
+  # Promotion tracking
+  last_accessed: 2024-11-18
+  access_count_30d: 3
+  promotion_history:
+    - promoted_at: 2024-11-18
+      trigger: "regime_change_interest_rate"
+      human_decision: "approved"
+```
+
+**Query Performance**:
+
+- **Index queries**: <100ms (metadata only, no S3 access)
+- **Full archive retrieval**: 3-5s (S3 GET when promoting)
+- **Cost**: ~$0.01/mo for 10,000 patterns (negligible)
+
+Complete specification: [DD-013: Archive Lifecycle Management](../design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md)
+
 ### Anti-Confirmation Bias Mechanisms
 
 Multiple safeguards prevent false pattern acceptance (see [DD-007](../design-decisions/DD-007_PATTERN_VALIDATION_ARCHITECTURE.md) for complete architecture):

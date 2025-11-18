@@ -1,13 +1,15 @@
 ---
 flaw_id: 12
 title: Pattern Archive Lifecycle Gaps
-status: active
+status: resolved
 priority: high
 phase: 3-4
 effort_weeks: 7
 impact: Data loss risk for deprecated patterns, no archive promotion
 blocks: ['Post-mortem investigation']
 depends_on: ['DD-009 implemented', '#9 post-mortem system']
+resolved_by: DD-013
+resolved_date: 2025-11-18
 domain: ['memory', 'data']
 sub_issues:
   - id: C2
@@ -21,7 +23,8 @@ discovered: 2025-11-17
 
 # Flaw #12: Pattern Archive Lifecycle Gaps
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED (DD-013)
+**Resolved Date**: 2025-11-18
 **Priority**: Critical
 **Impact**: Data loss risk for deprecated pattern evidence, no archive re-promotion path
 **Phase**: Phase 3-4 (Months 5-8)
@@ -592,8 +595,57 @@ class PatternRehydration:
 
 ---
 
+## Resolution (DD-013)
+
+This flaw was resolved by [DD-013: Archive Lifecycle Management](../../design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md) on 2025-11-18.
+
+### How DD-013 Resolves Sub-Issue C2 (Circular Deletion Dependency)
+
+DD-013 extends DD-009's pattern-aware retention with status-aware logic for deprecated patterns:
+
+**Solution Implemented**:
+
+- **18-month retention window** for deprecated patterns post-deprecation
+- **Tiered archive requirements**:
+  - Early-stage deprecated (candidate/statistically_validated): Tier 1 sufficient
+  - Late-stage deprecated (human_approved/active/probationary): Tier 2 required
+- **Archive sufficiency check** blocks deletion if required tier missing
+- **Post-mortem lock** prevents deletion when pattern under investigation
+
+**Key Difference from Original Proposal**:
+
+- Original: 3-year retention window
+- **Implemented**: 18-month window (cost optimization, covers 90%+ post-mortems)
+
+### How DD-013 Resolves Sub-Issue A3 (No Archive Promotion Path)
+
+DD-013 implements auto-promotion system with cached index and human oversight:
+
+**Solution Implemented**:
+
+- **Cached archive index** (Redis/ElasticSearch) for <100ms queries without S3 access
+- **Promotion triggers**: Regime change detection, access frequency (3+ hits/30d), post-mortem needs
+- **Auto-promote with 48hr human override**: Patterns promoted immediately, human can reject within window
+- **Re-hydration pipeline**: S3 → validation → L3 graph restoration with staleness metadata
+- **Probationary period**: Promoted patterns require re-validation before investment use
+- **Cooldown logic**: 6-month observation period prevents promotion/demotion thrashing
+
+**Key Difference from Original Proposal**:
+
+- Original: High access frequency threshold (5 accesses/7d), 90-day cooldown
+- **Implemented**: Lower threshold (3 accesses/30d), 6-month cooldown, human override system
+
+### Implementation Status
+
+- **Design**: Complete (DD-013 approved 2025-11-18)
+- **Implementation**: Pending (Phase 3-4 per roadmap)
+- **Dependencies**: DD-009 pattern archiving, regime detection service, Redis/ElasticSearch infrastructure
+
+---
+
 ## Related Documentation
 
+- [DD-013: Archive Lifecycle Management](../../design-decisions/DD-013_ARCHIVE_LIFECYCLE_MANAGEMENT.md) - **Resolution**
 - [DD-009: Data Retention & Pattern Evidence](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md)
 - [Memory System](../../architecture/02-memory-system.md)
 - [Data Management](../../operations/03-data-management.md)

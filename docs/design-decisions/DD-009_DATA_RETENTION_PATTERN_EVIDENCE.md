@@ -9,7 +9,7 @@
 - [Data Management](../operations/03-data-management.md)
 - [Learning Systems](../learning/01-learning-systems.md)
 - [Pattern Validation](DD-007_PATTERN_VALIDATION_ARCHITECTURE.md)
-  **Related Decisions**: DD-005 (Memory Scalability), DD-006 (Negative Feedback), DD-007 (Pattern Validation)
+  **Related Decisions**: DD-005 (Memory Scalability), DD-006 (Negative Feedback), DD-007 (Pattern Validation), DD-013 (Archive Lifecycle - extends this decision)
 
 ---
 
@@ -498,3 +498,5 @@ vs. losing pattern validation capability: Priceless
 - **Evidence Reconstruction**: If critical pattern needs evidence beyond 10yr, could request from SEC EDGAR (public filings)
 - **Summarization Supplement**: Could add summarization layer as tertiary backup (DD-009-v2 enhancement)
 - **Selective Raw Archiving**: Super-critical patterns (>$1M decisions) could archive full raw files (opt-in)
+
+**Note**: DD-013 (Archive Lifecycle Management) extends this decision to address deprecated pattern retention and archive promotion capabilities.
