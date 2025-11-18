@@ -1,3 +1,24 @@
+---
+flaw_id: 12
+title: Pattern Archive Lifecycle Gaps
+status: active
+priority: high
+phase: 3-4
+effort_weeks: 7
+impact: Data loss risk for deprecated patterns, no archive promotion
+blocks: ["Post-mortem investigation"]
+depends_on: ["DD-009 implemented", "#9 post-mortem system"]
+domain: ["memory", "data"]
+sub_issues:
+  - id: C2
+    severity: critical
+    title: Circular dependency in deletion
+  - id: A3
+    severity: high
+    title: No archive promotion path
+discovered: 2025-11-17
+---
+
 # Flaw #12: Pattern Archive Lifecycle Gaps
 
 **Status**: 🔴 ACTIVE

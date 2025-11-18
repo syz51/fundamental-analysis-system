@@ -1,3 +1,17 @@
+---
+flaw_id: 20
+title: Memory System Access Control Undefined
+status: active
+priority: medium
+phase: 3
+effort_weeks: 4
+impact: Data integrity risk from unrestricted modifications
+blocks: ["Production security"]
+depends_on: ["Memory system operational (L1/L2/L3)"]
+domain: ["memory", "architecture"]
+discovered: 2025-11-17
+---
+
 # Flaw #20: Memory System Access Control Undefined
 
 **Status**: 🔴 ACTIVE

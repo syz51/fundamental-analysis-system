@@ -19,6 +19,7 @@ Minor issues identified during documentation review. These are ambiguities and c
 **Issue**: Probation extension criteria "50%+ progress toward target" undefined.
 
 **Ambiguity**:
+
 ```yaml
 Pattern needs 5 more occurrences for validation
 After 90 days: Found 2 occurrences
@@ -41,6 +42,7 @@ UNDEFINED: Occurrence-based vs rate-adjusted progress
 **Issue**: Target cache hit rate >80% specified, but "cache hit" definition unclear across L1/L2/L3 tiers.
 
 **Ambiguity**:
+
 ```yaml
 Query needs Pattern A + Pattern B
   - Pattern A in L2 cache (<50ms) ✓
@@ -68,6 +70,7 @@ Options:
 **Issue**: Pattern status lifecycle shows 8 states but only 6 documented transitions.
 
 **Missing Transitions**:
+
 ```yaml
 States: candidate, statistically_validated, human_approved,
         active, probationary, rejected, deprecated
@@ -95,6 +98,7 @@ Also: 8 rejection substates shown but lifecycle only shows "rejected"
 **Issue**: Screening agent tracks "false positive/negative rates" but determination criteria undefined.
 
 **Ambiguity**:
+
 ```text
 What constitutes "false positive"?
   Option A: Screened in, rejected at Gate 1?
@@ -123,6 +127,7 @@ Who labels?
 **Issue**: Clarification needed - sync operation time vs layer access time.
 
 **Potential Confusion**:
+
 ```yaml
 # CLAUDE.md & memory-system.md:
 Critical sync: <2 seconds
@@ -147,6 +152,7 @@ CLARIFY: Sync time is operation latency, access time is query latency
 **Issue**: Inconsistent minimum occurrence requirements.
 
 **Contradictions**:
+
 ```yaml
 # learning-systems.md L190-193
 "Minimum 5 occurrences"
@@ -164,14 +170,14 @@ learned_from: ['INTC_2020', 'IBM_2019']  # ONLY 2!
 
 ## Summary
 
-| Issue | Type            | Priority | Effort     |
-| ----- | --------------- | -------- | ---------- |
-| M1    | Clarification   | LOW      | 30 min     |
-| M2    | Definition      | LOW      | 1 hour     |
-| M4    | Documentation   | MEDIUM   | 2-3 hours  |
-| M7    | Definition      | MEDIUM   | 1 hour     |
-| CS1   | Clarification   | LOW      | 30 min     |
-| CS2   | Consistency fix | LOW      | 1 hour     |
+| Issue | Type            | Priority | Effort    |
+| ----- | --------------- | -------- | --------- |
+| M1    | Clarification   | LOW      | 30 min    |
+| M2    | Definition      | LOW      | 1 hour    |
+| M4    | Documentation   | MEDIUM   | 2-3 hours |
+| M7    | Definition      | MEDIUM   | 1 hour    |
+| CS1   | Clarification   | LOW      | 30 min    |
+| CS2   | Consistency fix | LOW      | 1 hour    |
 
 **Total Effort**: ~8 hours (1 day)
 
@@ -180,6 +186,7 @@ learned_from: ['INTC_2020', 'IBM_2019']  # ONLY 2!
 ## Implementation Plan
 
 **Phase 4 (Month 8)**: Address during documentation polish
+
 - Update DD-004 (M1)
 - Update DD-005 (M2)
 - Add state transition diagram (M4)

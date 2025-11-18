@@ -1,3 +1,27 @@
+---
+flaw_id: 19
+title: Partial Failure Handling Undefined
+status: active
+priority: high
+phase: 2
+effort_weeks: 4
+impact: Undefined behavior when subset of agents fail
+blocks: ["Multi-agent reliability"]
+depends_on: ["Multi-agent workflows operational"]
+domain: ["agents", "architecture"]
+sub_issues:
+  - id: G1
+    severity: high
+    title: Agent failure quorum undefined
+  - id: G2
+    severity: high
+    title: Message protocol implementation missing
+  - id: M6
+    severity: medium
+    title: Data contradiction resolution timeout missing
+discovered: 2025-11-17
+---
+
 # Flaw #19: Partial Failure Handling Undefined
 
 **Status**: 🔴 ACTIVE

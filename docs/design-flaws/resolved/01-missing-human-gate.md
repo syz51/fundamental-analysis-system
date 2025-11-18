@@ -1,3 +1,18 @@
+---
+flaw_id: 1
+title: Missing Human Gate for Learning Validation
+status: resolved
+priority: critical
+phase: 1
+effort_weeks: 2
+impact: Blocks safe learning loop implementation
+blocks: ["#3", "#9"]
+depends_on: []
+domain: ["learning", "human-gates"]
+resolved: 2025-11-17
+resolution: DD-001 Gate 6 Learning Validation
+---
+
 # Flaw #1: Missing Human Gate for Learning Validation
 
 **Status**: RESOLVED ✅

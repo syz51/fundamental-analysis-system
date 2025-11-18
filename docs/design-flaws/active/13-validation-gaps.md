@@ -1,3 +1,24 @@
+---
+flaw_id: 13
+title: Learning System Validation Gaps
+status: active
+priority: critical
+phase: 3
+effort_weeks: 6
+impact: Auto-approval without validation, blind testing contamination
+blocks: ["Auto-approval deployment"]
+depends_on: ["Gate 6 operational", "DD-007 pattern validation"]
+domain: ["learning"]
+sub_issues:
+  - id: C3
+    severity: critical
+    title: Auto-approval validation mechanism missing
+  - id: H4
+    severity: high
+    title: Blind testing contamination risk
+discovered: 2025-11-17
+---
+
 # Flaw #13: Learning System Validation Gaps
 
 **Status**: 🔴 ACTIVE

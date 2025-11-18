@@ -1,6 +1,21 @@
+---
+flaw_id: 5
+title: Data Retention Policy Conflict
+status: resolved
+priority: medium
+phase: 4
+effort_weeks: 2
+impact: Enables pattern re-validation, post-mortem investigation
+blocks: []
+depends_on: ["Pattern storage system operational"]
+domain: ["data", "memory"]
+resolved: 2025-11-17
+resolution: DD-009 Data Retention & Pattern Evidence Architecture
+---
+
 # Flaw #5: Data Retention Policy Conflict
 
-**Status**: UNRESOLVED ⚠️
+**Status**: RESOLVED ✅
 **Priority**: Medium
 **Impact**: Patterns persist without supporting evidence after retention expiry
 

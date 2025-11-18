@@ -1,3 +1,18 @@
+---
+flaw_id: 8
+title: Debate Resolution Deadlock Scenario
+status: resolved
+priority: critical
+phase: 2
+effort_weeks: 2
+impact: Pipeline deadlocks prevent MVP operation
+blocks: []
+depends_on: ["#2 memory sync"]
+domain: ["agents", "architecture"]
+resolved: 2025-11-17
+resolution: 5-level tiered escalation system
+---
+
 # Flaw #8: Debate Resolution Deadlock Scenario
 
 **Status**: ✅ RESOLVED

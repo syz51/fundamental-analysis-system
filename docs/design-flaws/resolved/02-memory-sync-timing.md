@@ -1,3 +1,18 @@
+---
+flaw_id: 2
+title: Memory Sync Timing Incompatible with Debate Protocol
+status: resolved
+priority: critical
+phase: 1
+effort_weeks: 2
+impact: Required for reliable inter-agent communication
+blocks: ["#7", "#8"]
+depends_on: []
+domain: ["memory"]
+resolved: 2025-11-17
+resolution: DD-002 Event-Driven Memory Synchronization
+---
+
 # Flaw #2: Memory Sync Timing Incompatible with Debate Protocol
 
 **Status**: RESOLVED ✅

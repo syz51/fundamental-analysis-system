@@ -1,3 +1,18 @@
+---
+flaw_id: 4
+title: Agent Credibility Scoring - No Temporal Decay
+status: resolved
+priority: medium
+phase: 4
+effort_weeks: 3
+impact: Accurate credibility weighting adapts to regime changes
+blocks: []
+depends_on: ["Operational agents with performance data"]
+domain: ["agents"]
+resolved: 2025-11-17
+resolution: DD-008 Agent Credibility System
+---
+
 # Flaw #4: Agent Credibility Scoring - No Temporal Decay
 
 **Status**: RESOLVED ✅

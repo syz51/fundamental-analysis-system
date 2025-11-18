@@ -1,3 +1,18 @@
+---
+flaw_id: 18
+title: Learning Asymmetry - Human Expertise Not Tracked
+status: deferred
+priority: medium
+phase: 5
+effort_weeks: 3
+impact: Suboptimal human-AI task division
+blocks: []
+depends_on: ["Human gates operational", "#6 implementation"]
+domain: ["learning", "human-gates"]
+related_flaws: ["#6"]
+discovered: 2025-11-17
+---
+
 # Flaw #18: Learning Asymmetry - Human Expertise Not Tracked
 
 **Status**: 🟢 DEFERRED (Related to Flaw #6)

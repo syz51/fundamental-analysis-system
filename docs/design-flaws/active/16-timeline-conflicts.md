@@ -1,3 +1,24 @@
+---
+flaw_id: 16
+title: Timeline & Dependency Conflicts
+status: active
+priority: high
+phase: 2
+effort_weeks: 2
+impact: Phase 2 blocked by Phase 4 dependency
+blocks: ["Phase 2 implementation"]
+depends_on: []
+domain: ["architecture"]
+sub_issues:
+  - id: H1
+    severity: high
+    title: Credibility dependency circular
+  - id: M8
+    severity: medium
+    title: Benchmarking sprints missing
+discovered: 2025-11-17
+---
+
 # Flaw #16: Timeline & Dependency Conflicts
 
 **Status**: 🔴 ACTIVE

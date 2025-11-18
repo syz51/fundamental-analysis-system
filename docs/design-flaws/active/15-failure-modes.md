@@ -1,3 +1,27 @@
+---
+flaw_id: 15
+title: Query & Sync Failure Modes
+status: active
+priority: critical
+phase: 3
+effort_weeks: 4
+impact: System hangs from infinite recursion, memory overflow
+blocks: ["Memory reliability"]
+depends_on: ["DD-005 memory system", "DD-002 event-driven sync"]
+domain: ["memory"]
+sub_issues:
+  - id: C5
+    severity: critical
+    title: Query timeout fallback infinite recursion risk
+  - id: A4
+    severity: high
+    title: Event-driven sync no backpressure mechanism
+  - id: M5
+    severity: medium
+    title: Regime detection/credibility recalc race condition
+discovered: 2025-11-17
+---
+
 # Flaw #15: Query & Sync Failure Modes
 
 **Status**: 🔴 ACTIVE

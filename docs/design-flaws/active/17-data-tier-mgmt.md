@@ -1,3 +1,24 @@
+---
+flaw_id: 17
+title: Data Tier Management Gaps
+status: active
+priority: high
+phase: 4
+effort_weeks: 4
+impact: Performance degradation, no corruption recovery
+blocks: ["Production reliability"]
+depends_on: ["DD-009 tiered storage", "Neo4j operational"]
+domain: ["data", "memory"]
+sub_issues:
+  - id: H3
+    severity: high
+    title: No storage tier migration rollback procedures
+  - id: G4
+    severity: medium
+    title: Knowledge graph corruption recovery missing
+discovered: 2025-11-17
+---
+
 # Flaw #17: Data Tier Management Gaps
 
 **Status**: 🔴 ACTIVE

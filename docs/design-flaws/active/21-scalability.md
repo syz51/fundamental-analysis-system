@@ -1,3 +1,24 @@
+---
+flaw_id: 21
+title: Scalability Architecture Bottlenecks
+status: active
+priority: critical
+phase: 4
+effort_weeks: 8
+impact: Cannot scale to 1000+ stocks without redesign
+blocks: ["Scale to 1000+ stocks"]
+depends_on: ["Neo4j operational", "DD-004 auto-approval"]
+domain: ["human-gates", "architecture"]
+sub_issues:
+  - id: A1
+    severity: high
+    title: Central knowledge graph single point of failure
+  - id: A2
+    severity: high
+    title: Human gate synchronous bottleneck
+discovered: 2025-11-17
+---
+
 # Flaw #21: Scalability Architecture Bottlenecks
 
 **Status**: 🔴 ACTIVE

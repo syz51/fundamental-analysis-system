@@ -1,3 +1,17 @@
+---
+flaw_id: 6
+title: Static Human Expertise Routing
+status: deferred
+priority: low
+phase: 5
+effort_weeks: 3
+impact: Marginal improvement in expertise matching
+blocks: []
+depends_on: ["Human gates operational with usage data"]
+domain: ["human-gates", "learning"]
+discovered: 2025-11-17
+---
+
 # Flaw #6: Static Human Expertise Routing
 
 **Status**: UNRESOLVED ⚠️

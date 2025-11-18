@@ -1,3 +1,18 @@
+---
+flaw_id: 3
+title: Pattern Validation Confirmation Bias Loop
+status: resolved
+priority: high
+phase: 3
+effort_weeks: 6
+impact: False patterns degrade decision quality over time
+blocks: ["#9"]
+depends_on: ["#1 Gate 6 learning validation"]
+domain: ["learning"]
+resolved: 2025-11-17
+resolution: DD-007 Pattern Validation Architecture
+---
+
 # Flaw #3: Pattern Validation Confirmation Bias Loop
 
 **Status**: RESOLVED ✅

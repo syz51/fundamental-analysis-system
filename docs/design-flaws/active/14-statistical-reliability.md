@@ -1,3 +1,27 @@
+---
+flaw_id: 14
+title: Statistical Reliability Issues
+status: active
+priority: high
+phase: 2-3
+effort_weeks: 4
+impact: Auto-resolution may never trigger with current parameters
+blocks: ["#8 auto-resolution"]
+depends_on: ["Agent performance data", "Debate protocol"]
+domain: ["agents", "learning"]
+sub_issues:
+  - id: C4
+    severity: critical
+    title: Confidence interval formula inconsistency
+  - id: H6
+    severity: high
+    title: Minimum sample size too low (n=5)
+  - id: CS4
+    severity: medium
+    title: Fixed vs dynamic threshold ambiguity
+discovered: 2025-11-17
+---
+
 # Flaw #14: Statistical Reliability Issues
 
 **Status**: 🔴 ACTIVE
