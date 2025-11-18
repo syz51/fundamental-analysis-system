@@ -6,9 +6,9 @@ priority: critical
 phase: 3
 effort_weeks: 6
 impact: Auto-approval without validation, blind testing contamination
-blocks: ["Auto-approval deployment"]
-depends_on: ["Gate 6 operational", "DD-007 pattern validation"]
-domain: ["learning"]
+blocks: ['Auto-approval deployment']
+depends_on: ['Gate 6 operational', 'DD-007 pattern validation']
+domain: ['learning']
 sub_issues:
   - id: C3
     severity: critical
@@ -42,6 +42,7 @@ Gate 6 learning validation system (DD-004) has two critical gaps:
 **Problem**: DD-004 specifies auto-approval at >95% accuracy in production, but no method to validate this before enabling.
 
 **Current State**:
+
 ```yaml
 Auto-Approval Rules (Production Phase):
   - Credibility Changes: Auto-approve if delta <0.05 AND sample_size ≥20
@@ -52,6 +53,7 @@ Target: >95% accuracy
 ```
 
 **Missing**:
+
 - Validation methodology before enabling auto-approval
 - Monitoring for accuracy degradation after enabled
 - Rollback triggers if accuracy falls below 95%
@@ -66,6 +68,7 @@ Target: >95% accuracy
 **Problem**: Blind testing requires agents unaware of pattern, but shadow analysis could leak through logs/debugging/cache.
 
 **Contamination Vectors**:
+
 ```text
 1. Shared logging systems
    - Analysis A (with pattern) logs "Using pattern X"
@@ -88,6 +91,7 @@ Target: >95% accuracy
 ```
 
 **Missing**:
+
 - Pattern quarantine enforcement
 - Log filtering during blind tests
 - Cache isolation mechanisms
