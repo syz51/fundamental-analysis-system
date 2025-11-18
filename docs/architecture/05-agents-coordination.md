@@ -233,17 +233,20 @@ The Lead Coordinator integrates with three specialized components for workflow p
 **Purpose**: Orchestrates pause/resume operations, manages state transitions
 
 **Responsibilities**:
+
 - State machine management (RUNNING → PAUSING → PAUSED → RESUMING → RUNNING)
 - Timeout escalation (day 3/7/14/30 alerts)
 - Alert triggering (pause initiated, reminders, auto-resume)
 - Checkpoint integration (save on pause, load on resume via DD-011)
 
 **API**:
+
 - `pause_analysis(stock_id, reason, checkpoint_id, trigger_source)`
 - `resume_analysis(stock_id, resume_plan, notify)`
 - `get_pause_state(stock_id)`
 
 **Interactions**:
+
 - Calls checkpoint system (DD-011) for state persistence
 - Triggers alerts via alert system (Flaw #24)
 - Extends L1 memory TTL via memory system (Flaw #25)
@@ -253,6 +256,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
 **Purpose**: Analyzes agent dependencies, generates resume plans
 
 **Responsibilities**:
+
 - Build agent dependency DAG from pipeline configuration
 - Identify completed agents (skip on resume)
 - Identify failed agent + dependents (restart on resume)
@@ -260,6 +264,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
 - Generate executable resume plans
 
 **Algorithm**:
+
 1. Load pipeline config, construct DAG
 2. Extract checkpoint state (completed agents)
 3. Mark failed agent + downstream dependents for restart
@@ -267,10 +272,12 @@ The Lead Coordinator integrates with three specialized components for workflow p
 5. Return `ResumePlan{restart: [], skip: [], wait: []}`
 
 **API**:
+
 - `resolve_dependencies(failed_agent, checkpoint) -> ResumePlan`
 - `create_resume_plan(stock_id) -> ResumePlan`
 
 **Interactions**:
+
 - Queries checkpoint system for agent completion status
 - Provides resume plans to PauseManager and orchestrator
 
@@ -279,22 +286,26 @@ The Lead Coordinator integrates with three specialized components for workflow p
 **Purpose**: Coordinates concurrent pause/resume for multiple stocks
 
 **Responsibilities**:
+
 - Batch pause operations (parallel coordination)
 - Batch resume operations (priority queue, concurrency control)
 - Resource-aware scheduling (quota/capacity checks)
 - Failure isolation (batch pause if >50% fail)
 
 **API**:
+
 - `pause_batch(stock_ids, reason, max_concurrency=5)`
 - `resume_batch(stock_ids, concurrency_limit=5)`
 - `get_batch_status(batch_id) -> {total, paused, resumed, failed}`
 
 **Strategy**:
+
 - Priority queue: oldest pauses first, gate-timeouts prioritized
 - Concurrency: 5 parallel resumes default (configurable)
 - Resource checks: API quota, compute capacity, DB connections
 
 **Interactions**:
+
 - Calls PauseManager for individual stock operations
 - Monitors orchestrator resource utilization
 - Coordinates with alert system for batch notifications
@@ -305,12 +316,14 @@ The Lead Coordinator integrates with three specialized components for workflow p
 **Purpose**: Automatically detect correlated failures, infer root causes, trigger batch operations
 
 **Responsibilities**:
+
 - Error signature generation (normalize vendor-specific errors)
 - Temporal correlation detection (5min window clustering)
 - Root cause inference (API quota vs network vs data patterns)
 - Auto-batch trigger (3+ correlated failures → batch pause)
 
 **Algorithm**:
+
 1. On agent failure, generate error signature: `hash(agent_type, error_type, data_source, normalized_msg)`
 2. Detect correlations: find failures with same signature within 5min window
 3. Check batch threshold: if ≥3 correlated failures, trigger batch pause
@@ -318,6 +331,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
 5. Auto-trigger BatchManager with root cause and correlation_id
 
 **API**:
+
 - `on_agent_failure(stock_ticker, agent_type, error_type, error_message, data_source) -> CorrelationResult`
 - `generate_error_signature(agent_type, error_type, data_source, error_message) -> str`
 - `detect_correlation(signature, timestamp, window_minutes=5) -> List[UUID]`
@@ -325,12 +339,14 @@ The Lead Coordinator integrates with three specialized components for workflow p
 - `trigger_batch_pause(stock_ids, root_cause, correlation_id) -> BatchPauseResult`
 
 **Error Signature Normalization**:
+
 - Remove timestamps, UUIDs, request IDs
 - Normalize quota numbers: "1000/1000" → "LIMIT_EXCEEDED"
 - Extract semantic patterns: "quota exceeded" → "api_quota_exceeded"
 - Hash normalized signature for matching
 
 **Root Cause Inference Rules**:
+
 1. **API Quota**: 3+ stocks, same data source, quota error → "{source} API quota exceeded"
 2. **Network Outage**: 5+ stocks, same source, timeout/connection → "{source} network connectivity"
 3. **Data Unavailability**: 3+ stocks, 404/not found → "{source} data unavailable"
@@ -338,6 +354,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
 5. **Fallback**: Generic correlation → "Shared failure - {count} stocks"
 
 **Example Correlations**:
+
 - AAPL, MSFT, GOOGL, AMZN, TSLA all fail at 14:47 with Koyfin quota error
 - FailureCorrelator detects within 30s: signature match, 5 failures within 5min window
 - Infers: "Koyfin API quota exceeded"
@@ -345,6 +362,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
 - AlertManager creates 5 separate cards (DD-015 requirement) with "Resume All" button
 
 **Interactions**:
+
 - Subscribes to agent failure events via Lead Coordinator
 - Calls BatchManager for auto-batch pause trigger
 - Stores correlation records in failure_correlations table
@@ -355,6 +373,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
 **Existing Types**: Finding, Request, Challenge, Confirmation, Alert
 
 **New Types (DD-012)**:
+
 - **PAUSE_REQUEST**: `{stock_id, reason, checkpoint_id, trigger_source}`
   - Sent by: Lead Coordinator (on Tier 2 failure)
   - Recipient: PauseManager
@@ -369,6 +388,7 @@ The Lead Coordinator integrates with three specialized components for workflow p
   - Recipient: BatchManager
 
 **New Types (DD-017)**:
+
 - **AGENT_FAILURE_EVENT**: `{stock_ticker, agent_type, error_type, error_message, data_source, timestamp}`
   - Sent by: Base Agent (on failure), Lead Coordinator
   - Recipient: FailureCorrelator
@@ -387,13 +407,13 @@ The Lead Coordinator subscribes to three critical memory system failure types in
 
 **Alert Types Subscribed**:
 
-| Alert | Severity | Trigger | Lead Coordinator Action |
-|-------|----------|---------|-------------------------|
-| **Query Timeout Exhausted** | WARNING | All fallback layers timeout (L1→L2→cached) | Monitor query timeout rate, trigger database performance investigation if >5% queries timeout |
-| **Sync Queue Overflow** | HIGH | Queue depth >50, backpressure active | Reduce sync event rate, scale agent capacity, trigger BatchManager to pause low-priority analyses |
-| **Sync Permanently Dropped** | WARNING/HIGH | Sync dropped after 5 retries (normal=WARNING, high=HIGH) | Re-request dropped syncs, investigate agent load, trigger human notification if high-priority sync dropped |
-| **Regime Cache Timeout** | HIGH | Cache flag not set within 60s | Investigate regime detection hang, trigger manual regime update, alert human |
-| **Regime Staleness SLA Miss** | WARNING | 99th percentile regime update >5min | Optimize regime detection algorithm, monitor credibility system health |
+| Alert                         | Severity     | Trigger                                                  | Lead Coordinator Action                                                                                    |
+| ----------------------------- | ------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Query Timeout Exhausted**   | WARNING      | All fallback layers timeout (L1→L2→cached)               | Monitor query timeout rate, trigger database performance investigation if >5% queries timeout              |
+| **Sync Queue Overflow**       | HIGH         | Queue depth >50, backpressure active                     | Reduce sync event rate, scale agent capacity, trigger BatchManager to pause low-priority analyses          |
+| **Sync Permanently Dropped**  | WARNING/HIGH | Sync dropped after 5 retries (normal=WARNING, high=HIGH) | Re-request dropped syncs, investigate agent load, trigger human notification if high-priority sync dropped |
+| **Regime Cache Timeout**      | HIGH         | Cache flag not set within 60s                            | Investigate regime detection hang, trigger manual regime update, alert human                               |
+| **Regime Staleness SLA Miss** | WARNING      | 99th percentile regime update >5min                      | Optimize regime detection algorithm, monitor credibility system health                                     |
 
 **Subscription Implementation**:
 

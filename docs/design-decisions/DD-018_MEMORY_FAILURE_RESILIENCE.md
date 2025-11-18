@@ -625,13 +625,13 @@ class CredibilityEngine:
 
 **Alert Types**:
 
-| Alert                            | Severity | Trigger Condition                                  | Action Required                     |
-| -------------------------------- | -------- | -------------------------------------------------- | ----------------------------------- |
-| Query Timeout Exhausted          | WARNING  | All fallbacks timeout (L1/L2/cached)               | Investigate database performance    |
-| Sync Queue Overflow              | HIGH     | Queue >50 messages, backpressure active            | Scale agent capacity, reduce sync rate |
-| Sync Permanently Dropped         | WARNING/HIGH | Sync dropped after 5 retries (WARNING=normal, HIGH=high priority) | Review sync priority, agent load |
-| Regime Cache Timeout             | HIGH     | Cache flag not set within 60s                      | Investigate regime detection hang   |
-| Regime Staleness SLA Miss        | WARNING  | 99th percentile duration >5min                     | Optimize regime detection algorithm |
+| Alert                     | Severity     | Trigger Condition                                                 | Action Required                        |
+| ------------------------- | ------------ | ----------------------------------------------------------------- | -------------------------------------- |
+| Query Timeout Exhausted   | WARNING      | All fallbacks timeout (L1/L2/cached)                              | Investigate database performance       |
+| Sync Queue Overflow       | HIGH         | Queue >50 messages, backpressure active                           | Scale agent capacity, reduce sync rate |
+| Sync Permanently Dropped  | WARNING/HIGH | Sync dropped after 5 retries (WARNING=normal, HIGH=high priority) | Review sync priority, agent load       |
+| Regime Cache Timeout      | HIGH         | Cache flag not set within 60s                                     | Investigate regime detection hang      |
+| Regime Staleness SLA Miss | WARNING      | 99th percentile duration >5min                                    | Optimize regime detection algorithm    |
 
 **Metrics**:
 
@@ -672,8 +672,8 @@ class CredibilityEngine:
 
 ## Status History
 
-| Date       | Status   | Notes                                  |
-| ---------- | -------- | -------------------------------------- |
+| Date       | Status   | Notes                                        |
+| ---------- | -------- | -------------------------------------------- |
 | 2025-11-18 | Approved | Design finalized, resolves Flaw #15 C5/A4/M5 |
 
 ---

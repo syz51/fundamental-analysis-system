@@ -78,21 +78,25 @@ L1 working memory (Redis) uses dual-layer snapshot system to survive pauses and 
 **5-Component Architecture**:
 
 1. **L1TTLManager**: Dynamic TTL management
+
    - Active analysis: 24h TTL (normal working memory)
    - Paused analysis: 14d TTL (extended for multi-day pauses)
    - Auto-restore to 24h on resume
 
 2. **L1CacheSnapshotter**: Per-agent snapshots with hybrid triggers
+
    - **During analysis**: Piggyback on checkpoint events → Redis secondary only (fast ~100ms)
    - **On pause**: Force dual snapshot → Redis secondary + PostgreSQL (durability)
    - Type preservation: All Redis types (string, list, hash, set, zset) preserved
 
 3. **L1CacheRestorer**: Restore from snapshot with type preservation
+
    - Restore performance: <5s (Redis secondary), <30s (PostgreSQL fallback)
    - Clears stale L1 keys before restore to avoid conflicts
    - Restores active 24h TTL on resume
 
 4. **ConsistencyVerifier**: Hash-based validation on restore
+
    - SHA256 hash of sorted L1 keys + values
    - Detects partial restore failures, stale data, corruption
    - Fail-fast on mismatch
@@ -104,7 +108,7 @@ L1 working memory (Redis) uses dual-layer snapshot system to survive pauses and 
 
 **Redis Data Structures**:
 
-```
+```text
 # Per-agent snapshot keys
 fas:l1_snapshot:{agent_id} = <JSONB snapshot with type metadata>
 fas:l1_snapshot_meta:{agent_id} = {timestamp, hash, checkpoint_id, key_count}
@@ -1312,10 +1316,10 @@ class SyncBackpressureManager:
 
 **Alert Triggers**:
 
-| Alert | Severity | Condition |
-|-------|----------|-----------|
-| Sync Queue Overflow | HIGH | Queue depth >50, backpressure active |
-| Sync Permanently Dropped | WARNING (normal), HIGH (high priority) | Sync dropped after 5 retries |
+| Alert                    | Severity                               | Condition                            |
+| ------------------------ | -------------------------------------- | ------------------------------------ |
+| Sync Queue Overflow      | HIGH                                   | Queue depth >50, backpressure active |
+| Sync Permanently Dropped | WARNING (normal), HIGH (high priority) | Sync dropped after 5 retries         |
 
 **Performance Characteristics**:
 
