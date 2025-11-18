@@ -1,10 +1,9 @@
 ---
 flaw_id: 22
 title: Agent Checkpoint System Missing
-status: active
+status: resolved
 priority: high
 phase: 2
-effort_weeks: 3
 impact: Failed agents restart from scratch, wasting completed work
 blocks: ['Agent resumption', 'Partial failure recovery']
 depends_on: ['PostgreSQL/Redis infrastructure']
@@ -13,18 +12,24 @@ sub_issues:
   - id: A1
     severity: high
     title: No agent execution state persistence
+    status: resolved
   - id: A2
     severity: high
     title: Subtask progress tracking undefined
+    status: resolved
   - id: A3
     severity: medium
     title: Checkpoint retention policy missing
+    status: resolved
 discovered: 2025-11-18
+resolved: 2025-11-18
+resolution: Design Decision DD-011 addresses all sub-issues
+resolution_doc: docs/design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md
 ---
 
 # Flaw #22: Agent Checkpoint System Missing
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED
 **Priority**: High
 **Impact**: Failed agents restart from scratch, wasting completed work
 **Phase**: Phase 2 (Months 3-4)
@@ -44,12 +49,14 @@ No mechanism to save agent execution state during analysis, preventing resumptio
 **Current State**: Task-level monitoring only (complete/failed/in-progress)
 
 **Problem**: When agent fails, no record of:
+
 - Which subtask was executing (e.g., "M&A review" step of capital allocation analysis)
 - Progress percentage (e.g., 60% through 10-K parsing)
 - Intermediate results (e.g., partial ROI calculations, half-completed SWOT)
 - Working memory snapshot (L1 cache contents)
 
 **Example Failure**:
+
 ```text
 Strategy Analyst - AAPL Analysis:
   ✅ Historical ROI calculation (10Y data) - COMPLETED
@@ -66,6 +73,7 @@ Current Behavior: No checkpoint saved
 ```
 
 **Missing Components**:
+
 - Agent state schema (execution context, progress metrics)
 - Storage mechanism (durable persistence layer)
 - Save triggers (when to checkpoint)
@@ -78,6 +86,7 @@ Current Behavior: No checkpoint saved
 **Problem**: No specification for subtask granularity or checkpoint boundaries.
 
 **Current Gaps**:
+
 - What constitutes a "subtask" for checkpoint purposes?
 - How granular should checkpoints be (every API call? Every finding? Every section?)
 - Which subtasks have easily storable deliverables vs. transient state?
@@ -86,6 +95,7 @@ Current Behavior: No checkpoint saved
 **Subtask Granularity Examples** (Need Specification):
 
 **Financial Analyst**:
+
 ```python
 # Proposed subtask breakdown
 subtasks = [
@@ -100,6 +110,7 @@ subtasks = [
 ```
 
 **Strategy Analyst**:
+
 ```python
 subtasks = [
     'historical_roi',        # Deliverable: 10Y ROI data (PostgreSQL)
@@ -110,6 +121,7 @@ subtasks = [
 ```
 
 **Valuation Agent** (Nested):
+
 ```python
 subtasks = [
     'dcf_assumptions',       # Deliverable: Assumption table
@@ -123,6 +135,7 @@ subtasks = [
 ```
 
 **Undefined**:
+
 - Should checkpoint after every subtask or only at major milestones?
 - How to handle long-running subtasks (e.g., 10-K parsing takes 20 min)?
 - Intermediate checkpoints within subtasks?
@@ -134,17 +147,20 @@ subtasks = [
 **Problem**: No specification for when to cleanup checkpoints.
 
 **Questions**:
+
 1. Keep checkpoints after successful analysis completion?
 2. Cleanup immediately or defer to memory system?
 3. How long to retain failed analysis checkpoints?
 4. What if human wants to review "why did agent restart 3 times"?
 
 **User Decision** (from discussion):
+
 - Cleanup after successful completion
 - Defer retention decisions to memory system (let it manage lifecycle)
 - As long as knowledge base keeps growing (findings always preserved in Neo4j)
 
 **Missing Details**:
+
 - Automatic cleanup trigger (on analysis success?)
 - Manual override to preserve checkpoints for debugging
 - Archival strategy for audit trail
@@ -471,11 +487,13 @@ class CheckpointRetentionPolicy:
 ## Files Affected
 
 **New Files**:
+
 - `src/agents/checkpoint.py` - Checkpointer class, save/restore logic
 - `src/agents/subtasks.py` - Subtask definitions for each agent
 - `migrations/xxx_agent_checkpoints.sql` - PostgreSQL schema
 
 **Modified Files**:
+
 - `src/agents/base_agent.py` - Add checkpoint hooks
 - `src/agents/coordinator.py` - Restore from checkpoint on resume
 - `docs/architecture/03-agents-specialist.md` - Document subtask structure

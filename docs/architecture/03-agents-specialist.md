@@ -30,6 +30,19 @@ Initial filtering and candidate identification with historical awareness
 - Generate one-page company summaries
 - Prioritize candidates for deeper analysis
 
+### Checkpoint Subtask Structure
+
+For execution state persistence and failure recovery ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)):
+
+| Subtask               | Deliverable                | Storage         | Est. Duration |
+| --------------------- | -------------------------- | --------------- | ------------- |
+| `screener_data_fetch` | Raw screener results       | PostgreSQL      | 5 min         |
+| `quantitative_filter` | Filtered candidate list    | PostgreSQL      | 3 min         |
+| `summary_generation`  | One-page summaries         | PostgreSQL      | 10 min        |
+| `priority_ranking`    | Ranked recommendation list | Neo4j + Message | 2 min         |
+
+Checkpoint saved after each subtask completes, enabling resume from last completed subtask on failure.
+
 ### Memory Capabilities
 
 - Track screening pattern success rates by sector
@@ -92,6 +105,20 @@ Opportunities| Threats
 - Expansion  | - Regulation
 ```
 
+### Checkpoint Subtask Structure
+
+For execution state persistence and failure recovery ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)):
+
+| Subtask                   | Deliverable                | Storage    | Est. Duration |
+| ------------------------- | -------------------------- | ---------- | ------------- |
+| `sec_filing_parsing`      | Parsed 10-K/10-Q sections  | PostgreSQL | 20 min        |
+| `business_model_analysis` | Revenue streams, segments  | Neo4j      | 15 min        |
+| `swot_analysis`           | SWOT framework             | Neo4j      | 15 min        |
+| `moat_evaluation`         | Competitive advantages     | Neo4j      | 10 min        |
+| `kpi_tracking`            | Key performance indicators | PostgreSQL | 5 min         |
+
+Checkpoint saved after each subtask completes, enabling resume from last completed subtask on failure.
+
 ### Memory Capabilities
 
 - Store business model patterns and success rates
@@ -139,6 +166,19 @@ Quantitative analysis of financial health with prediction tracking
 - Aggressive accounting policies
 - Unusual non-recurring adjustments
 - Cash flow vs. earnings mismatches
+
+### Checkpoint Subtask Structure
+
+For execution state persistence and failure recovery ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)):
+
+| Subtask              | Deliverable                    | Storage    | Est. Duration |
+| -------------------- | ------------------------------ | ---------- | ------------- |
+| `10k_parsing`        | Financial statements JSON      | PostgreSQL | 15 min        |
+| `ratio_calculation`  | Ratio table (ROE/ROA/ROIC/etc) | PostgreSQL | 5 min         |
+| `peer_comparison`    | Comparison matrix              | Redis L2   | 10 min        |
+| `red_flag_detection` | Red flag findings              | Neo4j      | 20 min        |
+
+Checkpoint saved after each subtask completes, enabling resume from last completed subtask on failure.
 
 ### Memory Capabilities
 
@@ -192,6 +232,19 @@ Evaluate strategic direction and execution with pattern recognition
 - Execution success rate on stated initiatives
 - M&A value creation track record
 
+### Checkpoint Subtask Structure
+
+For execution state persistence and failure recovery ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)):
+
+| Subtask                      | Deliverable               | Storage         | Est. Duration |
+| ---------------------------- | ------------------------- | --------------- | ------------- |
+| `historical_roi`             | 10Y ROI timeseries        | PostgreSQL      | 10 min        |
+| `ma_review`                  | M&A track record findings | Neo4j           | 25 min        |
+| `mgmt_compensation`          | Compensation analysis     | Neo4j           | 15 min        |
+| `capital_allocation_scoring` | Final score               | Neo4j + Message | 5 min         |
+
+Checkpoint saved after each subtask completes, enabling resume from last completed subtask on failure.
+
 ### Memory Capabilities
 
 - Management credibility scoring by executive and company
@@ -227,6 +280,20 @@ Determine fair value and price targets with model calibration
 - Incorporate current events impact on valuation
 - Set price targets and entry points
 - Technical analysis for timing considerations
+
+### Checkpoint Subtask Structure
+
+For execution state persistence and failure recovery ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)):
+
+| Subtask                | Deliverable                     | Storage    | Est. Duration |
+| ---------------------- | ------------------------------- | ---------- | ------------- |
+| `dcf_assumptions`      | Assumption table                | PostgreSQL | 10 min        |
+| `cash_flow_projection` | 10Y FCF model                   | PostgreSQL | 15 min        |
+| `wacc_calculation`     | WACC inputs/result              | PostgreSQL | 5 min         |
+| `terminal_value`       | Terminal value calc             | PostgreSQL | 5 min         |
+| `sensitivity_analysis` | Scenario table (base/bull/bear) | Neo4j      | 15 min        |
+
+Checkpoint saved after each subtask completes, enabling resume from last completed subtask on failure.
 
 ### Memory Capabilities
 

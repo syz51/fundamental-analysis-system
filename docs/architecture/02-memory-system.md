@@ -2,7 +2,7 @@
 
 ## Hybrid Memory Model
 
-The system implements a three-tier hybrid memory architecture combining centralized knowledge with distributed agent-specific memories:
+The system implements a four-tier hybrid memory architecture combining centralized knowledge with distributed agent-specific memories and execution state persistence:
 
 ```text
 ┌─────────────────────────────────────────────┐
@@ -10,6 +10,11 @@ The system implements a three-tier hybrid memory architecture combining centrali
 │  Companies | Patterns | Decisions | Outcomes │
 └─────────────────────────────────────────────┘
                     ▲ ▼ Sync
+┌─────────────────────────────────────────────┐
+│   Checkpoint Storage (PostgreSQL + Redis)    │
+│   Agent State | Subtask Progress | Recovery  │
+└─────────────────────────────────────────────┘
+                    ▲ ▼ Save/Restore
 ┌──────────────┬──────────────┬───────────────┐
 │   L2 Cache   │   L2 Cache   │   L2 Cache    │
 │ Specialized  │ Specialized  │ Specialized   │
@@ -50,6 +55,19 @@ The system implements a three-tier hybrid memory architecture combining centrali
 - **Size**: Unlimited
 - **TTL**: Permanent
 - **Access Time**: <1s
+
+### Checkpoint Storage (Execution State Persistence)
+
+- **Purpose**: Agent execution state for failure recovery and pause/resume
+- **Contents**: Subtask progress, working memory snapshot (L1 dump), interim results, execution context, failure details
+- **Storage**: Dual-tier
+  - PostgreSQL (durable, permanent record)
+  - Redis (fast recovery, 7-day TTL)
+- **Trigger**: Save after each subtask completion
+- **Access Time**: <5s (Redis), <30s (PostgreSQL fallback)
+- **Retention**: Delete on analysis success, 30-day retention for failures
+
+See [DD-011 Agent Checkpoint System](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md) for complete design.
 
 ---
 

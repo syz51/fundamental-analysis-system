@@ -262,6 +262,106 @@ The QC Agent validates work at each phase:
 
 ---
 
+## Failure Recovery & Pause/Resume
+
+The pipeline supports graceful failure recovery and workflow pause/resume using checkpoint-based state persistence ([DD-011](../design-decisions/DD-011_AGENT_CHECKPOINT_SYSTEM.md)).
+
+### Checkpoint-Based Recovery
+
+**How It Works**:
+
+Each specialist agent saves execution state after completing each subtask:
+
+- Subtask progress (completed/pending)
+- Working memory snapshot (L1 cache dump)
+- Intermediate results (partial findings)
+- Execution context (config, retry count)
+
+**Storage**: Dual-tier for reliability and speed
+
+- PostgreSQL (durable, permanent record)
+- Redis (fast recovery, 7-day TTL)
+
+### Failure Recovery Workflow
+
+```mermaid
+graph TB
+    A[Agent Failure Detected] --> B{Checkpoint Exists?}
+    B -->|Yes| C[Restore from Checkpoint]
+    B -->|No| D[Restart from Beginning]
+    C --> E[Resume from Next Subtask]
+    E --> F[Continue Pipeline]
+    D --> F
+```
+
+**Recovery Process**:
+
+1. **Failure Detection**: Lead Coordinator detects agent failure (API rate limit, network error, resource exhaustion)
+2. **Checkpoint Lookup**: Query checkpoint storage for most recent state
+3. **State Restoration**:
+   - Fast path: Restore from Redis (<5s)
+   - Fallback: Restore from PostgreSQL (<30s)
+4. **Resume Execution**: Agent continues from next pending subtask
+5. **Zero Duplicate Work**: Completed subtasks never re-executed
+
+**Example Recovery**:
+
+```text
+Strategy Analyst - AAPL Analysis:
+  ✅ historical_roi (completed - 10 min)
+  ✅ ma_review (completed - 25 min)
+  ❌ mgmt_compensation (failed at 45% - Koyfin rate limit)
+
+[Recovery triggered]
+  ↳ Checkpoint restored from Redis in 3s
+  ↳ Resumed at mgmt_compensation subtask
+  ↳ No re-work of historical_roi or ma_review
+  ↳ Total recovery overhead: 3s vs 35 min restart
+```
+
+### Manual Pause/Resume
+
+**Use Cases**:
+
+- Overnight pauses (extend L1 cache TTL)
+- Human investigation needed (provisional decision review)
+- Resource constraints (prioritize different analysis)
+- External dependency (awaiting data provider response)
+
+**Pause Workflow**:
+
+1. Human triggers pause via dashboard (or automatic on blocking issue)
+2. All active agents force-checkpoint current state
+3. Analysis marked "paused" with reason and timestamp
+4. Resources released (agents can work on other stocks)
+
+**Resume Workflow**:
+
+1. Human triggers resume via dashboard (or automatic when blocker resolved)
+2. Lead Coordinator restores agent states from checkpoints
+3. Agents resume from next pending subtasks
+4. Pipeline continues from pause point
+
+**Integration with Human Gates**:
+
+Pause/resume particularly useful for:
+
+- **Gate 3** (Assumption Validation): Pause for extended human research (24hr+)
+- **Gate 4** (Debate Arbitration): Pause if human needs expert consultation
+- **Gate 5** (Final Decision): Pause for investment committee scheduling
+
+### Checkpoint Retention
+
+**Cleanup Policy**:
+
+- **Success**: Delete checkpoints immediately after analysis completes
+- **Failure**: Retain for 30 days (audit trail, debugging)
+- **Manual Override**: Flag to preserve for investigation
+
+**Storage Impact**: ~5 KB per checkpoint × 5 checkpoints/agent × 5 agents = ~125 KB per stock
+
+---
+
 ## Timeline Management
 
 ### Standard 12-Day Cycle
