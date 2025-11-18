@@ -4,11 +4,95 @@
 
 This document provides the technical specification for the comprehensive agent credibility scoring system that addresses temporal decay, market regime adaptation, performance trend detection, and human override tracking.
 
-**Related Design Decisions**: [DD-004: Agent Credibility Scoring](../../docs/design-flaws/resolved/04-credibility-scoring.md) (RESOLVED)
+**Related Design Decisions**:
+- [DD-008: Comprehensive Agent Credibility System](../design-decisions/DD-008_AGENT_CREDIBILITY_SYSTEM.md)
+- [DD-004: Agent Credibility Scoring](../../docs/design-flaws/resolved/04-credibility-scoring.md) (RESOLVED)
+
+---
+
+## Implementation Phases
+
+The credibility system is implemented in two phases to balance rapid delivery with comprehensive functionality:
+
+### Phase 2: Simple Credibility (Months 3-4)
+
+**Components implemented**:
+- ✅ **TimeWeightedCredibility** (Section 1 below)
+- ✅ **Wilson confidence intervals** (integrated into TimeWeightedCredibility)
+
+**Phase 2 configuration**:
+```python
+# Simple credibility calculation (Phase 2 only)
+simple_credibility_config = {
+    'decay_halflife_years': 2.0,           # Exponential temporal decay
+    'min_sample_size': 15,                  # Minimum datapoints for auto-resolution
+    'confidence_level': 0.95,               # Wilson score confidence level
+    'regime_detection': False,              # No regime-specific scoring
+    'trend_detection': False,               # No trend extrapolation
+    'override_tracking': False,             # No override penalties
+    'context_matching': False               # No multi-dimensional matching
+}
+
+# Phase 2 credibility formula
+credibility_score = base_accuracy * temporal_weight
+
+# Auto-resolution threshold (includes confidence intervals)
+min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
+```
+
+**Use case**: Enables debate auto-resolution (DD-003 Level 2) with statistically sound credibility differentials
+
+**Limitations**:
+- No market regime awareness (bull vs bear performance conflated)
+- No trend detection (improving agents underestimated)
+- No override tracking (blind spots undetected)
+- No context matching (domain specialists not distinguished)
+
+---
+
+### Phase 4: Comprehensive Credibility (Months 7-8)
+
+**Additional components implemented**:
+- ✅ **MarketRegimeDetector** (Section 2 below)
+- ✅ **AgentTrendAnalysis** (Section 3 below)
+- ✅ **HumanOverrideTracking** (Section 4 below)
+- ✅ **Context matching** (Section 5 below)
+- ✅ **ComprehensiveCredibilitySystem** (Section 6 below - orchestrator)
+
+**Phase 4 configuration**:
+```python
+# Comprehensive credibility calculation (Phase 4)
+comprehensive_credibility_config = {
+    'decay_halflife_years': 2.0,           # Exponential temporal decay
+    'min_sample_size': 15,                  # Minimum datapoints for auto-resolution
+    'confidence_level': 0.95,               # Wilson score confidence level
+    'regime_detection': True,               # ✅ Regime-specific scoring (6 regimes)
+    'regime_min_samples': 50,               # Min samples for regime-specific credibility
+    'trend_detection': True,                # ✅ 52-week trend extrapolation
+    'trend_min_r_squared': 0.3,             # Min R² for trend significance
+    'override_tracking': True,              # ✅ Override rate penalties
+    'override_thresholds': [0.20, 0.40],    # Penalty thresholds (15%, 30%)
+    'context_matching': True,               # ✅ Multi-dimensional context
+    'context_dimensions': 5                 # sector, metric_type, time_horizon, size, growth
+}
+
+# Phase 4 credibility formula (full DD-008 spec)
+credibility_score = (
+    base_accuracy *           # Context-matched historical accuracy
+    temporal_weight *         # Exponential decay (2-year half-life)
+    regime_adjustment *       # Current market regime performance
+    trend_adjusted *          # Performance trajectory extrapolation
+    override_penalty          # Human override rate penalty
+)
+```
+
+**Backward compatibility**: Falls back to Phase 2 simple credibility if insufficient data for regime/trend/override/context components
 
 ---
 
 ## System Components
+
+**Note**: Sections below describe the full Phase 4 implementation. For Phase 2, only Section 1 (TimeWeightedCredibility with confidence intervals) is implemented. Sections 2-6 are Phase 4 enhancements.
 
 ### 1. TimeWeightedCredibility
 

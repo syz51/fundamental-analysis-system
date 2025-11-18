@@ -165,10 +165,14 @@ Rejected Option 1 (human-only) due to deadlock risk. Rejected Option 2 (agent-on
 ### Escalation Levels
 
 1. **Agent Negotiation** (15min): Direct evidence exchange
-2. **Facilitator Mediation** (1hr): Auto-resolve if credibility differential >0.25, min 5 precedents
+2. **Facilitator Mediation** (1hr): Auto-resolve if credibility differential >0.25, min 15 historical datapoints per agent
 3. **Human Arbitration** (6hr): Priority routing, 3 concurrent max, workload-aware assignment
 4. **Conservative Default** (provisional): Most cautious position, override window until next gate
 5. **Gate Review**: Validate/override provisionals at Gates 3/5
+
+**Credibility System Integration** (DD-008):
+- **Phase 2 (Months 3-4)**: Simple credibility (overall accuracy + temporal decay + confidence intervals)
+- **Phase 4 (Months 7-8)**: Comprehensive credibility (adds regime, trend, override, context matching)
 
 ### Key Parameters
 
@@ -207,7 +211,7 @@ Rejected Option 1 (human-only) due to deadlock risk. Rejected Option 2 (agent-on
 ## Open Questions
 
 1. **Credibility threshold validation**: Is 0.25 differential optimal? Need A/B testing
-2. **Precedent minimum**: Is 5 historical debates sufficient for auto-resolution?
+2. **Minimum datapoints**: 15 historical datapoints chosen for statistical reliability - validate during Phase 2 testing
 3. **Recomputation cost**: What % of provisionals get overridden? Impact on pipeline timing?
 
 **Blocking**: No - defaults are conservative, can tune during testing

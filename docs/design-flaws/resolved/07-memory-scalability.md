@@ -7,8 +7,8 @@ phase: 3
 effort_weeks: 4
 impact: Performance targets achievable with optimization framework
 blocks: []
-depends_on: ["#2 event-driven sync", "operational agents"]
-domain: ["memory"]
+depends_on: ['#2 event-driven sync', 'operational agents']
+domain: ['memory']
 resolved: 2025-11-17
 resolution: DD-005 Memory Scalability Optimization
 ---

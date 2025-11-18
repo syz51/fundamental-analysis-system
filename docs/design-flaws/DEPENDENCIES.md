@@ -15,7 +15,7 @@ Foundation (Phase 1) ✅ COMPLETE
     │   ├── Flaw #8 ✅ → Debate Deadlock Resolution
     │   ├── Flaw #11 ✅ → Algorithm Specs (specs documented)
     │   ├── Flaw #14 🔴 → Statistical Reliability (blocks #8 auto-resolution)
-    │   ├── Flaw #16 🔴 → Timeline Conflicts (restructure needed)
+    │   ├── Flaw #16 ✅ → Timeline Conflicts (RESOLVED 2025-11-18)
     │   └── Flaw #19 🔴 → Partial Failures (blocks multi-agent)
     │       │
     │       └── Phase 3: Quality & Learning (4 RESOLVED, 2 ACTIVE)
@@ -42,29 +42,29 @@ Foundation (Phase 1) ✅ COMPLETE
 
 ## Dependency Matrix
 
-| Flaw   | Depends On                       | Blocks                             | Phase | Status   |
-| ------ | -------------------------------- | ---------------------------------- | ----- | -------- |
-| #1 ✅  | -                                | #3, #9                             | 1     | RESOLVED |
-| #2 ✅  | -                                | #7, #8                             | 1     | RESOLVED |
-| #3 ✅  | #1                               | #9                                 | 3     | RESOLVED |
-| #4 ✅  | Operational agents               | -                                  | 4     | RESOLVED |
-| #5 ✅  | Pattern storage                  | -                                  | 4     | RESOLVED |
-| #6 🟢  | Human gate data                  | -                                  | 5     | DEFERRED |
-| #7 ✅  | #2, operational agents           | -                                  | 3     | RESOLVED |
-| #8 ✅  | #2                               | ~~Core agent testing~~ (unblocked) | 2     | RESOLVED |
-| #9 ✅  | #1, #3                           | -                                  | 4     | RESOLVED |
-| #10 ✅ | #1 (Gate 6)                      | -                                  | 4     | RESOLVED |
-| #11 ✅ | #8 (debate protocol)             | ~~Implementation pending~~         | 2     | RESOLVED |
-| #12 ✅ | DD-009, #9 (post-mortem)         | ~~Post-mortem~~ (unblocked)        | 3     | RESOLVED |
-| #13 🔴 | Gate 6, DD-007 (pattern val)     | Auto-approval deployment           | 3     | ACTIVE   |
-| #14 🔴 | Agent perf data, debate protocol | Auto-resolution (#8)               | 2-3   | ACTIVE   |
-| #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                 | 3     | ACTIVE   |
-| #16 🔴 | - (roadmap only)                 | Phase 2 implementation             | 2     | ACTIVE   |
-| #17 🔴 | DD-009, Neo4j                    | Production reliability             | 4     | ACTIVE   |
-| #18 🟢 | Human gate data, #6              | -                                  | 5     | DEFERRED |
-| #19 🔴 | Multi-agent workflows            | Multi-agent reliability            | 2     | ACTIVE   |
-| #20 🔴 | Memory system (L1/L2/L3)         | Production security                | 3     | ACTIVE   |
-| #21 🔴 | Neo4j, DD-004 auto-approval      | Scale to 1000+ stocks              | 4     | ACTIVE   |
+| Flaw   | Depends On                       | Blocks                                 | Phase | Status   |
+| ------ | -------------------------------- | -------------------------------------- | ----- | -------- |
+| #1 ✅  | -                                | #3, #9                                 | 1     | RESOLVED |
+| #2 ✅  | -                                | #7, #8                                 | 1     | RESOLVED |
+| #3 ✅  | #1                               | #9                                     | 3     | RESOLVED |
+| #4 ✅  | Operational agents               | -                                      | 4     | RESOLVED |
+| #5 ✅  | Pattern storage                  | -                                      | 4     | RESOLVED |
+| #6 🟢  | Human gate data                  | -                                      | 5     | DEFERRED |
+| #7 ✅  | #2, operational agents           | -                                      | 3     | RESOLVED |
+| #8 ✅  | #2                               | ~~Core agent testing~~ (unblocked)     | 2     | RESOLVED |
+| #9 ✅  | #1, #3                           | -                                      | 4     | RESOLVED |
+| #10 ✅ | #1 (Gate 6)                      | -                                      | 4     | RESOLVED |
+| #11 ✅ | #8 (debate protocol)             | ~~Implementation pending~~             | 2     | RESOLVED |
+| #12 ✅ | DD-009, #9 (post-mortem)         | ~~Post-mortem~~ (unblocked)            | 3     | RESOLVED |
+| #13 🔴 | Gate 6, DD-007 (pattern val)     | Auto-approval deployment               | 3     | ACTIVE   |
+| #14 🔴 | Agent perf data, debate protocol | Auto-resolution (#8)                   | 2-3   | ACTIVE   |
+| #15 🔴 | Memory system (DD-005, DD-002)   | Memory reliability                     | 3     | ACTIVE   |
+| #16 ✅ | - (roadmap only)                 | ~~Phase 2 implementation~~ (unblocked) | 2     | RESOLVED |
+| #17 🔴 | DD-009, Neo4j                    | Production reliability                 | 4     | ACTIVE   |
+| #18 🟢 | Human gate data, #6              | -                                      | 5     | DEFERRED |
+| #19 🔴 | Multi-agent workflows            | Multi-agent reliability                | 2     | ACTIVE   |
+| #20 🔴 | Memory system (L1/L2/L3)         | Production security                    | 3     | ACTIVE   |
+| #21 🔴 | Neo4j, DD-004 auto-approval      | Scale to 1000+ stocks                  | 4     | ACTIVE   |
 
 ---
 
@@ -85,7 +85,7 @@ Foundation (Phase 1) ✅ COMPLETE
 - **#13** blocks → Auto-approval deployment (95% accuracy target)
 - **#14** blocks → Auto-resolution never triggers (n=5 sample size too low)
 - **#15** blocks → Memory reliability (infinite recursion risk)
-- **#16** blocks → Phase 2 implementation START (credibility circular dependency)
+- **#16** ~~blocks~~ → Phase 2 implementation START (RESOLVED - phased credibility)
 - **#17** blocks → Production reliability (corruption recovery missing)
 - **#19** blocks → Multi-agent reliability (undefined failure behavior)
 - **#20** blocks → Production security (no access control)
@@ -177,7 +177,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 **_Stream C: Timeline & Planning_**
 
-- #16 (Timeline Conflicts) - 2 weeks _(unblocked, can start immediately)_
+- #16 (Timeline Conflicts) - 2 weeks _(RESOLVED 2025-11-18)_
 
 **_Stream D: Validation_**
 
@@ -191,7 +191,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 
 **Week 1-2:**
 
-- [x] #16 (Timeline Conflicts) - 2w **[HIGHEST PRIORITY - unblocks Phase 2]**
+- [x] #16 (Timeline Conflicts) - 2w **[RESOLVED 2025-11-18 - Phase 2 unblocked]**
 
 **Week 3-6 (Parallel):**
 
@@ -223,7 +223,7 @@ These flaws can be worked on in parallel (no inter-dependencies):
 ### Highest Risk if Unfixed (CRITICAL)
 
 1. **Flaw #21** (Scalability Bottlenecks) - blocks 1000+ stock target, need 18 FTE without fix
-2. **Flaw #16** (Timeline Conflicts) - blocks Phase 2 implementation START
+2. **Flaw #16** (Timeline Conflicts) - ~~blocks Phase 2 implementation START~~ RESOLVED 2025-11-18
 
 ### High Risk (Should Fix Before MVP)
 

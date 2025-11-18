@@ -7,8 +7,8 @@ phase: 4
 effort_weeks: 2
 impact: Enables pattern re-validation, post-mortem investigation
 blocks: []
-depends_on: ["Pattern storage system operational"]
-domain: ["data", "memory"]
+depends_on: ['Pattern storage system operational']
+domain: ['data', 'memory']
 resolved: 2025-11-17
 resolution: DD-009 Data Retention & Pattern Evidence Architecture
 ---

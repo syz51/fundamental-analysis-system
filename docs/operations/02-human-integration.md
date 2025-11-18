@@ -147,6 +147,8 @@ The system shows historical accuracy of similar assumptions, enabling humans to 
 ```yaml
 Display:
   - Conflicting agent positions with credibility scores
+    - Phase 2 (Months 3-4): Simple credibility (overall accuracy + temporal decay + confidence intervals)
+    - Phase 4 (Months 7-8): Comprehensive credibility (adds regime, trend, override, context)
   - Historical precedents for similar debates
   - Pattern success rates supporting each position
   - Agent track records in this context

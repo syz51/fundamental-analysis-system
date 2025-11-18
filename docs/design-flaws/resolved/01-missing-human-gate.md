@@ -6,9 +6,9 @@ priority: critical
 phase: 1
 effort_weeks: 2
 impact: Blocks safe learning loop implementation
-blocks: ["#3", "#9"]
+blocks: ['#3', '#9']
 depends_on: []
-domain: ["learning", "human-gates"]
+domain: ['learning', 'human-gates']
 resolved: 2025-11-17
 resolution: DD-001 Gate 6 Learning Validation
 ---

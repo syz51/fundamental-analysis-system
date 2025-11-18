@@ -6,9 +6,9 @@ priority: critical
 phase: 4
 effort_weeks: 8
 impact: Cannot scale to 1000+ stocks without redesign
-blocks: ["Scale to 1000+ stocks"]
-depends_on: ["Neo4j operational", "DD-004 auto-approval"]
-domain: ["human-gates", "architecture"]
+blocks: ['Scale to 1000+ stocks']
+depends_on: ['Neo4j operational', 'DD-004 auto-approval']
+domain: ['human-gates', 'architecture']
 sub_issues:
   - id: A1
     severity: high
@@ -38,12 +38,14 @@ Two architectural bottlenecks prevent scaling to production targets:
 ### Sub-Issue A1: Knowledge Graph Single Point of Failure
 
 **Files**:
+
 - `docs/architecture/01-system-overview.md:1-77`
 - `docs/architecture/02-memory-system.md`
 
 **Problem**: All memory tiers (L1, L2, L3) depend on central Neo4j graph, but no high-availability or failover specified.
 
 **Current Architecture**:
+
 ```text
 Memory & Learning Layer
 │
@@ -57,6 +59,7 @@ If L3 fails → System unavailable
 ```
 
 **Missing**:
+
 - Neo4j clustering/replication strategy
 - Failover procedures (manual? automatic?)
 - Read replica configuration
@@ -64,6 +67,7 @@ If L3 fails → System unavailable
 - Split-brain prevention
 
 **Availability Impact**:
+
 ```text
 Neo4j downtime scenarios:
   - Planned maintenance: 1-2hr/month
@@ -77,12 +81,14 @@ Availability: 99.4% (target should be 99.9%+)
 ### Sub-Issue A2: Human Gate Scaling Bottleneck
 
 **Files**:
+
 - `docs/operations/01-analysis-pipeline.md`
 - `docs/operations/02-human-integration.md`
 
 **Problem**: Analysis pipeline blocks at 6 human gates. At 1000 stocks/year scale, requires 18 FTE humans.
 
 **Scaling Calculation**:
+
 ```yaml
 Target: 1000 stocks/year (Month 12)
        = ~20 stocks/week
@@ -144,6 +150,7 @@ Monitoring:
 ```
 
 **Cost Impact**:
+
 ```text
 Single instance: $500/mo (r5.2xlarge)
 HA cluster:
@@ -163,8 +170,7 @@ Three options to scale human gates:
 Current Target: 50% auto-approval (DD-004)
 Scaling Target: 90% auto-approval
 
-At 90% auto-approval:
-  288hr × 10% = 28.8 hr/day human-required
+At 90% auto-approval: 288hr × 10% = 28.8 hr/day human-required
   28.8hr / 8hr = 3.6 FTE ≈ 4 humans (feasible)
 
 Requirements:
@@ -201,8 +207,7 @@ Merge gates:
   - Gate 5: Final decision (unchanged)
   - Gate 6: Learning (async)
 
-Reduced to 4 gates:
-  4 gates × 12hr = 48 hr/stock
+Reduced to 4 gates: 4 gates × 12hr = 48 hr/stock
   4 stocks × 48hr = 192 hr/day
   192hr × 50% = 96 hr/day
   96hr / 8hr = 12 FTE (still high)
@@ -224,12 +229,14 @@ Reduced to 4 gates:
 ## Success Criteria
 
 ### A1: Knowledge Graph HA
+
 - ✅ Cluster operational (3 core + 2 replica)
 - ✅ Automatic failover <10s
 - ✅ Availability 99.95% (measured over 30 days)
 - ✅ Backup restoration tested (<1hr RTO)
 
 ### A2: Human Gate Scaling
+
 - ✅ Auto-approval rate ≥90% in production
 - ✅ Auto-approval accuracy >95% (validated)
 - ✅ Human team ≤5 FTE at 1000 stocks/year

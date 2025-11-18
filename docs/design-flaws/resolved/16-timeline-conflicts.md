@@ -1,7 +1,7 @@
 ---
 flaw_id: 16
 title: Timeline & Dependency Conflicts
-status: active
+status: resolved
 priority: high
 phase: 2
 effort_weeks: 2
@@ -17,11 +17,13 @@ sub_issues:
     severity: medium
     title: Benchmarking sprints missing
 discovered: 2025-11-17
+resolved: 2025-11-18
+resolution_approach: Phased credibility implementation + benchmark sprint allocation
 ---
 
 # Flaw #16: Timeline & Dependency Conflicts
 
-**Status**: 🔴 ACTIVE
+**Status**: ✅ RESOLVED
 **Priority**: High
 **Impact**: Phase 2 blocked by Phase 4 dependency, underestimated timelines
 **Phase**: Immediate (affects Phases 2-4)
@@ -202,3 +204,53 @@ Phase 4: Months 7-8
 - **Blocks**: Phase 2 implementation (immediate blocker)
 - **Depends On**: Debate resolution design (Flaw #8 - RESOLVED)
 - **Related**: DD-008 (Credibility), DD-005 (Scalability), Roadmap
+
+---
+
+## Resolution (2025-11-18)
+
+**Approach Selected**: Phased credibility implementation (H1) + roadmap timeline adjustments (M8)
+
+### H1 Resolution: Phased Credibility Implementation
+
+**Decision**: Implement credibility system in two phases for iterative development:
+
+**Phase 2 (Months 3-4) - Simple Credibility**:
+
+- Overall accuracy + exponential temporal decay (2yr half-life)
+- Wilson confidence intervals for statistical reliability
+- Minimum 15 datapoints (increased from 5 for reliability)
+- **No** regime/trend/override/context matching
+- Formula: `credibility = base_accuracy × temporal_weight`
+
+**Phase 4 (Months 7-8) - Comprehensive Credibility**:
+
+- Adds all DD-008 components: regime (6 types), trend (52-week), override tracking, context matching
+- Full multi-factor formula with backward compatibility
+- Falls back to simple credibility if insufficient data
+
+**Rationale**: Phased approach has design value beyond timeline resolution:
+
+- Faster MVP validation with simpler system
+- Learn from Phase 2 usage patterns before investing in comprehensive system
+- Iterative development reduces risk
+
+### M8 Resolution: Roadmap Timeline Updates
+
+**Decision**: Add benchmark sprint time allocations to roadmap estimates
+
+- Acknowledge benchmarking as explicit activity (not missing allocation)
+- Roadmap timelines are design-stage assumptions, will be refined during implementation
+
+### Documentation Updates
+
+**Files Updated**:
+
+1. `DD-008_AGENT_CREDIBILITY_SYSTEM.md` - Added Implementation Phases section
+2. `05-credibility-system.md` - Added Phase 2 & 4 configuration details
+3. `DD-003_DEBATE_DEADLOCK_RESOLUTION.md` - Updated min samples (5→15), added phase notes
+4. `07-collaboration-protocols.md` - Added Phase 2 simple & Phase 4 comprehensive formulas
+5. `01-roadmap.md` - Detailed Phase 2 & 4 credibility milestones
+6. `02-human-integration.md` - Updated Gate 4 with phase capability notes
+
+**Impact**: Flaw resolved. Phase 2 unblocked with simple credibility. Phase 4 enhances with comprehensive system.

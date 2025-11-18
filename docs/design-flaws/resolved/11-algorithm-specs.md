@@ -7,8 +7,8 @@ phase: 2
 effort_weeks: 5
 impact: Blocks automation features implementation
 blocks: []
-depends_on: ["#8 debate protocol"]
-domain: ["architecture", "agents", "learning"]
+depends_on: ['#8 debate protocol']
+domain: ['architecture', 'agents', 'learning']
 sub_issues:
   - id: C1
     severity: critical

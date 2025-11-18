@@ -7,8 +7,8 @@ phase: 4
 effort_weeks: 3
 impact: Accurate credibility weighting adapts to regime changes
 blocks: []
-depends_on: ["Operational agents with performance data"]
-domain: ["agents"]
+depends_on: ['Operational agents with performance data']
+domain: ['agents']
 resolved: 2025-11-17
 resolution: DD-008 Agent Credibility System
 ---

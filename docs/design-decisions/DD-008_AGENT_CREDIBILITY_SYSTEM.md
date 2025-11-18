@@ -274,6 +274,83 @@ min_differential = max(0.25, agent_A_CI + agent_B_CI)
 
 ---
 
+## Implementation Phases
+
+To balance rapid delivery with comprehensive functionality, credibility system implementation is split into two phases:
+
+### Phase 2: Simple Credibility (Months 3-4)
+
+**Scope**: Minimum viable credibility for debate auto-resolution
+
+**Components**:
+1. **Temporal decay**: Exponential weighting with 2-year half-life
+2. **Confidence intervals**: Wilson score intervals for sample size adjustment
+
+**Formula**:
+```python
+credibility_score = (
+    base_accuracy *           # Overall domain accuracy
+    temporal_weight *         # Exponential decay (2-yr half-life)
+    1.0                      # No regime/trend/override adjustments
+)
+
+# Auto-resolution threshold adjusted for confidence
+min_differential = max(0.25, wilson_CI_A + wilson_CI_B)
+```
+
+**Minimum sample size**: 15 datapoints (increased from 5 for statistical reliability)
+
+**Use case**: Enables debate auto-resolution (DD-003 Level 2) with statistically sound credibility differentials
+
+**Limitations**:
+- No market regime awareness (bull vs bear performance conflated)
+- No trend detection (improving agents underestimated)
+- No override tracking (blind spots undetected)
+- No context matching (domain specialists not distinguished)
+
+**Estimated effort**: 1 week implementation + 3 days testing
+
+---
+
+### Phase 4: Comprehensive Credibility (Months 7-8)
+
+**Scope**: Full DD-008 specification with all 6 components
+
+**Added components**:
+3. **Market regime-specific credibility**: 6 regimes (BULL_LOW_RATES, BULL_HIGH_RATES, BEAR_HIGH_RATES, BEAR_LOW_RATES, HIGH_VOLATILITY, NORMAL)
+4. **Performance trend detection**: 52-week linear regression, extrapolation (R² > 0.3)
+5. **Human override tracking**: Override rate penalties (>20% = 15% penalty, >40% = 30% penalty)
+6. **Multi-dimensional context matching**: 5 dimensions (sector, metric_type, time_horizon, company_size, growth_stage)
+
+**Formula**: (as specified in Core Components above)
+
+**Use case**: Precise credibility scoring for learning system (DD-006), pattern validation (DD-007), advanced debate resolution
+
+**Backward compatibility**: Graceful enhancement - Phase 2 credibility remains available as fallback if insufficient data for Phase 4 components
+
+**Estimated effort**: 2 weeks implementation + 1 week testing/validation
+
+---
+
+### Migration Path
+
+**Week 1-2 (Phase 4)**: Parallel calculation
+- Calculate both Phase 2 (simple) and Phase 4 (comprehensive) credibility
+- Use Phase 2 for decisions (production)
+- Log Phase 4 (shadow mode) for comparison
+
+**Week 3 (Phase 4)**: A/B testing
+- 50% debates use Phase 4 credibility
+- Measure auto-resolution accuracy, override rates
+- Validate Phase 4 performs better (>10% improvement)
+
+**Week 4 (Phase 4)**: Full rollout
+- 100% debates use Phase 4 credibility
+- Monitor for regressions
+- Keep Phase 2 calculation for 30 days (rollback option)
+
+---
+
 ## Options Considered
 
 ### Option 1: Simple Time Buckets (Baseline - Rejected)

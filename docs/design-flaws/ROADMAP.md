@@ -38,20 +38,25 @@ Timeline for addressing design flaws across development phases.
 - ✅ 5-tier debate escalation system
 - ✅ Algorithms documented (C1, M3, G5)
 
-### Active Blockers (3/5)
+### Active Blockers (2/5)
 
 | Flaw                                 | Priority | Effort | Status    | Blocks                  |
 | ------------------------------------ | -------- | ------ | --------- | ----------------------- |
-| [#16](16-timeline-conflicts.md)      | High     | 2w     | 🔴 ACTIVE | Phase 2 START           |
 | [#14](14-statistical-reliability.md) | High     | 4w     | 🔴 ACTIVE | Auto-resolution         |
 | [#19](19-partial-failures.md)        | High     | 4w     | 🔴 ACTIVE | Multi-agent reliability |
 
+**Recently Resolved:**
+
+| Flaw                                      | Priority | Effort | Resolved   | Resolution                         |
+| ----------------------------------------- | -------- | ------ | ---------- | ---------------------------------- |
+| [#16](resolved/16-timeline-conflicts.md)  | High     | 2w     | 2025-11-18 | Phased credibility + roadmap updates |
+
 **Required Before Phase 3:**
 
-- [ ] Restructure roadmap (#16)
-  - [ ] Add phased credibility (simplified Phase 2, comprehensive Phase 4)
-  - [ ] Add benchmark sprints (1 week each phase)
-  - [ ] Update timeline dependencies
+- [x] Restructure roadmap (#16) - RESOLVED 2025-11-18
+  - [x] Add phased credibility (simplified Phase 2, comprehensive Phase 4)
+  - [x] Add benchmark sprints (1 week each phase)
+  - [x] Update timeline dependencies
 - [ ] Fix statistical reliability (#14)
   - [ ] Standardize Wilson score confidence intervals
   - [ ] Increase min sample size 5→15

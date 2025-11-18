@@ -120,16 +120,24 @@ The debate protocol uses a tiered escalation approach with timeouts and fallback
 **Auto-Resolution Criteria**:
 
 - Credibility gap threshold: 0.25 (or sum of confidence intervals, whichever is larger)
-- Based on comprehensive multi-factor credibility calculation:
-  - **Recency weighting** (50%): Exponential decay with configurable half-life (default 2 years)
-  - **Regime-specific accuracy** (30%): Performance in current market regime (bull/bear, rates, volatility)
-  - **Historical accuracy** (20%): Overall domain-specific track record
-  - **Context adjustment** (30% weight if sufficient data): Multi-dimensional context matching (sector, metric, horizon, size, stage)
-  - **Performance trend**: Extrapolate agent improvement/degradation trajectory (if R² > 0.3)
-  - **Override penalty**: Credibility reduction if high human override rate (>20%)
-- Requires minimum 5 historical data points per agent for basic credibility
+- Requires minimum 15 historical data points per agent for credibility calculation
+- Credibility system evolves across implementation phases (see DD-008):
+
+**Phase 2 (Months 3-4) - Simple Credibility**:
+- **Base accuracy**: Overall domain-specific track record
+- **Temporal weighting**: Exponential decay with 2-year half-life
+- **Confidence intervals**: Wilson score intervals for statistical reliability
+- Formula: `credibility = base_accuracy × temporal_weight`
+
+**Phase 4 (Months 7-8) - Comprehensive Credibility** (adds):
+- **Regime-specific accuracy** (30%): Performance in current market regime (bull/bear, rates, volatility)
+- **Context matching** (30% weight if sufficient data): Multi-dimensional context (sector, metric, horizon, size, stage)
+- **Performance trend**: Extrapolate improvement/degradation trajectory (if R² > 0.3)
+- **Override penalty**: Credibility reduction if high human override rate (>20%)
 - Requires minimum 50 data points for regime-specific scoring
-- Falls back to escalation if insufficient data or credibility differential below threshold
+- Formula: `credibility = base_accuracy × temporal_weight × regime_adjustment × trend_adjusted × override_penalty`
+
+**Fallback**: If insufficient data or credibility differential below threshold → escalate to Level 3
 
 #### Level 3: Human Arbitration - Gate 4 (6hr timeout)
 

@@ -204,11 +204,10 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Architecture (6 flaws: 4 active, 2 resolved)</b></summary>
+<summary><b>Architecture (6 flaws: 3 active, 3 resolved)</b></summary>
 
 **Active:**
 
-- [#16](active/16-timeline-conflicts.md) - Timeline & Dependency Conflicts (H, Phase 2)
 - [#19](active/19-partial-failures.md) - Partial Failure Handling Undefined (H, Phase 2)
 - [#20](active/20-access-control.md) - Memory System Access Control Undefined (M, Phase 3)
 - [#21](active/21-scalability.md) - Scalability Architecture Bottlenecks (C, Phase 4)
@@ -217,6 +216,7 @@ Navigate by system component:
 
 - [#8](resolved/08-debate-deadlock.md)✅ - Debate Resolution Deadlock Scenario
 - [#11](resolved/11-algorithm-specs.md)✅ - Missing Algorithm Specifications
+- [#16](resolved/16-timeline-conflicts.md)✅ - Timeline & Dependency Conflicts (2025-11-18)
 
 </details>
 

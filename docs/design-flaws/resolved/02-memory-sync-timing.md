@@ -6,9 +6,9 @@ priority: critical
 phase: 1
 effort_weeks: 2
 impact: Required for reliable inter-agent communication
-blocks: ["#7", "#8"]
+blocks: ['#7', '#8']
 depends_on: []
-domain: ["memory"]
+domain: ['memory']
 resolved: 2025-11-17
 resolution: DD-002 Event-Driven Memory Synchronization
 ---

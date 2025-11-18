@@ -116,6 +116,9 @@ The implementation follows an agile methodology with continuous integration of m
   - Structured debate protocols (5-level escalation)
   - Historical context loading
   - **Credibility-weighted auto-resolution (Level 2, >0.25 threshold)**
+    - **Phase 2 Simple Credibility** (DD-008): Overall accuracy + temporal decay (2yr half-life) + Wilson confidence intervals
+    - Min 15 historical datapoints per agent
+    - No regime/trend/override/context adjustments (Phase 4 enhancements)
   - **Conservative default fallback logic (Level 4)**
   - **Provisional resolution tracking and override mechanisms**
   - Precedent-based arguments
@@ -345,6 +348,10 @@ Critical testing required for debate deadlock resolution system:
 
 - [ ] Advanced memory scalability optimizations (DD-005)
   - Implement incremental credibility updates (800ms → <10ms)
+    - **Phase 4 Comprehensive Credibility** (DD-008): Adds regime, trend, override, context matching to Phase 2 simple credibility
+    - 6 market regimes (BULL_LOW_RATES, BULL_HIGH_RATES, BEAR_HIGH_RATES, BEAR_LOW_RATES, HIGH_VOLATILITY, NORMAL)
+    - 52-week trend detection (R² > 0.3), override tracking (>20%/40% penalties)
+    - Multi-dimensional context matching (5 dimensions)
   - Deploy parallel query execution (5× speedup)
   - Build memory pruning strategy (>2yr archival)
   - Implement similarity index rebuild pipeline
