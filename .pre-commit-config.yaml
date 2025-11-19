@@ -1,0 +1,94 @@
+# Pre-commit hooks configuration for production-grade Python development
+# Run `pre-commit install` to install the git hooks
+# Run `pre-commit run --all-files` to run all hooks manually
+
+repos:
+  # Ruff - Fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.5
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi]
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Mypy - Static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-PyYAML
+          - elastic-transport>=8.17.0
+          - elasticsearch<9.0.0
+        args: [--config-file=pyproject.toml]
+        exclude: ^(tests/|src/storage/migrations/)
+
+  # Bandit - Security linting
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.1
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # Trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      # End of file fixer
+      - id: end-of-file-fixer
+      # YAML validation
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom YAML tags
+      # Large files check
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      # Merge conflict markers
+      - id: check-merge-conflict
+      # Python syntax check
+      - id: check-ast
+      # JSON validation
+      - id: check-json
+      # TOML validation
+      - id: check-toml
+      # Prevent commits to main
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+  # Local hooks
+  - repo: local
+    hooks:
+      # Coverage threshold enforcement
+      - id: pytest-coverage
+        name: pytest coverage check (95% minimum)
+        entry: bash -c 'PYTHONPATH=$PWD uv run pytest tests/unit/ --cov=src --cov-fail-under=95 --quiet --no-cov-on-fail'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+# Configuration
+default_language_version:
+  python: python3.13
+
+# Fail fast on first error
+fail_fast: true
+
+# Exclude paths
+exclude: |
+  (?x)^(
+      \.git/|
+      \.venv/|
+      __pycache__/|
+      .*\.egg-info/|
+      build/|
+      dist/|
+      src/storage/migrations/versions/.*\.py$
+  )

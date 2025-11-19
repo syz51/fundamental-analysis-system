@@ -14,8 +14,9 @@ Parses YAML frontmatter from all flaw files and generates INDEX.md with:
 """
 
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+
 import yaml
 
 DESIGN_FLAWS_DIR = Path(__file__).parent
@@ -23,7 +24,7 @@ DESIGN_FLAWS_DIR = Path(__file__).parent
 
 def parse_frontmatter(filepath):
     """Extract YAML frontmatter from a markdown file."""
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
     # Extract YAML frontmatter
@@ -425,12 +426,18 @@ def generate_index(flaws):
     content.append("")
     content.append("- [README.md](README.md) - How to navigate and use this folder")
     content.append("- [STATUS.md](STATUS.md) - Current status and progress tracking")
-    content.append("- [RESOLVING.md](RESOLVING.md) - Resolution workflow and guidelines")
-    content.append("- [Minor Issues](resolved/MINOR-ISSUES.md) - 6 low-priority clarifications (all resolved 2025-11-18)")
+    content.append(
+        "- [RESOLVING.md](RESOLVING.md) - Resolution workflow and guidelines"
+    )
+    content.append(
+        "- [Minor Issues](resolved/MINOR-ISSUES.md) - 6 low-priority clarifications (all resolved 2025-11-18)"
+    )
     content.append(
         "- [Design Decisions](../design-decisions/) - DD-XXX resolution documents"
     )
-    content.append("- [Implementation Roadmap](../implementation/01-roadmap.md) - Phase timeline")
+    content.append(
+        "- [Implementation Roadmap](../implementation/01-roadmap.md) - Phase timeline"
+    )
     content.append("")
     content.append("---")
     content.append("")

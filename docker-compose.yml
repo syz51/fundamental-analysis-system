@@ -17,19 +17,101 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
+  # L1 Working Memory (Hot)
+  redis_l1:
     image: redis:7
-    container_name: fundamental_redis
+    container_name: fundamental_redis_l1
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis_l1_data:/data
+    command: redis-server --appendonly yes --save 900 1
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # L2 Agent Memory (Warm) - Cache only
+  redis_l2:
+    image: redis:7
+    container_name: fundamental_redis_l2
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_l2_data:/data
+    command: redis-server --save 900 1
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Checkpoint Memory - High Durability
+  redis_checkpoint:
+    image: redis:7
+    container_name: fundamental_redis_checkpoint
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_checkpoint_data:/data
+    command: redis-server --appendonly yes --save 60 1
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: fundamental_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+    container_name: fundamental_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.14.0
+    container_name: fundamental_kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://fundamental_elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
 volumes:
   postgres_data:
-  redis_data:
+  redis_l1_data:
+  redis_l2_data:
+  redis_checkpoint_data:
+  minio_data:
+  elasticsearch_data:

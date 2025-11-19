@@ -17,9 +17,18 @@ We use **Docker Compose** to manage our database services, ensuring consistent e
     - **Volume**: `postgres_data:/var/lib/postgresql` (Compatible with PG 18+ standards)
     - **Default DB**: `fundamental_analysis`
     - **Credentials**: `postgres` / `postgres`
-  - **Redis**: Image `redis:7`
+  - **Redis (L1 Working Memory)**: Image `redis:7`
     - **Port**: `6379`
-    - **Volume**: `redis_data:/data`
+    - **Volume**: `redis_l1_data:/data`
+    - **Persistence**: AOF + RDB (Hybrid)
+  - **Redis (L2 Cache)**: Image `redis:7`
+    - **Port**: `6380`
+    - **Volume**: `redis_l2_data:/data`
+    - **Persistence**: RDB Only
+  - **Redis (Checkpoint)**: Image `redis:7`
+    - **Port**: `6381`
+    - **Volume**: `redis_checkpoint_data:/data`
+    - **Persistence**: AOF + RDB (Hybrid)
 
 ### Running the Infrastructure
 
@@ -148,3 +157,7 @@ All tables in migration scripts are explicitly schema-qualified (e.g., `CREATE T
 
 - **Description**: "Initial schema"
 - **Content**: Contains the DDL for all base tables defined in Design Decisions DD-011, DD-012, DD-017, DD-019, and DD-020.
+
+## Related Guides
+
+- [Elasticsearch Setup & Search Component Guide](./03-elasticsearch-setup.md)

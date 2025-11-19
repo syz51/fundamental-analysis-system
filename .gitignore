@@ -90,3 +90,5 @@ site/
 # Logs
 *.log
 logs/
+
+.mc_config/
