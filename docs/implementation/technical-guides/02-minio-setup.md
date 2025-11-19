@@ -23,13 +23,25 @@ The MinIO service is defined in `docker-compose.yml`:
 
 The following buckets are created to organize data according to the system's lifecycle policies:
 
-| Bucket Name        | Logical Path (Docs)      | Purpose                                                                |
-| ------------------ | ------------------------ | ---------------------------------------------------------------------- |
-| `raw`              | `/data/raw`              | Unprocessed source data (SEC filings, transcripts, news, market data). |
-| `processed`        | `/data/processed`        | Cleaned and structured data (financial statements, ratios, sentiment). |
-| `models`           | `/data/models`           | Valuation models and scenario analysis files (Excel, JSON, Parquet).   |
-| `pattern-archives` | `/data/pattern_archives` | Tier 1 and Tier 2 archives for critical pattern evidence (DD-009).     |
-| `outputs`          | `/data/outputs`          | Final analysis products (reports, watchlists, decision logs).          |
+| Bucket Name                | Logical Path (Docs)      | Versioning | Purpose                                                                |
+| -------------------------- | ------------------------ | ---------- | ---------------------------------------------------------------------- |
+| `raw`                      | `/data/raw`              | ✅ Enabled | Unprocessed source data (SEC filings, transcripts, news, market data). |
+| `processed`                | `/data/processed`        | -          | Cleaned and structured data (financial statements, ratios, sentiment). |
+| `models`                   | `/data/models`           | -          | Valuation models and scenario analysis files (Excel, JSON, Parquet).   |
+| `pattern-archives`         | `/data/pattern_archives` | ✅ Enabled | Tier 1 and Tier 2 archives for critical pattern evidence (DD-009).     |
+| `outputs`                  | `/data/outputs`          | -          | Final analysis products (reports, watchlists, decision logs).          |
+| `neo4j-backups-primary`    | -                        | -          | Neo4j database backups (DD-021 HA requirements).                       |
+| `postgres-backups-primary` | -                        | -          | PostgreSQL database backups (DD-021 HA requirements).                  |
+
+**_Versioning Rationale (Development vs. Production)_**
+
+In the current development setup, versioning is selectively enabled only for the `raw` and `pattern-archives` buckets. This design choice is intentional for the following reasons:
+
+- **`raw` bucket**: Versioning is enabled to maintain an immutable audit trail of unprocessed source data, which is critical for compliance and re-validation of patterns.
+- **`pattern-archives` bucket**: Versioning is enabled as mandated by [DD-009: Data Retention & Pattern Evidence](../../design-decisions/DD-009_DATA_RETENTION_PATTERN_EVIDENCE.md) to ensure the preservation of critical pattern evidence used in investment decisions.
+- **Other buckets (`processed`, `models`, `outputs`, `*-backups-primary`)**: These buckets primarily store derived or transient data that can be regenerated from source data or are managed by other backup strategies. Versioning is not enabled in the development environment to optimize local storage and performance.
+
+This selective approach aligns with a **phased implementation strategy**. While versioning is limited in development, a more comprehensive versioning policy is planned for the production environment (e.g., AWS S3) to meet broader data governance and disaster recovery requirements, as outlined in the "Production vs. Development" table below and the project's [Roadmap](../../implementation/01-roadmap.md).
 
 > **Note**: The `/data/memory` paths for Knowledge Graph and Agent Memories are stored in Neo4j and Redis, respectively, not MinIO. Only the `pattern_archives` component of memory uses object storage.
 
@@ -61,6 +73,25 @@ The following buckets are created to organize data according to the system's lif
    - Configure a local `mc` alias named `fundamental` pointing to localhost:9000.
    - Create all required buckets if they don't exist.
    - Use a local `.mc_config` directory to avoid modifying your global system configuration.
+
+## Verification
+
+### S3 Select Capability
+
+To verify S3 Select functionality (required by DD-013), run the verification script:
+
+```bash
+./scripts/verify_s3_select.sh
+```
+
+This script:
+
+- Creates a test bucket with sample JSON data
+- Executes an S3 Select SQL query to filter records
+- Validates that MinIO correctly processes the query
+- Cleans up test resources automatically
+
+Expected output: `✅ SUCCESS: S3 Select is active and filtering correctly.`
 
 ## Accessing Data
 
