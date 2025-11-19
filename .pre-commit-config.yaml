@@ -60,6 +60,18 @@ repos:
       - id: no-commit-to-branch
         args: [--branch, main, --branch, master]
 
+  # Local hooks
+  - repo: local
+    hooks:
+      # Coverage threshold enforcement
+      - id: pytest-coverage
+        name: pytest coverage check (95% minimum)
+        entry: bash -c 'PYTHONPATH=$PWD uv run pytest tests/unit/ --cov=src --cov-fail-under=95 --quiet --no-cov-on-fail'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
 # Configuration
 default_language_version:
   python: python3.14

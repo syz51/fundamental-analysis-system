@@ -11,6 +11,7 @@ dependencies = [
 	"elasticsearch<9.0.0",
 	"greenlet>=3.2.4",
 	"pyyaml>=6.0",
+	"redis>=5.0.0",
 	"sqlalchemy>=2.0.44",
 ]
 
@@ -136,6 +137,10 @@ pretty = true
 module = "elasticsearch.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "redis.*"
+ignore_missing_imports = true
+
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "build"]
 skips = ["B101", "B601"]
@@ -158,4 +163,9 @@ exclude_lines = [
 	"if __name__ == .__main__.:",
 	"if TYPE_CHECKING:",
 	"@abstractmethod",
+]
+
+[dependency-groups]
+dev = [
+    "types-redis>=4.6.0.20241004",
 ]

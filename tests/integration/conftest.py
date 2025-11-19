@@ -7,6 +7,11 @@ import pytest
 from elasticsearch import AsyncElasticsearch
 from src.storage.search_tool import SearchClient
 
+try:
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
+
 # Environment variables for service URLs
 ES_URL = os.getenv("ES_URL", "http://localhost:9200")
 POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql://postgres:postgres@localhost:5432/fundamental_analysis_test")
@@ -58,6 +63,7 @@ async def postgres_pool():
     Provides an asyncpg connection pool for integration tests.
     Automatically closes the pool after all tests complete.
     """
+    pool = None
     try:
         pool = await asyncpg.create_pool(POSTGRES_URL, min_size=1, max_size=5)
         print(f"\nConnected to PostgreSQL at {POSTGRES_URL}")
@@ -66,7 +72,8 @@ async def postgres_pool():
 
     yield pool
 
-    await pool.close()
+    if pool is not None:
+        await pool.close()
 
 
 @pytest.fixture
@@ -83,24 +90,26 @@ async def postgres_conn(postgres_pool):
         # Transaction automatically rolls back when exiting context
 
 
-# Redis fixture placeholder - uncomment when redis is added as dependency
-# @pytest.fixture(scope="session")
-# async def redis_client():
-#     """
-#     Session-scoped Redis client fixture.
-#
-#     Provides a Redis client for integration tests.
-#     Automatically closes the connection after all tests complete.
-#     """
-#     import redis.asyncio as redis
-#
-#     try:
-#         client = await redis.from_url(REDIS_URL)
-#         await client.ping()
-#         print(f"\nConnected to Redis at {REDIS_URL}")
-#     except Exception as e:
-#         pytest.skip(f"Redis not available at {REDIS_URL}: {e}")
-#
-#     yield client
-#
-#     await client.close()
+@pytest.fixture(scope="session")
+async def redis_client():
+    """
+    Session-scoped Redis client fixture.
+
+    Provides a Redis client for integration tests.
+    Automatically closes the connection after all tests complete.
+    """
+    if redis is None:
+        pytest.skip("redis.asyncio not available")
+
+    client = None
+    try:
+        client = await redis.from_url(REDIS_URL)
+        await client.ping()
+        print(f"\nConnected to Redis at {REDIS_URL}")
+    except Exception as e:
+        pytest.skip(f"Redis not available at {REDIS_URL}: {e}")
+
+    yield client
+
+    if client is not None:
+        await client.close()
