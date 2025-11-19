@@ -376,7 +376,7 @@ Provides top-down macroeconomic analysis to complement bottom-up company researc
 **L2 Context Memory** (30d cache, Neo4j):
 
 - Regime history (last 30 days classifications)
-- Indicator time series (30-day history for all 15-20 indicators)
+- Indicator time series (30-day history for all 23-28 indicators)
 - Sector favorability trends (30-day scoring history)
 - Recent macro analyses
 

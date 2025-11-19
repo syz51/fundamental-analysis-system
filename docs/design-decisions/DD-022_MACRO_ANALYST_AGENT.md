@@ -239,8 +239,10 @@ Track 5 categories of indicators:
 
 ```python
 class EconomicIndicators:
-    GROWTH = ['GDP', 'Industrial Production', 'Employment']
-    INFLATION = ['CPI', 'PCE', 'PPI', 'Wage Growth']
+    GROWTH = ['GDP', 'ISM Manufacturing PMI', 'ISM Services PMI', 'Retail Sales',
+              'Industrial Production', 'Employment', 'Initial Jobless Claims',
+              'Durable Goods Orders', 'Housing Starts', 'Leading Economic Index']
+    INFLATION = ['CPI', 'PPI', 'PCE', 'Wage Growth']
     MONETARY = ['Fed Funds Rate', '10Y Treasury', 'Yield Curve', 'Fed Balance Sheet']
     CREDIT = ['Corporate Spreads', 'High Yield Spreads', 'Credit Growth']
     SENTIMENT = ['Consumer Confidence', 'VIX', 'Put/Call Ratio']

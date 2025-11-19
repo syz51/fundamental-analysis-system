@@ -59,8 +59,8 @@ The system requires sophisticated infrastructure to support parallel agent execu
 
 #### Macro Data Storage (Phase 2+)
 
-**Macro Indicators** (~2GB/year):
-- Time series data (15-20 indicators × daily/monthly × 10 years)
+**Macro Indicators** (~3GB/year):
+- Time series data (23-28 indicators × daily/monthly × 10 years)
 - Format: JSON/CSV, compressed
 - Retention: 10 years historical + ongoing
 

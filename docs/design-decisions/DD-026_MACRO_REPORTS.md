@@ -149,11 +149,19 @@ Phase 2 implementation of Macro Analyst (DD-022) requires:
 ├──────────────┼──────────┼──────────┼─────────┼─────────┤
 │ GROWTH                                                  │
 │ GDP (QoQ)    │ 1.8%     │ 35th     │ -0.7%   │ 🟡      │
+│ ISM Mfg PMI  │ 48.5     │ 42nd     │ -1.2    │ 🟡      │
+│ ISM Svcs PMI │ 52.3     │ 55th     │ +0.8    │ 🟢      │
+│ Retail Sales │ 0.3%     │ 48th     │ -0.2%   │ 🟡      │
 │ Ind Prod     │ 102.5    │ 48th     │ +0.3    │ 🟢      │
 │ Unemployment │ 4.1%     │ 58th     │ +0.2%   │ 🟡      │
+│ Jobless Clms │ 225K     │ 52nd     │ +15K    │ 🟡      │
+│ Durable Goods│ 2.1%     │ 50th     │ +0.5%   │ 🟢      │
+│ Housing Strt │ 1.42M    │ 45th     │ -0.08M  │ 🟡      │
+│ LEI          │ -0.4%    │ 38th     │ -0.2%   │ 🔴      │
 │                                                         │
 │ INFLATION                                               │
 │ CPI (YoY)    │ 3.2%     │ 75th     │ -0.4%   │ 🟡      │
+│ PPI (YoY)    │ 2.6%     │ 70th     │ -0.5%   │ 🟡      │
 │ PCE          │ 2.8%     │ 72nd     │ -0.3%   │ 🟡      │
 │ Wages        │ 4.5%     │ 68th     │ -0.1%   │ 🟢      │
 │                                                         │
@@ -184,7 +192,7 @@ Signal = 🟢 Positive, 🟡 Neutral, 🔴 Concerning
 ```
 
 **Content**:
-- Indicator table (15-20 key indicators across 5 categories)
+- Indicator table (23-28 key indicators across 5 categories)
 - Historical percentile ranking (context: is this high/low/normal?)
 - 3-month trend (direction: rising/falling/stable)
 - Signal color coding (green/yellow/red)
@@ -424,13 +432,20 @@ Real Estate  │ -1.2        │ -0.4  │ -0.7
 │                                                         │
 │ HIGH PRIORITY:                                          │
 │ • Jan 31: FOMC meeting (rate decision + Fed rhetoric)  │
+│ • Feb 1: ISM Manufacturing PMI (growth signal)         │
+│ • Feb 3: ISM Services PMI (services economy)           │
+│ • Feb 13: PPI release (producer price inflation)       │
 │ • Feb 14: CPI release (Jan inflation data)             │
 │ • Feb 28: GDP advance estimate (Q4 2024)               │
 │ • Mar 20: FOMC meeting (potential first cut?)          │
 │                                                         │
 │ MEDIUM PRIORITY:                                        │
+│ • Weekly Thu: Initial Jobless Claims (labor market)    │
 │ • Feb 2: NFP (Jan employment data)                     │
-│ • Feb 15: Retail sales (consumer strength)             │
+│ • Feb 15: Retail Sales (consumer strength)             │
+│ • Feb 26: Durable Goods Orders (business investment)   │
+│ • Feb 20: Housing Starts (economic cycle)              │
+│ • Feb 22: Leading Economic Index (recession signal)    │
 │ • Mar 1: ISM Manufacturing (growth indicators)         │
 │                                                         │
 │ WATCH LIST:                                             │
@@ -544,7 +559,7 @@ Real Estate  │ -1.2        │ -0.4  │ -0.7
 
 **Tab 2: Economic Calendar**:
 - Next 30 days of scheduled data releases
-- FOMC meetings, CPI/PPI releases, NFP, GDP
+- FOMC meetings, CPI/PPI releases, NFP, GDP, ISM PMI, Retail Sales, Jobless Claims, Durable Goods, Housing Starts, LEI
 - Priority color-coded (high=red, medium=yellow, low=green)
 - Countdown timer to next high-priority event
 
@@ -678,6 +693,12 @@ Response:
       "trend_3mo": "falling",
       "signal": "yellow"
     },
+    "PPI": {
+      "current": 0.026,  # 2.6%
+      "percentile": 70,
+      "trend_3mo": "falling",
+      "signal": "yellow"
+    },
     "PCE": {
       "current": 0.028,  # 2.8%
       "percentile": 72,
@@ -690,6 +711,26 @@ Response:
       "trend_3mo": "stable",
       "signal": "green"
     }
+  }
+}
+
+GET /api/macro/indicators?category=GROWTH
+
+Response:
+{
+  "category": "GROWTH",
+  "as_of_date": "2025-01-15",
+  "indicators": {
+    "GDP": {"current": 0.018, "percentile": 35, "trend_3mo": "falling", "signal": "yellow"},
+    "ISM_Mfg_PMI": {"current": 48.5, "percentile": 42, "trend_3mo": "falling", "signal": "yellow"},
+    "ISM_Svcs_PMI": {"current": 52.3, "percentile": 55, "trend_3mo": "rising", "signal": "green"},
+    "Retail_Sales": {"current": 0.003, "percentile": 48, "trend_3mo": "falling", "signal": "yellow"},
+    "Industrial_Production": {"current": 102.5, "percentile": 48, "trend_3mo": "rising", "signal": "green"},
+    "Unemployment": {"current": 0.041, "percentile": 58, "trend_3mo": "rising", "signal": "yellow"},
+    "Jobless_Claims": {"current": 225000, "percentile": 52, "trend_3mo": "rising", "signal": "yellow"},
+    "Durable_Goods": {"current": 0.021, "percentile": 50, "trend_3mo": "rising", "signal": "green"},
+    "Housing_Starts": {"current": 1420000, "percentile": 45, "trend_3mo": "falling", "signal": "yellow"},
+    "LEI": {"current": -0.004, "percentile": 38, "trend_3mo": "falling", "signal": "red"}
   }
 }
 ```
@@ -998,6 +1039,44 @@ Total: ~3.5 hours
 ---
 
 ## Implementation Notes
+
+### FRED Data Sources
+
+All economic indicators sourced from FRED API (Federal Reserve Economic Data):
+
+**Growth Indicators**:
+- GDP (QoQ): `GDP` - Quarterly
+- ISM Manufacturing PMI: `NAPM` - Monthly, 1st business day
+- ISM Services PMI: `NMFCI` - Monthly, 3rd business day
+- Retail Sales: `RSXFS` - Monthly, ~15th
+- Industrial Production: `INDPRO` - Monthly
+- Unemployment Rate: `UNRATE` - Monthly, 1st Friday
+- Initial Jobless Claims: `ICSA` - Weekly, Thursday 8:30am ET
+- Durable Goods Orders: `DGORDER` - Monthly, ~27th
+- Housing Starts: `HOUST` - Monthly, ~17th
+- Leading Economic Index: `USSLIND` (or Conference Board subscription) - Monthly
+
+**Inflation Indicators**:
+- CPI (YoY): `CPIAUCSL` - Monthly, ~13th
+- PPI (YoY): `PPIACO` - Monthly, ~13th
+- PCE: `PCE` - Monthly
+- Wage Growth: `CES0500000003` (avg hourly earnings) - Monthly
+
+**Monetary Indicators**:
+- Fed Funds Rate: `FEDFUNDS` - Monthly
+- 10Y Treasury Yield: `DGS10` - Daily
+- Yield Curve (10Y-2Y): `T10Y2Y` - Daily
+
+**Credit Indicators**:
+- Corporate Spreads: `BAMLC0A0CM` (BofA Merrill Lynch) - Daily
+- High Yield Spreads: `BAMLH0A0HYM2` - Daily
+
+**Sentiment Indicators**:
+- VIX: CBOE API (not FRED) - Real-time
+- Consumer Confidence: `UMCSENT` (U. Michigan) - Monthly
+
+**API Access**: https://fred.stlouisfed.org/docs/api/ (free, registration required)
+**Rate Limit**: 120 requests/minute
 
 ### Critical Constraints
 
