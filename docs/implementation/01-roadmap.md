@@ -24,7 +24,8 @@ The implementation follows an agile methodology with continuous integration of m
 - [ ] Set up data infrastructure
   - PostgreSQL for structured data
   - S3 (MinIO/AWS) for raw documents (10-15TB)
-  - Elasticsearch for full-text search index
+  - Elasticsearch 8+ for Unified Hybrid Search (Text + Vectors) [DD-027]
+  - Elasticsearch Index Mapping Standard [DD-029]
 - [ ] Implement data collector agent
   - SEC EDGAR integration
   - Financial data API connections
@@ -47,7 +48,7 @@ The implementation follows an agile methodology with continuous integration of m
   - Query optimization
   - Backup and versioning
 - [ ] Implement basic memory storage
-  - Working memory (Redis)
+  - Tiered Redis Architecture (L1 Working, L2 Cache, Checkpoint) [DD-028]
   - Knowledge graph persistence
   - Memory versioning system
   - Initial data population
@@ -86,7 +87,7 @@ The implementation follows an agile methodology with continuous integration of m
   - Financial statement analysis
   - Ratio calculation and benchmarking
   - Red flag detection
-  - Local L2 cache for ratio patterns
+  - Local L2 cache (Redis L2) for ratio patterns
   - Prediction tracking structure
 - [ ] Deploy business research agent with pattern matching
   - SEC filing analysis (10-K, 10-Q, 8-K)
