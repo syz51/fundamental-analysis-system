@@ -148,6 +148,20 @@ The implementation follows an agile methodology with continuous integration of m
     - DD-011 checkpoint system (prerequisite for pause/resume)
     - Alert system (Flaw #24) for pause notifications
 
+#### Automated Failure Handling (DD-016, DD-017)
+
+- [ ] Implement L1 Memory Durability (DD-016)
+  - **Objective**: Enable reliable multi-day pauses without work loss
+  - **Dual-Layer System**: Redis secondary snapshots (active) + PostgreSQL checkpoints (on-pause)
+  - **Components**: L1TTLManager (dynamic TTL 24h/14d), L1CacheSnapshotter, L1CacheRestorer
+  - **Verification**: ConsistencyVerifier (hash-based) ensures restore integrity
+  - **Integration**: Triggered by PauseManager and CheckpointSystem
+- [ ] Implement Failure Correlation System (DD-017)
+  - **Objective**: Automate detection of shared root causes (e.g., API quotas) to prevent duplicate alerts
+  - **Components**: FailureCorrelator, ErrorSignatureGenerator, RootCauseInference
+  - **Logic**: Temporal clustering (5min window), signature matching, auto-batch pause trigger
+  - **Integration**: Connects with AlertManager (DD-015) and BatchManager (DD-012)
+
 #### Collaboration System
 
 - [ ] Implement memory-enhanced debate facilitator with tiered escalation
@@ -361,6 +375,35 @@ Critical testing required for debate deadlock resolution system:
   - Timeout monitoring and alerting (target <5%)
   - Slow query logging for investigation
 
+#### Memory Failure Resilience (DD-018)
+
+- [ ] Implement query fallback & recursion protection
+  - `MAX_FALLBACK_DEPTH` enforcement (prevent infinite recursion)
+  - Timeout reduction logic (500ms → 200ms → 100ms)
+  - Ultimate fallback safety (empty result + warning alert)
+- [ ] Implement sync backpressure system
+  - Queue depth monitoring with exponential backoff
+  - Priority-based eviction (drop normal/high before critical)
+  - Protection against queue overflow during high-load debates
+- [ ] Implement regime detection sequencing
+  - Hybrid parallelism (parallel across regimes, serial within)
+  - Dependency flags to prevent stale credibility updates
+  - Staleness SLA enforcement (<5min)
+
+#### Memory Access Control (DD-020)
+
+- [ ] Implement Fine-Grained RBAC
+  - 5 Roles: Agent, Knowledge Base Agent, Debate Facilitator, Learning Engine, Human Admin
+  - Permission Matrix: L1/L2/L3 read/write granularity (e.g., `read_write_own` vs `read_all`)
+  - API Authorization Gateway (<5ms overhead)
+- [ ] Implement Memory Audit Logging
+  - PostgreSQL-based immutable log
+  - Track all actor actions, resource modifications, and access denials
+  - 5-year retention policy for regulatory compliance
+- [ ] Enforce Pattern Lifecycle & Credibility Protection
+  - Only Knowledge Base Agent/Humans can validate patterns
+  - Only Learning Engine can update credibility scores
+
 #### Additional Agents
 
 - [ ] Add strategy analyst with track record system
@@ -469,14 +512,19 @@ Critical testing required for debate deadlock resolution system:
 - Zero data loss in all test scenarios
 - Backup restoration <1hr RTO
 
-#### Data Retention & Pattern Evidence (DD-009)
+#### Data Retention & Tier Operations (DD-009, DD-019)
 
-- [ ] Implement tiered storage infrastructure
+- [ ] Implement tiered storage infrastructure (DD-009)
   - Set up Hot/Warm/Cold storage tiers (S3 Standard/IA/Glacier or equivalent)
   - Build automated tier migration service (age-based triggers)
   - Configure storage class transitions
   - Test access latency requirements (<10ms Hot, <100ms Warm, <3s Cold)
   - Implement cost tracking and monitoring
+- [ ] Implement Data Tier Management Operations (DD-019)
+  - **Access-Based Re-Promotion**: Track file access frequency; auto-promote Warm→Hot on spike
+  - **Graph Integrity Monitoring**: Hybrid real-time alerts + hourly checks + daily deep scan
+  - **Automated Repair**: Fix orphaned relationships and missing properties automatically
+  - **Disaster Recovery**: Point-in-time recovery (PITR) for Neo4j (<1hr RTO)
 - [ ] Build pattern-aware retention system
   - PatternAwareRetention service (checks pattern dependencies before deletion)
   - File→Pattern dependency tracking in knowledge graph

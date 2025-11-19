@@ -28,7 +28,7 @@ python main.py  # Currently prints "Hello from fundamental-analysis-system!"
 - **Specialists**: Screening, business, financial, strategy, valuation (with memory)
 - **Support**: Data collector, news monitor, knowledge base, report writer
 
-**13 Specialized Agents** → Memory-enhanced pipeline → 6 human decision gates
+**14 Specialized Agents** → Memory-enhanced pipeline → 6 human decision gates
 
 ## Analysis Pipeline
 
@@ -70,7 +70,7 @@ python main.py  # Currently prints "Hello from fundamental-analysis-system!"
 
 **[📚 Complete Documentation](docs/README.md)** - Full design documentation:
 
-- **[Architecture](docs/architecture/)** - 5-layer system, 13 agents, memory system, collaboration protocols
+- **[Architecture](docs/architecture/)** - 5-layer system, 14 agents, memory system, collaboration protocols
 - **[Operations](docs/operations/)** - 12-day analysis pipeline, 6 human gates, data management
 - **[Learning](docs/learning/)** - Pattern recognition, feedback loops, performance metrics
 - **[Implementation](docs/implementation/)** - Roadmap, tech stack, compliance, glossary

@@ -32,16 +32,19 @@ The system requires sophisticated infrastructure to support parallel agent execu
 #### Macro Analyst Compute (Phase 2+)
 
 **Monthly Report Generation**:
+
 - Frequency: Monthly (1st week of month)
 - Duration: 2-4 hours (automated batch)
 - Process: Fetch indicators → analyze regime → score sectors → generate charts → render PDF
 
 **Daily Monitoring**:
+
 - Frequency: Daily at 5am ET
 - Duration: 5-10 minutes
 - Process: Regime detection, indicator fetch, threshold checks
 
 **Weekly Sector Scoring**:
+
 - Frequency: Weekly (Sunday night)
 - Duration: 15-20 minutes
 - Process: Calculate favorability for 11 sectors, update valuations
@@ -60,16 +63,19 @@ The system requires sophisticated infrastructure to support parallel agent execu
 #### Macro Data Storage (Phase 2+)
 
 **Macro Indicators** (~3GB/year):
+
 - Time series data (23-28 indicators × daily/monthly × 10 years)
 - Format: JSON/CSV, compressed
 - Retention: 10 years historical + ongoing
 
 **Macro Reports** (~500MB/year):
+
 - Monthly PDFs (8-12 pages × 12 months × ~2MB each)
 - Dashboard data (JSON, charts)
 - Retention: Permanent (audit trail)
 
 **Peer Groups** (Future Phase 3+):
+
 - Industry universe mappings
 - Comp table data
 
@@ -588,20 +594,24 @@ END $$;
 #### Macro Data APIs (Phase 2+)
 
 **Required (Free)**:
+
 - **FRED API**: Federal Reserve Economic Data
-  - Endpoint: https://api.stlouisfed.org/fred/
+
+  - Endpoint: <https://api.stlouisfed.org/fred/>
   - Authentication: API key (free, register at fred.stlouisfed.org)
   - Rate limit: 120 requests/minute
   - Indicators: GDP, CPI, unemployment, Fed Funds, 10Y Treasury
 
 - **IMF WEO API**: International Monetary Fund World Economic Outlook
-  - Endpoint: https://www.imf.org/external/datamapper/api/v1/
+
+  - Endpoint: <https://www.imf.org/external/datamapper/api/v1/>
   - Authentication: None (open API)
   - Rate limit: Not specified
   - Indicators: Global GDP forecasts, inflation, government debt
 
 - **OECD Stats API**: OECD Statistics
-  - Endpoint: https://stats.oecd.org/restsdmx/sdmx.ashx/
+
+  - Endpoint: <https://stats.oecd.org/restsdmx/sdmx.ashx/>
   - Authentication: None (open API)
   - Rate limit: Not specified
   - Indicators: 700 indicators, 27 EU countries
@@ -612,6 +622,7 @@ END $$;
   - Indicators: VIX, put/call ratios
 
 **Optional (Paid, Phase 3+)**:
+
 - Bloomberg Terminal: $32K/yr
 - FactSet: $12K-$50K/yr
 
