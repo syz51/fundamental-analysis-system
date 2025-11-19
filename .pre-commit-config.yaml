@@ -1,0 +1,80 @@
+# Pre-commit hooks configuration for production-grade Python development
+# Run `pre-commit install` to install the git hooks
+# Run `pre-commit run --all-files` to run all hooks manually
+
+repos:
+  # Ruff - Fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi]
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Mypy - Static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-PyYAML
+        args: [--config-file=pyproject.toml]
+        exclude: ^(tests/|src/storage/migrations/)
+
+  # Bandit - Security linting
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      # End of file fixer
+      - id: end-of-file-fixer
+      # YAML validation
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom YAML tags
+      # Large files check
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      # Merge conflict markers
+      - id: check-merge-conflict
+      # Python syntax check
+      - id: check-ast
+      # JSON validation
+      - id: check-json
+      # TOML validation
+      - id: check-toml
+      # Prevent commits to main
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+# Configuration
+default_language_version:
+  python: python3.14
+
+# Fail fast on first error
+fail_fast: false
+
+# Exclude paths
+exclude: |
+  (?x)^(
+      \.git/|
+      \.venv/|
+      __pycache__/|
+      .*\.egg-info/|
+      build/|
+      dist/|
+      src/storage/migrations/versions/.*\.py$
+  )

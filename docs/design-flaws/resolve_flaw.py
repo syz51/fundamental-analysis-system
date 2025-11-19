@@ -29,12 +29,12 @@ Manual steps required after:
 
 import argparse
 import re
-import sys
-from pathlib import Path
-from datetime import date, datetime
-import yaml
 import subprocess
+import sys
+from datetime import date, datetime
+from pathlib import Path
 
+import yaml
 
 DESIGN_FLAWS_DIR = Path(__file__).parent
 DOCS_DIR = DESIGN_FLAWS_DIR.parent
@@ -43,7 +43,7 @@ REPO_ROOT = DOCS_DIR.parent
 
 def parse_frontmatter(filepath):
     """Extract YAML frontmatter from markdown file."""
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
     match = re.match(r"^---\n(.*?)\n---\n(.*)", content, re.DOTALL)
@@ -90,7 +90,7 @@ def get_dd_info(dd_id):
     dd_filename = dd_file.name
 
     # Try to get title from frontmatter first
-    with open(dd_file, "r", encoding="utf-8") as f:
+    with open(dd_file, encoding="utf-8") as f:
         content = f.read()
 
     # Check if has frontmatter
@@ -121,7 +121,7 @@ def find_references(flaw_filename):
     # Search in all markdown files
     for md_file in REPO_ROOT.glob("**/*.md"):
         if md_file.is_file() and ".git" not in str(md_file):
-            with open(md_file, "r", encoding="utf-8") as f:
+            with open(md_file, encoding="utf-8") as f:
                 content = f.read()
                 if pattern in content:
                     count = content.count(pattern)
@@ -139,7 +139,7 @@ def update_references(flaw_filename):
 
     for md_file in REPO_ROOT.glob("**/*.md"):
         if md_file.is_file() and ".git" not in str(md_file):
-            with open(md_file, "r", encoding="utf-8") as f:
+            with open(md_file, encoding="utf-8") as f:
                 content = f.read()
 
             if old_pattern in content:
@@ -312,20 +312,18 @@ def main():
     current_resolution = frontmatter.get("resolution")
     if has_resolution_text and not args.force and not (args.desc or args.dd):
         print(f"  - Resolution: {current_resolution} (preserving)")
+    elif current_resolution:
+        print(f"  - Resolution: {current_resolution} → {resolution_text}")
     else:
-        if current_resolution:
-            print(f"  - Resolution: {current_resolution} → {resolution_text}")
-        else:
-            print(f"  - Resolution: {resolution_text}")
+        print(f"  - Resolution: {resolution_text}")
 
     current_date = frontmatter.get("resolved")
     if has_resolved_date and not args.force and not args.date:
         print(f"  - Resolved date: {current_date} (preserving)")
+    elif current_date:
+        print(f"  - Resolved date: {current_date} → {resolved_date}")
     else:
-        if current_date:
-            print(f"  - Resolved date: {current_date} → {resolved_date}")
-        else:
-            print(f"  - Resolved date: {resolved_date}")
+        print(f"  - Resolved date: {resolved_date}")
 
     if references:
         print(f"\n  Path references to update ({len(references)} files):")
