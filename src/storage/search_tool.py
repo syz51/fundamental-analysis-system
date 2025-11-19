@@ -5,9 +5,12 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 from elasticsearch import AsyncElasticsearch
+
+if TYPE_CHECKING:
+    from elastic_transport import ObjectApiResponse
 from elasticsearch.exceptions import (
     ApiError,
     ConnectionTimeout,
@@ -274,7 +277,7 @@ class SearchClient:
         )
 
         # Helper to parse ES response
-        def parse_response(response: dict[str, Any]) -> list[SearchResult]:
+        def parse_response(response: ObjectApiResponse[Any]) -> list[SearchResult]:
             results = []
             for hit in response["hits"]["hits"]:
                 source = hit["_source"]
@@ -293,7 +296,7 @@ class SearchClient:
         # 3. Execute Search based on type
         try:
             if search_type == "keyword":
-                body = {
+                keyword_body: dict[str, Any] = {
                     "size": config.limit,
                     "_source": {"exclude": ["embedding"]},
                     "query": {
@@ -303,7 +306,7 @@ class SearchClient:
                         }
                     },
                 }
-                resp = await self.client.search(index=indices, **body)
+                resp = await self.client.search(index=indices, **keyword_body)
                 results = parse_response(resp)
                 self.circuit_breaker.record_success()
                 logger.info(f"Search successful: returned {len(results)} results")
@@ -311,7 +314,7 @@ class SearchClient:
 
             elif search_type == "semantic":
                 vector = await self._generate_embedding(query)
-                body = {
+                semantic_body: dict[str, Any] = {
                     "size": config.limit,
                     "_source": {"exclude": ["embedding"]},
                     "knn": {
@@ -322,7 +325,7 @@ class SearchClient:
                         "filter": filter_clauses,
                     },
                 }
-                resp = await self.client.search(index=indices, **body)
+                resp = await self.client.search(index=indices, **semantic_body)
                 results = parse_response(resp)
                 self.circuit_breaker.record_success()
                 logger.info(f"Search successful: returned {len(results)} results")
@@ -333,7 +336,7 @@ class SearchClient:
                 vector = await self._generate_embedding(query)
 
                 # Query A: BM25
-                bm25_body = {
+                bm25_body: dict[str, Any] = {
                     "size": config.limit,
                     "_source": {"exclude": ["embedding"]},
                     "query": {
@@ -345,7 +348,7 @@ class SearchClient:
                 }
 
                 # Query B: kNN
-                knn_body = {
+                knn_body: dict[str, Any] = {
                     "size": config.limit,
                     "_source": {"exclude": ["embedding"]},
                     "knn": {
