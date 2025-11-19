@@ -300,7 +300,7 @@ _Example: `MATCH (a:Analysis)-[:SIMILAR_TO]->(b) WHERE similarity > 0.8 RETURN b
 
 Dense vector representation of text enabling semantic similarity search.
 
-_Model: OpenAI text-embedding-ada-002 (1536 dimensions), stored in vector database._
+_Model: Custom embedding model (1536 dimensions), stored in Elasticsearch `dense_vector` fields alongside text content for hybrid search (DD-027, DD-029)._
 
 ### Graph Algorithm
 
@@ -322,15 +322,17 @@ _Phases: Screening (days 1-2), Parallel Analysis (days 3-7), Debate (days 8-9), 
 
 ### Semantic Search
 
-Search technique using embeddings to find content similar in meaning (not just keywords).
+Search technique using embeddings (kNN vector search) to find content similar in meaning, not just keyword matches. Combined with BM25 text search via Reciprocal Rank Fusion (RRF) for hybrid queries.
 
-_Use Case: Find precedents and patterns semantically similar to current situation._
+_Implementation: Elasticsearch 8+ `dense_vector` fields with cosine similarity, HNSW indexing (DD-027). Use Case: Find precedents and patterns semantically similar to current situation._
 
-### Vector Database
+### Vector Database (Deprecated)
 
-Specialized database (Pinecone, Weaviate, Qdrant) optimized for storing and querying high-dimensional embeddings.
+**Status**: Consolidated into Elasticsearch per DD-027.
 
-_Query: Top-K similarity search with metadata filtering._
+Previously considered separate databases (Pinecone, Weaviate, Qdrant) for vector storage. Current architecture uses Elasticsearch 8+ unified hybrid search combining text (BM25) and vector (kNN) in single indices, avoiding sync complexity and enabling atomic updates.
+
+_See: DD-027 Unified Hybrid Search Architecture, DD-029 Elasticsearch Index Mapping Standard._
 
 ---
 

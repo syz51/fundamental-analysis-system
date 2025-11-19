@@ -23,8 +23,8 @@ The implementation follows an agile methodology with continuous integration of m
 
 - [ ] Set up data infrastructure
   - PostgreSQL for structured data
-  - MongoDB for document storage
-  - S3/object storage for raw files
+  - S3 (MinIO/AWS) for raw documents (10-15TB)
+  - Elasticsearch for full-text search index
 - [ ] Implement data collector agent
   - SEC EDGAR integration
   - Financial data API connections

@@ -118,7 +118,8 @@ The addition of memory and learning systems introduces unique risks around data 
     - 99.95% availability target (vs 99.4% single instance)
     - Cross-region backup: AWS S3 us-west-2 + GCP Cloud Storage (DR)
     - RTO <1hr, RPO <1hr
-  - PostgreSQL & MongoDB replication
+  - PostgreSQL & Elasticsearch replication
+  - S3 Cross-Region Replication (CRR)
   - Redis clustering with failover
   - Multi-AZ deployment
   - Load balancing across instances
@@ -157,6 +158,22 @@ The addition of memory and learning systems introduces unique risks around data 
 - **Corruption detection**: Automated integrity checks every 6 hours
 
 **Monitoring**: Memory integrity score >99.9%, zero undetected corruption
+
+#### Search Index Desynchronization
+
+**Description**: Discrepancy between S3 raw storage and Elasticsearch text indices (e.g., file uploaded but not indexed).
+
+**Impact**:
+
+- "Invisible" documents (data exists but agents can't find it)
+- Incomplete analysis based on partial data
+- Stale search results pointing to deleted files
+
+**Mitigation**:
+
+- **Atomic Staging**: Use PostgreSQL transaction to track "Indexing Pending" state
+- **Reconciliation Jobs**: Nightly batch job comparing S3 keys vs Elastic IDs
+- **Immutable Archives**: Documents in S3 are immutable; updates create new versions
 
 ---
 

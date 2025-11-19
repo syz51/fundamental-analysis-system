@@ -102,25 +102,41 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - `financial_data`: Statements, ratios, metrics
   - `market_data`: Prices, volumes, events
   - `metadata`: Companies, sectors, peers
+  - `document_registry`: S3 keys, index status, metadata (Hybrid Architecture)
   - `workflow`: Pause/resume state, checkpoints, batch operations (DD-011, DD-012)
   - `access_tracking`: File access logs, weekly aggregations, tier metadata (DD-019)
 
-#### MongoDB (Document Storage)
+#### S3 Compatible Object Storage (Raw Documents)
 
-- **Version**: 6+
+- **Provider**: MinIO (Dev) / AWS S3 (Prod)
 - **Purpose**: SEC filings, transcripts, unstructured text, news articles
 - **Size**: 10-15TB
 - **Configuration**:
-  - Sharded cluster (3+ shards)
-  - Replica sets for HA
-  - Text search indexes
-  - GridFS for large documents
-  - Automated backups (daily)
-- **Collections**:
-  - `sec_filings`: 10-K, 10-Q, 8-K, proxies
-  - `transcripts`: Earnings calls, presentations
-  - `news`: Articles, press releases
-  - `reports`: Generated investment memos
+  - Standard tier for active analysis
+  - Lifecycle policies for transition to Cold/Glacier (DD-013)
+  - Versioning enabled for compliance
+  - Server-side encryption
+  - Cross-region replication (us-west-2 DR)
+
+#### Elasticsearch (Unified Hybrid Search Engine)
+
+- **Version**: 8+
+- **Purpose**: Unified text (BM25) + vector (kNN) search, hybrid queries with RRF scoring
+- **Size**: 2-3TB (Text + vector indices)
+- **Configuration**:
+  - Cluster mode (3 shards, 2 replicas per index)
+  - Dedicated master nodes
+  - Hot/Warm architecture for cost optimization
+  - Custom financial analyzer (synonyms, stemming)
+  - Snapshot/Restore to S3 repository
+  - High Availability setup (similar to Neo4j HA approach)
+- **Indices** (standardized schema per [DD-029](../design-decisions/DD-029_ELASTICSEARCH_INDEX_MAPPING_STANDARD.md)):
+  - `sec_filings`: SEC filings with core schema + filing-specific extensions
+  - `transcripts`: Earnings calls with core schema + transcript-specific extensions
+  - `news`: News articles with core schema + news-specific extensions
+- **Schema**: All indices implement shared core schema (14 required fields) + domain extensions
+  - See [DD-029: Elasticsearch Index Mapping Standard](../design-decisions/DD-029_ELASTICSEARCH_INDEX_MAPPING_STANDARD.md) for complete field specifications
+- **Hybrid Search**: Native RRF retriever combining BM25 (text) + kNN (embedding) in single query (per [DD-027](../design-decisions/DD-027_UNIFIED_HYBRID_SEARCH_ARCHITECTURE.md))
 
 #### Neo4j (Knowledge Graph) - NEW
 
@@ -150,7 +166,9 @@ The system requires sophisticated infrastructure to support parallel agent execu
 
 #### In-Memory Cache & Storage - NEW
 
-**Purpose**: L1/L2 agent working memory, session cache, optional message queue
+**Purpose**: L1/L2 agent working memory, session cache, checkpoint storage
+
+**Technology**: **Redis 7+** (Finalized per [DD-028: Redis Persistence Strategy](../design-decisions/DD-028_REDIS_PERSISTENCE_STRATEGY.md))
 
 **Requirements**:
 
@@ -158,13 +176,13 @@ The system requires sophisticated infrastructure to support parallel agent execu
   - Sub-millisecond read latency (p95)
   - High throughput (100k+ ops/sec)
   - 500GB-1TB capacity
-- **Persistence**:
-  - Snapshot-based backup (RDB equivalent)
-  - Append-only log (AOF equivalent)
-  - Survive restarts without data loss
+- **Persistence Strategy**:
+  - **L1 Working Memory**: RDB + AOF hybrid (everysec fsync) for maximum durability
+  - **L2 Specialized Cache**: RDB-only for performance (rebuildable from source)
+  - Checkpoint integration with PostgreSQL dual storage (per DD-011, DD-016)
 - **Eviction**:
-  - LRU policy for cache data
-  - TTL support for temporary data
+  - L1: No eviction (24h TTL active, 14d TTL paused via app)
+  - L2: LRU policy with 30-day TTL
 - **Data Structures**:
   - Key-value storage
   - Hash maps for nested data
@@ -172,24 +190,25 @@ The system requires sophisticated infrastructure to support parallel agent execu
 - **Namespacing**:
   - `L1:{agent_id}:working`: Agent working memory
   - `L2:{agent_id}:specialized`: Agent domain cache
+  - `CHECKPOINT:{agent_id}:{timestamp}`: Checkpoint snapshots (secondary instance)
   - `sessions:{session_id}`: Debate/collaboration sessions
-  - Optional: `queue:{topic}` if used for message queue
 
-**Technology Options**: [Redis, Memcached + persistence layer, Dragonfly]
-**Decision**: TBD - Phase 2 implementation
+**Configuration**: See [DD-028](../design-decisions/DD-028_REDIS_PERSISTENCE_STRATEGY.md) for complete Redis persistence configuration and tiered durability strategy.
 
-**Note**: Role decision (cache-only vs dual cache+queue) deferred to Phase 2. If separate message queue chosen, remove `queue:{topic}` namespace.
+#### Vector Database (Semantic Search) - DEPRECATED
 
-#### Vector Database (Semantic Search)
+**Status**: Consolidated into Elasticsearch per [DD-027: Unified Hybrid Search Architecture](../design-decisions/DD-027_UNIFIED_HYBRID_SEARCH_ARCHITECTURE.md)
 
-- **Options**: Pinecone, Weaviate, or Qdrant
-- **Purpose**: Semantic similarity search for patterns, precedents
-- **Size**: 2-5TB
-- **Configuration**:
-  - Embedding dimension: 1536 (OpenAI ada-002)
-  - Distance metric: Cosine similarity
-  - Sharding for scale
-  - Metadata filtering support
+**Previous Approach** (fragmented):
+- Separate vector database (Pinecone, Weaviate, Qdrant) for embeddings
+- Required sync between text DB (Elasticsearch) and vector DB
+- Complex client-side score merging for hybrid queries
+
+**Current Approach** (unified):
+- Elasticsearch 8+ handles both text (BM25) and vector (kNN) search
+- Single atomic index updates (no sync drift)
+- Native RRF scoring for hybrid queries
+- See [DD-029](../design-decisions/DD-029_ELASTICSEARCH_INDEX_MAPPING_STANDARD.md) for embedding field specifications (1536-dim, cosine similarity, HNSW indexing)
 
 ### Message Queue
 
@@ -1166,5 +1185,3 @@ To support 1000+ stocks and <24hr analysis turnaround, the system implements com
 - **DD-005: Memory Scalability Optimization**: See `../design-decisions/DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md` for performance optimization design
 
 ---
-
-_Document Version: 2.1 | Last Updated: 2025-11-17_

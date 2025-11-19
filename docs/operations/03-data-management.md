@@ -188,6 +188,21 @@ Cleaned, normalized, and structured data ready for analysis.
   **Size Estimate**: ~15GB/year new processed data
   **Storage Cost**: Included in tiered storage (~$5/mo total)
 
+#### /search_indices
+
+Unified hybrid search indices combining full-text (BM25) and semantic vector (kNN) search.
+
+**Indices** (per [DD-029](../design-decisions/DD-029_ELASTICSEARCH_INDEX_MAPPING_STANDARD.md)):
+
+- **sec_filings**: SEC filings (10-K/Q/8-K) with text + embeddings + filing metadata
+- **transcripts**: Earnings calls with text + embeddings + speaker/segment metadata
+- **news**: News articles with text + embeddings + event tracking metadata
+
+**Technology**: Elasticsearch 8+ with unified hybrid search ([DD-027](../design-decisions/DD-027_UNIFIED_HYBRID_SEARCH_ARCHITECTURE.md))
+**Schema**: Shared core schema (14 fields) + domain-specific extensions (DD-029)
+**Retention**: Rebuildable from /raw (text) + embedding model (vectors)
+**Size Estimate**: ~20-25% of raw text volume (includes dense_vector fields)
+
 #### /models
 
 Valuation models and scenario analyses.

@@ -117,9 +117,10 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 #### Data Infrastructure
 
 - External APIs for market data, SEC filings, news feeds
-- Multiple database systems (PostgreSQL, MongoDB, Neo4j, Redis)
-- Document storage for filings, transcripts, reports
-- Specialized memory storage for knowledge graph and agent caches
+- Multiple database systems (PostgreSQL, Elasticsearch, Neo4j, Redis)
+- S3 Object Storage for raw filings, transcripts, reports (10-15TB capacity)
+- Elasticsearch 8+ for unified hybrid search (text BM25 + vector kNN with RRF scoring, per DD-027)
+- Specialized memory storage for knowledge graph (Neo4j) and agent caches (Redis L1/L2)
 - Message queue for inter-agent communication and memory synchronization
   - See [Technical Requirements](../implementation/02-tech-requirements.md#message-queue) for specifications
 
