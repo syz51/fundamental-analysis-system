@@ -562,14 +562,16 @@ Notify all agents of regime changes, major macro updates
 ### Trigger Events
 
 1. **Regime Change** (confidence >80%):
+
    - Old regime → New regime transition detected
    - Example: BULL_LOW_RATES → BEAR_HIGH_RATES
-   - Priority: Critical (2s sync)
+   - **Priority: System-Critical** (Tier 0, bypasses queue)
 
 2. **Major Fed Announcement**:
+
    - Rate change (25bps+)
    - Policy shift (QE/QT changes)
-   - Priority: High (10s sync)
+   - **Priority: System-Critical** (Tier 0, bypasses queue)
 
 3. **Threshold Breach** (sustained >3 days):
    - Indicator moves to extreme percentile (>95th or <5th)
@@ -583,7 +585,7 @@ Notify all agents of regime changes, major macro updates
   "from_agent": "macro_analyst",
   "to_agent": "all",
   "message_type": "alert",
-  "priority": "critical",
+  "priority": "system_critical",
   "content": {
     "event_type": "regime_change",
     "old_regime": "BULL_LOW_RATES",
@@ -591,12 +593,12 @@ Notify all agents of regime changes, major macro updates
     "confidence": 0.85,
     "implications": {
       "sector_favorability_changes": {
-        "Technology": -15,    // Score decreased 15pts
-        "Healthcare": +10     // Score increased 10pts
+        "Technology": -15, // Score decreased 15pts
+        "Healthcare": +10 // Score increased 10pts
       },
       "discount_rate_changes": {
-        "Technology": 0.025,  // +2.5% discount rate
-        "Utilities": 0.015    // +1.5% discount rate
+        "Technology": 0.025, // +2.5% discount rate
+        "Utilities": 0.015 // +1.5% discount rate
       }
     },
     "recommended_actions": [
@@ -687,29 +689,31 @@ The system synthesizes:
 
 ### Pre-Debate Memory Synchronization
 
-Before structured debates begin, the system ensures memory consistency:
+Before structured debates begin, the system ensures memory consistency using an **Atomic Sync-Lock Protocol**:
 
 **Critical Sync Protocol**:
 
-1. **Force sync all participants** (<2 seconds)
+1. **Acquire Sync Lock**:
 
-   - Both challenger and challenged agents
-   - All related agents in same analysis stream
-   - Ensures no stale local cache data
+   - Pause write operations for all debate participants.
+   - Prevents state drift between sync and snapshot.
 
-2. **Create memory snapshot**
+2. **Force Sync All Participants** (<2 seconds):
 
-   - Point-in-time view of all relevant knowledge
-   - Locked state prevents mid-debate inconsistencies
-   - All participants work from identical evidence base
+   - Flush local working memory (L1) to central graph.
+   - Ensures no stale local cache data.
 
-3. **Load historical context**
-   - Relevant historical debates
-   - Similar disagreements and resolutions
-   - Agent credibility by track record
-   - Applicable precedents
+3. **Create Memory Snapshot**:
 
-**Why Critical Sync Matters**: Without forced synchronization, debates could proceed with agents having different views of evidence, leading to contradictory positions and degraded debate quality.
+   - Generate immutable snapshot ID (e.g., `snap_12345`).
+   - All agents MUST reference this snapshot ID during debate.
+   - **Lock Released** immediately after snapshot creation.
+
+4. **Load Historical Context**:
+   - Load context relative to the snapshot.
+   - Relevant historical debates & precedents.
+
+**Why Critical Sync Matters**: Without atomic locking, an agent could update its state (e.g., receive new price data) _after_ the sync but _before_ the debate logic runs, causing "hallucinated" disagreements where agents argue based on different versions of reality.
 
 ### Challenge with Historical Evidence
 

@@ -1706,81 +1706,74 @@ See [DD-018 Memory Failure Resilience](../design-decisions/DD-018_MEMORY_FAILURE
 
 ### Event-Driven Sync Backpressure (A4)
 
-**Purpose**: Prevent memory queue overflow during high-priority sync bursts (debates, human gates, alert storms).
+**Purpose**: Prevent memory queue overflow during high-priority sync bursts while guaranteeing delivery of System-Critical signals.
 
-Without backpressure, event-driven sync can overwhelm agent L1 memory queues: debate generates 10 critical findings → 50 concurrent syncs (10 × 5 agents) → agent at 95/100 capacity → overflow, memory leak, crashes. The `SyncBackpressureManager` enforces queue limits and graceful degradation.
+Without backpressure, event-driven sync can overwhelm agent L1 memory queues. The `SyncBackpressureManager` enforces queue limits, reserved capacity for higher priorities, and graceful degradation.
 
 **SyncBackpressureManager Mechanism**:
 
-- **Queue Limits**: `MAX_QUEUE_DEPTH=50` (total), `CRITICAL_QUEUE_DEPTH=10` (during backpressure)
-- **Backpressure Signaling**: Reject non-critical syncs when queue full, signal sender to retry with exponential backoff
-- **Priority-Based Eviction**: Drop normal/high priority syncs before critical syncs when queue overflow
-- **Exponential Backoff**: 100ms → 200ms → 400ms → 800ms (max 5 retries), then permanent drop + alert
+- **Total Queue Capacity**: `MAX_QUEUE_DEPTH=100`
+- **Reserved Capacity**:
+  - **Tier 0 (System-Critical)**: 10 reserved slots (Tier 1-3 cannot fill).
+  - **Tier 1 (Critical)**: 20 reserved slots (Tier 2-3 cannot fill).
+- **Backpressure Signaling**: Reject lower-priority syncs when their shared pool is full.
+- **Priority-Based Eviction**: Drop Normal/High syncs to make room for Critical. System-Critical _never_ dropped; can evict Critical if absolutely necessary.
+- **Exponential Backoff**: 100ms → 200ms → 400ms → 800ms (max 5 retries).
 
 **Backpressure Flow**:
 
 ```text
-Sender: Push sync (priority: high, queue depth: 52/50)
+Sender: Push sync (priority: high, queue depth: 71/100)
   ↓
-Receiver: Queue full, backpressure active
-  ↓ Can accept? priority == 'critical' → NO (high)
+Receiver: Shared pool (70 slots) is full. Reserved slots (30) are for Critical+.
+  ↓ Can accept? priority == 'high' → NO.
 Receiver: Apply backpressure → SyncResult(backpressure=True, retry_after_ms=200ms)
-  ↓
-Sender: Receives backpressure signal, waits 200ms, retries
-  ↓ Retry #2 fails
-Sender: Waits 400ms, retries
-  ↓ Retry #5 fails (max retries exceeded)
-Receiver: Permanent drop + alert (severity: WARNING for normal, HIGH for high priority)
-```
-
-**Priority-Based Eviction** (when critical sync arrives to full queue):
-
-```text
-Queue: [normal, high, high, critical, critical, ...] (50/50 full)
-  ↓ New critical sync arrives
-Evict: Drop oldest 'normal' sync to make room
-  ↓ If no normal exists
-Evict: Drop oldest 'high' sync
-  ↓ Queue now: [high, high, critical, critical, ..., new_critical] (50/50)
 ```
 
 **Implementation**:
 
 ```python
 class SyncBackpressureManager:
-    MAX_QUEUE_DEPTH = 50
-    CRITICAL_QUEUE_DEPTH = 10
+    MAX_QUEUE_DEPTH = 100
+    # Reserved slots act as limits for lower priorities
+    LIMIT_NORMAL_HIGH = 70  # 30 slots reserved for Critical+
+    LIMIT_CRITICAL = 90     # 10 slots reserved for System-Critical
+
     BACKOFF_INITIAL_MS = 100
     BACKOFF_MAX_MS = 800
     BACKOFF_MAX_RETRIES = 5
 
     def can_accept_sync(self, priority: str) -> bool:
         current_depth = len(self.queue)
-        if current_depth < self.MAX_QUEUE_DEPTH:
-            return True
-        # Backpressure: only accept critical
-        self.backpressure_active = True
-        return priority == 'critical'
+
+        if priority == 'system_critical':
+            return current_depth < self.MAX_QUEUE_DEPTH
+        elif priority == 'critical':
+            return current_depth < self.LIMIT_CRITICAL
+        else: # normal or high
+            return current_depth < self.LIMIT_NORMAL_HIGH
 
     def push_sync_event(self, from_agent: str, message: dict, priority: str) -> SyncResult:
         if not self.can_accept_sync(priority):
-            if priority != 'critical':
+            if priority == 'system_critical':
+                # Emergency: Evict lowest priority to make room
+                self._evict_lowest_priority()
+            elif priority == 'critical':
+                 # Try to evict normal/high
+                if self._evict_normal_high():
+                    pass # Room made
+                else:
+                    return self._apply_backpressure(from_agent, priority)
+            else:
                 return self._apply_backpressure(from_agent, priority)
-            # Critical sync + full queue: evict lowest priority
-            self._evict_lowest_priority()
 
         self.queue.append((priority, message, datetime.now()))
         return SyncResult(accepted=True, queue_depth=len(self.queue))
 
-    def _apply_backpressure(self, from_agent: str, priority: str) -> SyncResult:
-        retry_count = self.dropped_stats[priority]
-        retry_delay_ms = min(self.BACKOFF_INITIAL_MS * (2 ** retry_count), self.BACKOFF_MAX_MS)
-
-        if retry_count >= self.BACKOFF_MAX_RETRIES:
-            self._trigger_sync_drop_alert(from_agent, priority, retry_count)
-            return SyncResult(accepted=False, backpressure=True, dropped=True)
-
-        return SyncResult(accepted=False, backpressure=True, retry_after_ms=retry_delay_ms)
+    def _evict_lowest_priority(self):
+        """Find and remove lowest priority item"""
+        # Sort queue by priority (Normal < High < Critical) and remove first match
+        pass
 ```
 
 **Alert Triggers**:

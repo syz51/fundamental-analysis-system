@@ -2,9 +2,9 @@
 
 ## At a Glance
 
-- **Total**: 27 flaws + 6 minor issues
+- **Total**: 29 flaws + 6 minor issues
 - **Active**: 0 (0 critical, 0 high, 0 medium, 0 low)
-- **Resolved**: 24
+- **Resolved**: 26
 - **Future**: 3
 
 ---
@@ -64,7 +64,7 @@ Potential improvements tracked for future consideration:
 
 ---
 
-## ✅ Resolved Flaws by Phase (24)
+## ✅ Resolved Flaws by Phase (26)
 
 <details>
 <summary><b>Phase 1: Foundation & Basic Memory (2 resolved)</b></summary>
@@ -77,7 +77,7 @@ Potential improvements tracked for future consideration:
 </details>
 
 <details>
-<summary><b>Phase 2: Core Agents with Memory (9 resolved)</b></summary>
+<summary><b>Phase 2: Core Agents with Memory (10 resolved)</b></summary>
 
 | #                                              | Flaw                                           | Resolution                                                                             | Completed  |
 | ---------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- | ---------- |
@@ -90,6 +90,7 @@ Potential improvements tracked for future consideration:
 | [24](resolved/24-agent-failure-alerts.md)      | Agent Failure Human Alerts Missing             | N/A                                                                                    | 2025-11-18 |
 | [25](resolved/25-working-memory-durability.md) | Working Memory Insufficient for Long Pauses    | N/A                                                                                    | N/A        |
 | [26](resolved/26-multi-stock-batching.md)      | Multi-Stock Failure Batching Undefined         | DD-017: Failure Correlation System                                                     | 2025-11-18 |
+| [28](resolved/28-atomic-sync-gap.md)           | Atomic Gap in Sync-Snapshot                    | Atomic Sync-Lock Protocol                                                              | 2025-11-19 |
 
 </details>
 
@@ -103,15 +104,16 @@ Potential improvements tracked for future consideration:
 </details>
 
 <details>
-<summary><b>Phase 3: Advanced Memory Features (5 resolved)</b></summary>
+<summary><b>Phase 3: Advanced Memory Features (6 resolved)</b></summary>
 
-| #                                      | Flaw                                      | Resolution                               | Completed  |
-| -------------------------------------- | ----------------------------------------- | ---------------------------------------- | ---------- |
-| [3](resolved/03-pattern-validation.md) | Pattern Validation Confirmation Bias Loop | DD-007 Pattern Validation Architecture   | 2025-11-17 |
-| [7](resolved/07-memory-scalability.md) | Memory Scalability vs Performance Targets | DD-005 Memory Scalability Optimization   | 2025-11-17 |
-| [13](resolved/13-validation-gaps.md)   | Learning System Validation Gaps           | N/A                                      | N/A        |
-| [15](resolved/15-failure-modes.md)     | Query & Sync Failure Modes                | DD-018: Memory System Failure Resilience | 2025-11-18 |
-| [20](resolved/20-access-control.md)    | Memory System Access Control Undefined    | DD-020                                   | 2025-11-18 |
+| #                                            | Flaw                                      | Resolution                                  | Completed  |
+| -------------------------------------------- | ----------------------------------------- | ------------------------------------------- | ---------- |
+| [3](resolved/03-pattern-validation.md)       | Pattern Validation Confirmation Bias Loop | DD-007 Pattern Validation Architecture      | 2025-11-17 |
+| [7](resolved/07-memory-scalability.md)       | Memory Scalability vs Performance Targets | DD-005 Memory Scalability Optimization      | 2025-11-17 |
+| [13](resolved/13-validation-gaps.md)         | Learning System Validation Gaps           | N/A                                         | N/A        |
+| [15](resolved/15-failure-modes.md)           | Query & Sync Failure Modes                | DD-018: Memory System Failure Resilience    | 2025-11-18 |
+| [20](resolved/20-access-control.md)          | Memory System Access Control Undefined    | DD-020                                      | 2025-11-18 |
+| [27](resolved/27-sync-priority-inversion.md) | Sync Priority Inversion                   | 4-tier priority sync with reserved capacity | 2025-11-19 |
 
 </details>
 
@@ -145,7 +147,7 @@ Potential improvements tracked for future consideration:
 Navigate by system component:
 
 <details>
-<summary><b>Memory System (8 flaws: 0 active, 8 resolved)</b></summary>
+<summary><b>Memory System (10 flaws: 0 active, 10 resolved)</b></summary>
 
 **Resolved:**
 
@@ -157,6 +159,8 @@ Navigate by system component:
 - [#17](resolved/17-data-tier-mgmt.md)✅ - Data Tier Management Gaps
 - [#20](resolved/20-access-control.md)✅ - Memory System Access Control Undefined
 - [#25](resolved/25-working-memory-durability.md)✅ - Working Memory Insufficient for Long Pauses
+- [#27](resolved/27-sync-priority-inversion.md)✅ - Sync Priority Inversion
+- [#28](resolved/28-atomic-sync-gap.md)✅ - Atomic Gap in Sync-Snapshot
 
 </details>
 
@@ -212,7 +216,7 @@ Navigate by system component:
 </details>
 
 <details>
-<summary><b>Architecture (9 flaws: 0 active, 9 resolved)</b></summary>
+<summary><b>Architecture (11 flaws: 0 active, 11 resolved)</b></summary>
 
 **Resolved:**
 
@@ -225,6 +229,8 @@ Navigate by system component:
 - [#22](resolved/22-agent-checkpoints.md)✅ - Agent Checkpoint System Missing
 - [#23](resolved/23-workflow-pause-resume.md)✅ - Workflow Pause/Resume Infrastructure Undefined
 - [#25](resolved/25-working-memory-durability.md)✅ - Working Memory Insufficient for Long Pauses
+- [#27](resolved/27-sync-priority-inversion.md)✅ - Sync Priority Inversion
+- [#28](resolved/28-atomic-sync-gap.md)✅ - Atomic Gap in Sync-Snapshot
 
 </details>
 

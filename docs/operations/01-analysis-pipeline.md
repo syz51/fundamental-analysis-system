@@ -22,21 +22,25 @@ The workflow is organized into 5 major phases, each incorporating historical con
 **Activities**:
 
 1. **Daily Regime Monitoring** (5min):
+
    - Query DD-008 regime detection for current market regime
    - Analyze regime implications (sector favorability, discount rates)
    - Detect regime changes (alert gates if confidence >80%)
 
 2. **Daily Indicator Analysis** (10min):
+
    - Fetch economic indicators from FRED/IMF/OECD
    - Calculate percentiles, trends, significance
    - Identify threshold breaches (>95th or <5th percentile)
 
 3. **Weekly Sector Scoring** (20min):
+
    - Calculate sector favorability scores (11 GICS sectors, 0-100)
    - Update sector valuations vs historical
    - Calculate 3-month momentum
 
 4. **Monthly Macro Report** (2-4hr, 1st week of month):
+
    - Generate comprehensive PDF report (8-12 pages)
    - Update interactive dashboard
    - Publish to Gates 1/2/5 and all agents
@@ -47,6 +51,7 @@ The workflow is organized into 5 major phases, each incorporating historical con
    - Threshold breaches sustained >3 days
 
 **Outputs** (cached for all stock analyses):
+
 - Current regime classification + confidence
 - Sector favorability rankings (11 sectors)
 - Discount rates by sector (for DCF models)
