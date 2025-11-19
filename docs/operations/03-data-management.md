@@ -59,22 +59,25 @@ Secondary sources supplement but don't replace primary analysis. They provide:
 **Free APIs (Phase 2)**:
 
 1. **FRED (Federal Reserve Economic Data)**
+
    - Indicators: GDP, CPI, unemployment, Fed Funds Rate, 10Y Treasury, industrial production
    - Update frequency: Daily for market data, monthly for economic releases
-   - API: https://fred.stlouisfed.org/docs/api/ (free, register for key)
+   - API: <https://fred.stlouisfed.org/docs/api/> (free, register for key)
    - Rate limit: 120 requests/minute
    - Coverage: US economic data, 800,000+ time series
 
 2. **IMF WEO Database**
+
    - Indicators: Global GDP forecasts, inflation, government debt, current account
    - Update frequency: Quarterly (Apr, Jul, Oct, Jan)
-   - API: https://www.imf.org/external/datamapper/api/help (free, no key)
+   - API: <https://www.imf.org/external/datamapper/api/help> (free, no key)
    - Coverage: 190 countries, global macro forecasts
 
 3. **OECD Stats**
+
    - Indicators: 700 indicators for 27 EU countries + OECD members
    - Update frequency: Monthly/quarterly depending on indicator
-   - API: https://data.oecd.org/api/ (free, no key)
+   - API: <https://data.oecd.org/api/> (free, no key)
    - Coverage: OECD countries, harmonized indicators
 
 4. **CBOE (Volatility Indices)**
@@ -84,11 +87,13 @@ Secondary sources supplement but don't replace primary analysis. They provide:
    - Coverage: US market sentiment indicators
 
 **Paid Options (Phase 3+, deferred)**:
+
 - Bloomberg Terminal: $32K/yr (comprehensive, real-time)
 - FactSet: $12K-$50K/yr (company data, screening, peer comps)
 - IBISWorld: $15K-$25K/yr (industry reports, competitive landscape)
 
 **Data Refresh Schedule**:
+
 - Market data (S&P, VIX): Daily at 5am ET (post-market close)
 - Economic indicators: Daily fetch, updates vary by release schedule
 - Macro reports: Monthly (1st week of month)
@@ -242,7 +247,7 @@ Domain-specific caches for each specialist agent.
 - **/valuation_agent**: Model templates, multiple histories, sector norms
 - **/macro_agent**: Regime patterns, forecast accuracy, sector rotation history
 
-**Technology**: Local PostgreSQL/SQLite per agent
+**Technology**: Redis (L2 Specialized Cache)
 **Retention**: 30 days (with selective promotion to central graph)
 **Size Estimate**: ~10GB per agent
 
@@ -599,6 +604,7 @@ vs. All Hot:      $23/mo (64% savings)
 - **Working Memory**: 24 hours (active), 14 days (paused)
 
   - Agent L1 cache for active analysis
+  - **Technology**: Redis (L1 Instance) with AOF+RDB hybrid persistence
   - Extended to 14d during pause ([DD-016](../../design-decisions/DD-016_L1_MEMORY_DURABILITY.md)), dual snapshot to Redis + PostgreSQL
   - Cleared after analysis completion
   - Critical items promoted to L2
@@ -606,6 +612,7 @@ vs. All Hot:      $23/mo (64% savings)
 - **Local Agent Cache**: 30 days (with selective promotion)
 
   - L2 cache for domain-specific patterns
+  - **Technology**: Redis (L2 Instance) with RDB-only persistence
   - High-value items promoted to central graph
   - Auto-refresh from central as needed
 

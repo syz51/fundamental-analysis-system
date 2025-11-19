@@ -29,32 +29,37 @@ The system implements a four-tier hybrid memory architecture combining centraliz
 
 ## Memory Hierarchy
 
-### L1: Agent Working Memory (RAM)
+### L1: Agent Working Memory (Redis)
 
 - **Purpose**: Immediate context for current analysis
+- **Technology**: Redis (L1 Instance) with AOF+RDB hybrid persistence
 - **Contents**: Active calculations, current company data, debate context
 - **Size**: ~100 items per agent
 - **TTL**: 24h (active), 14d (paused, [DD-016](../design-decisions/DD-016_L1_MEMORY_DURABILITY.md))
-- **Access Time**: <10ms
+- **Access Time**: <1ms
 
-### L2: Agent Specialized Cache (Local Database)
+### L2: Agent Specialized Cache (Redis)
 
 - **Purpose**: Domain-specific patterns and frequently accessed data
+- **Technology**: Redis (L2 Instance) with RDB-only persistence (rebuildable)
 - **Contents**:
   - Financial Agent: Ratio patterns, peer comparisons, accounting rules
   - Strategy Agent: Management patterns, capital allocation histories
   - Valuation Agent: Model templates, multiple histories, sector norms
 - **Size**: ~10,000 items per agent
-- **TTL**: Weeks (with refresh)
-- **Access Time**: <100ms
+- **TTL**: 30 days (LRU eviction)
+- **Access Time**: <10ms (Networked Redis)
 
-### L3: Central Knowledge Graph (Graph Database)
+### L3: Global Knowledge (Neo4j + Elasticsearch)
 
-- **Purpose**: Permanent institutional knowledge
-- **Contents**: All analyses, decisions, outcomes, patterns, relationships
+- **Purpose**: Permanent institutional knowledge (Structure + Content)
+- **Technology**: Neo4j (Relationships) + Elasticsearch 8+ (Unified Text/Vector Content)
+- **Contents**:
+  - **Neo4j**: Knowledge graph structure, relationships, decision trees
+  - **Elasticsearch**: Full text of filings/news, vector embeddings for semantic search
 - **Size**: Unlimited
 - **TTL**: Permanent
-- **Access Time**: <1s
+- **Access Time**: <500ms (Hybrid Search), <1s (Deep Graph Traversal)
 
 ### Checkpoint Storage (Execution State Persistence)
 

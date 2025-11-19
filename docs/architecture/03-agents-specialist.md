@@ -373,7 +373,7 @@ Provides top-down macroeconomic analysis to complement bottom-up company researc
 - Today's market data (S&P, VIX, yields)
 - Pending alerts (regime changes, threshold breaches)
 
-**L2 Context Memory** (30d cache, Neo4j):
+**L2 Context Memory** (30d cache, Redis):
 
 - Regime history (last 30 days classifications)
 - Indicator time series (30-day history for all 23-28 indicators)
