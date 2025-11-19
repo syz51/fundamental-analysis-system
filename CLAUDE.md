@@ -10,12 +10,19 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 
 **Full design documentation**: [docs/README.md](docs/README.md)
 
-### 5-Layer System (v2.0)
+### Current Focus: Architecture & Planning
+
+- **Status**: Design Phase (v3.0). Implementation has not started.
+- **Active Plans**: Check `plans/` for design tasks (e.g., `macro-industry-analysis-plan.md`).
+- **Roadmap**: [docs/implementation/01-roadmap.md](docs/implementation/01-roadmap.md)
+- **Latest ADR**: DD-026 Macro Reports.
+
+### 5-Layer System (v3.0)
 
 - **Human Interface**: Dashboard, notifications, feedback loop, analytics
 - **Memory & Learning**: Central knowledge graph, learning engine, pattern recognition
 - **Coordination**: Lead coordinator, debate facilitator, QC agent
-- **Specialist Agents**: Screening, business, financial, strategy, valuation, macro (with memory)
+- **Specialist Agents**: Screening, business, financial, strategy, valuation, macro, industry (with memory)
 - **Support**: Data collector, news monitor, knowledge base agent, report writer
 
 ### 14 Agent Types
@@ -25,11 +32,11 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 3. **Financial Analyst**: Statement analysis, ratios (ROE/ROA/ROIC), peer comparisons, red flags
 4. **Strategy Analyst**: Capital allocation, management track record, M&A review
 5. **Valuation**: DCF modeling, relative valuation (P/E, EV/EBITDA), scenarios
-6. **Macro Analyst**: Market regime analysis, economic indicators, sector favorability, discount rates (NEW Phase 2)
+6. **Macro Analyst**: Market regime analysis, economic indicators, sector favorability (NEW v3.0)
 7. **Data Collector**: API interfaces, document parsing, data quality
 8. **News Monitor**: Real-time tracking, event impact assessment
 9. **QC Agent**: Cross-verification, contradiction detection
-10. **Knowledge Base Agent**: Memory management, pattern recognition, institutional knowledge (NEW in v2.0)
+10. **Knowledge Base Agent**: Memory management, pattern recognition, institutional knowledge
 11. **Lead Coordinator**: Workflow orchestration, conflict resolution
 12. **Debate Facilitator**: Structured arguments, consensus building
 13. **Report Writer**: Investment memos, documentation
@@ -255,7 +262,9 @@ Design docs organized into modular files for easier iteration:
 - **[docs/operations/](docs/operations/)** - Pipeline, human integration, data (3 docs)
 - **[docs/learning/](docs/learning/)** - Learning systems, feedback, metrics (3 docs)
 - **[docs/implementation/](docs/implementation/)** - Roadmap, tech, compliance (4 docs)
-- **[docs/design-decisions/](docs/design-decisions/)** - Architectural decisions with template
+- **[docs/design-decisions/](docs/design-decisions/)** - Architectural decisions (ADRs DD-001 to DD-026)
+- **[docs/archive/](docs/archive/)** - Historical design docs and resolved flaws
+- **[plans/](plans/)** - Active implementation plans (e.g. Macro Analyst)
 - **[examples/](examples/)** - Code samples (to be populated)
 
 Quick links: [System Overview](docs/architecture/01-system-overview.md) | [Roadmap](docs/implementation/01-roadmap.md)

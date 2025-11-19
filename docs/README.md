@@ -1,6 +1,6 @@
-# Multi-Agent Fundamental Analysis System - Documentation
+# Fundamental Analysis System Documentation
 
-**Version 2.0** | **Last Updated:** 2025-11-18
+**Version 3.0** | **Last Updated:** 2025-11-19
 
 Comprehensive design documentation for the autonomous AI-powered stock analysis system.
 
@@ -54,6 +54,7 @@ Deep dives into specific complex architectural choices.
 - [Template](design-decisions/TEMPLATE.md) - Standard format for documenting new decisions
 
 **Recent Decisions**:
+
 - [DD-022: Macro Analyst Agent](design-decisions/DD-022_MACRO_ANALYST_AGENT.md) - Top-down macro analysis (Phase 2)
 - [DD-026: Macro Reports Format & Delivery](design-decisions/DD-026_MACRO_REPORTS.md) - Report specifications
 - [DD-021: Neo4j High Availability](design-decisions/DD-021_NEO4J_HA.md) - Production infrastructure

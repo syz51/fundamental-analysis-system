@@ -25,14 +25,6 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 - **Transparency**: All reasoning, memory queries, and decisions are auditable
 - **Continuous Learning**: System actively learns from outcomes and updates knowledge base
 
-### What's New in Version 2.0
-
-- **Hybrid Memory Architecture**: Central knowledge graph with local agent caches
-- **Knowledge Base Agent**: Dedicated agent for memory management and pattern recognition
-- **Memory-Enhanced Debates**: Historical context powers agent discussions
-- **Learning Loops**: Systematic capture and application of lessons learned
-- **Track Record System**: Agent credibility scoring based on historical accuracy
-
 ---
 
 ## High-Level Architecture with Memory Integration
@@ -113,7 +105,7 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 - Each maintains local memory cache for domain-specific patterns
 - Performs deep analysis in respective domains
 - Participates in collaborative debates with historical context
-- Macro Analyst provides top-down economic context (regime analysis, sector favorability, discount rates)
+- **Macro Analyst**: Provides top-down economic context (regime analysis, sector favorability, discount rates)
 
 #### Support Layer
 

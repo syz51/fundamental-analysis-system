@@ -98,6 +98,7 @@ The implementation follows an agile methodology with continuous integration of m
 #### Macro Analyst Agent Deployment
 
 - [ ] Deploy Macro Analyst Agent
+
   - Reuse DD-008 regime detection (6 market regimes)
   - Economic indicator analysis (FRED: GDP, CPI, rates, VIX)
   - Sector favorability scoring (11 GICS sectors, 0-100 scale)
@@ -107,6 +108,7 @@ The implementation follows an agile methodology with continuous integration of m
   - See [DD-022](../design-decisions/DD-022_MACRO_ANALYST_AGENT.md)
 
 - [ ] Macro Data Infrastructure
+
   - FRED API setup (free, register for key at fred.stlouisfed.org)
   - IMF/OECD API integration (free, no keys required)
   - CBOE VIX data fetching
@@ -730,4 +732,4 @@ Critical testing required for debate deadlock resolution system:
 
 ---
 
-_Document Version: 2.2 | Last Updated: 2025-11-18_
+_Document Version: 3.0 | Last Updated: 2025-11-19_
