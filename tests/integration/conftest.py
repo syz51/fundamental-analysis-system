@@ -27,13 +27,13 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def es_client():
     """
-    Session-scoped Elasticsearch client fixture.
+    Function-scoped Elasticsearch client fixture.
 
     Provides an AsyncElasticsearch client for integration tests.
-    Automatically closes the connection after all tests complete.
+    Automatically closes the connection after the test completes.
     """
     client = AsyncElasticsearch(hosts=[ES_URL])
 
@@ -64,13 +64,13 @@ async def search_client():
     await client.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def postgres_pool():
     """
-    Session-scoped PostgreSQL connection pool fixture.
+    Function-scoped PostgreSQL connection pool fixture.
 
     Provides an asyncpg connection pool for integration tests.
-    Automatically closes the pool after all tests complete.
+    Automatically closes the pool after the test completes.
     """
     pool = None
     try:
@@ -99,13 +99,13 @@ async def postgres_conn(postgres_pool):
         # Transaction automatically rolls back when exiting context
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def redis_client():
     """
-    Session-scoped Redis client fixture.
+    Function-scoped Redis client fixture.
 
     Provides a Redis client for integration tests.
-    Automatically closes the connection after all tests complete.
+    Automatically closes the connection after the test completes.
     """
     if redis is None:
         pytest.skip("redis.asyncio not available")
