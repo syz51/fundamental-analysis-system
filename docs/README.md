@@ -14,7 +14,7 @@ Understand the system design, memory model, agents, and collaboration protocols.
 
 - [01 - System Overview](architecture/01-system-overview.md) - Executive summary, objectives, 5-layer architecture
 - [02 - Memory System](architecture/02-memory-system.md) - L1/L2/L3 hybrid model, knowledge graph, sync protocols
-- [03 - Specialist Agents](architecture/03-agents-specialist.md) - 5 core analysis agents (screening, business, financial, strategy, valuation)
+- [03 - Specialist Agents](architecture/03-agents-specialist.md) - 6 core analysis agents (screening, business, financial, strategy, valuation, macro)
 - [04 - Support Agents](architecture/04-agents-support.md) - 4 infrastructure agents (data collector, news monitor, QC, knowledge base)
 - [05 - Coordination Agents](architecture/05-agents-coordination.md) - Lead coordinator, debate facilitator
 - [06 - Output Agents](architecture/06-agents-output.md) - Report writer, watchlist manager
@@ -52,6 +52,11 @@ Deep dives into specific complex architectural choices.
 
 - [Index of All Decisions](design-decisions/INDEX.md) - All design decisions with status (21 approved)
 - [Template](design-decisions/TEMPLATE.md) - Standard format for documenting new decisions
+
+**Recent Decisions**:
+- [DD-022: Macro Analyst Agent](design-decisions/DD-022_MACRO_ANALYST_AGENT.md) - Top-down macro analysis (Phase 2)
+- [DD-026: Macro Reports Format & Delivery](design-decisions/DD-026_MACRO_REPORTS.md) - Report specifications
+- [DD-021: Neo4j High Availability](design-decisions/DD-021_NEO4J_HA.md) - Production infrastructure
 
 ### ⚠️ Design Flaws
 
@@ -122,6 +127,17 @@ Practical implementation samples are in `/examples`:
 1. [Human Integration](operations/02-human-integration.md) - Gate design
 2. [Data Management](operations/03-data-management.md) - Data sources
 3. [Technical Requirements](implementation/02-tech-requirements.md) - Infrastructure needs
+
+---
+
+## System Enhancements (Phase 2+)
+
+The system integrates **top-down macro analysis** with bottom-up company research:
+
+- **Macro Analyst Agent**: Analyzes market regimes, economic indicators, sector dynamics
+- **Sector Favorability**: Guides screening priorities (avoid poor-timing sectors)
+- **Discount Rate Calibration**: DCF models reflect interest rate environment
+- See [DD-022](design-decisions/DD-022_MACRO_ANALYST_AGENT.md) for details
 
 ---
 

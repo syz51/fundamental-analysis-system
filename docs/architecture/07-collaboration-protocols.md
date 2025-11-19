@@ -553,6 +553,78 @@ Downstream Impact Calculation:
 
 ---
 
+## Macro Analyst Broadcasts
+
+### Purpose
+
+Notify all agents of regime changes, major macro updates
+
+### Trigger Events
+
+1. **Regime Change** (confidence >80%):
+   - Old regime → New regime transition detected
+   - Example: BULL_LOW_RATES → BEAR_HIGH_RATES
+   - Priority: Critical (2s sync)
+
+2. **Major Fed Announcement**:
+   - Rate change (25bps+)
+   - Policy shift (QE/QT changes)
+   - Priority: High (10s sync)
+
+3. **Threshold Breach** (sustained >3 days):
+   - Indicator moves to extreme percentile (>95th or <5th)
+   - Example: VIX jumps to 40 (>95th percentile)
+   - Priority: Normal (5min sync)
+
+### Broadcast Message Format
+
+```json
+{
+  "from_agent": "macro_analyst",
+  "to_agent": "all",
+  "message_type": "alert",
+  "priority": "critical",
+  "content": {
+    "event_type": "regime_change",
+    "old_regime": "BULL_LOW_RATES",
+    "new_regime": "BEAR_HIGH_RATES",
+    "confidence": 0.85,
+    "implications": {
+      "sector_favorability_changes": {
+        "Technology": -15,    // Score decreased 15pts
+        "Healthcare": +10     // Score increased 10pts
+      },
+      "discount_rate_changes": {
+        "Technology": 0.025,  // +2.5% discount rate
+        "Utilities": 0.015    // +1.5% discount rate
+      }
+    },
+    "recommended_actions": [
+      "Re-screen candidates with updated sector scores",
+      "Recalculate DCF models with new discount rates",
+      "Review in-progress analyses for regime sensitivity"
+    ]
+  },
+  "requires_response": false,
+  "timestamp": "2025-01-15T10:30:00Z"
+}
+```
+
+### Agent Response Protocol
+
+- **Screening Agent**: Re-weight candidates by new sector scores
+- **Valuation Agent**: Update discount rates for in-progress DCF models
+- **Financial/Business/Strategy Agents**: Note regime change in analysis context
+- **Lead Coordinator**: Flag in-progress analyses for potential re-evaluation
+
+### Human Notification
+
+- Alert sent to Gates 1/2/5 dashboards
+- Email notification (if configured)
+- Updated macro report published within 2 hours
+
+---
+
 ## Decision Meeting with Full Memory Context
 
 ### Decision Package Components

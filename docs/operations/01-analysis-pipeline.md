@@ -10,6 +10,57 @@ The workflow is organized into 5 major phases, each incorporating historical con
 
 ## Memory-Enhanced Workflow
 
+### Phase 0: Macro & Industry Analysis (Async, Cached)
+
+**Duration**: Continuous (independent of stock-specific pipeline)
+**Frequency**: Monthly reports + daily monitoring + event-driven updates
+
+**Purpose**: Provide top-down macroeconomic context that informs all stock analyses.
+
+**Agents**: Macro Analyst (Phase 2+)
+
+**Activities**:
+
+1. **Daily Regime Monitoring** (5min):
+   - Query DD-008 regime detection for current market regime
+   - Analyze regime implications (sector favorability, discount rates)
+   - Detect regime changes (alert gates if confidence >80%)
+
+2. **Daily Indicator Analysis** (10min):
+   - Fetch economic indicators from FRED/IMF/OECD
+   - Calculate percentiles, trends, significance
+   - Identify threshold breaches (>95th or <5th percentile)
+
+3. **Weekly Sector Scoring** (20min):
+   - Calculate sector favorability scores (11 GICS sectors, 0-100)
+   - Update sector valuations vs historical
+   - Calculate 3-month momentum
+
+4. **Monthly Macro Report** (2-4hr, 1st week of month):
+   - Generate comprehensive PDF report (8-12 pages)
+   - Update interactive dashboard
+   - Publish to Gates 1/2/5 and all agents
+
+5. **Ad-Hoc Updates** (event-driven):
+   - Regime changes (confidence >80%)
+   - Major Fed announcements (rate changes, policy shifts)
+   - Threshold breaches sustained >3 days
+
+**Outputs** (cached for all stock analyses):
+- Current regime classification + confidence
+- Sector favorability rankings (11 sectors)
+- Discount rates by sector (for DCF models)
+- Monthly macro report (PDF + dashboard + API)
+- Economic indicator snapshot
+
+**Integration**: Phase 1 (Screening) queries sector scores, Phase 4 (Valuation) queries discount rates
+
+**Human Gates**: None (async background analysis, results available to Gates 1/2/5 on-demand)
+
+**See**: [DD-022: Macro Analyst](../design-decisions/DD-022_MACRO_ANALYST_AGENT.md) for implementation details
+
+---
+
 ### Phase 1: Memory-Informed Discovery (Days 1-2)
 
 ```mermaid
@@ -29,7 +80,10 @@ graph LR
 1. Query: "Have we analyzed this company before?"
 2. Load: Previous recommendations, outcomes, lessons
 3. Pattern match: "Similar companies that succeeded/failed"
-4. Present: Historical context to human reviewer
+4. **Macro Context Query** (NEW Phase 2+):
+   - Current market regime and sector favorability rankings
+   - Used to weight candidates by sector timing (not just fundamentals)
+5. Present: Historical context to human reviewer
 
 **Core Activities**:
 
@@ -193,6 +247,10 @@ Valuation models are calibrated using historical performance:
 - **Assumption adjustment**: Calibrate inputs based on past prediction errors
 - **Scenario weighting**: Apply historical probabilities to bull/base/bear cases
 - **Confidence scoring**: Calculate based on track record in similar situations
+- **Macro-Calibrated Discount Rates** (NEW Phase 2+):
+  - Query Macro Analyst for sector-specific discount rates
+  - Reflects current interest rate environment (vs arbitrary defaults)
+  - Example: 11.5% in BEAR_HIGH_RATES vs 8% in BULL_LOW_RATES
 
 For example, if the valuation agent has historically overestimated tech company growth by 8%, the system automatically adjusts current projections downward and widens confidence intervals appropriately.
 
@@ -641,13 +699,14 @@ Supports: Airflow (DAG pause), Prefect (flow pause), Temporal (signal), Custom
 
 ### Standard 12-Day Cycle
 
-| Phase | Days  | Activities                      | Gates          | Fallback Handling                                   |
-| ----- | ----- | ------------------------------- | -------------- | --------------------------------------------------- |
-| 1     | 1-2   | Screening & validation          | Gate 1         | Auto-proceed with top 10 (24hr)                     |
-| 2     | 3-7   | Parallel specialist analysis    | Gate 2 (Day 3) | Standard checklist (12hr)                           |
-| 3     | 8-9   | Debate & synthesis              | Gate 4         | **Conservative default (6hr), review at next gate** |
-| 4     | 10-11 | Valuation modeling              | Gate 3         | Conservative estimates (24hr)                       |
-| 5     | 12    | Documentation & watchlist setup | Gate 5         | Blocking (no auto-action)                           |
+| Phase | Days       | Activities                      | Gates          | Fallback Handling                                   |
+| ----- | ---------- | ------------------------------- | -------------- | --------------------------------------------------- |
+| 0     | Continuous | Macro/industry analysis         | N/A            | Monthly/weekly/daily scheduled                      |
+| 1     | 1-2        | Screening & validation          | Gate 1         | Auto-proceed with top 10 (24hr)                     |
+| 2     | 3-7        | Parallel specialist analysis    | Gate 2 (Day 3) | Standard checklist (12hr)                           |
+| 3     | 8-9        | Debate & synthesis              | Gate 4         | **Conservative default (6hr), review at next gate** |
+| 4     | 10-11      | Valuation modeling              | Gate 3         | Conservative estimates (24hr)                       |
+| 5     | 12         | Documentation & watchlist setup | Gate 5         | Blocking (no auto-action)                           |
 
 **Key Change**: Phase 3 debates are now **non-blocking**. If human unavailable, conservative defaults applied provisionally and pipeline continues. Provisional decisions reviewed at Gates 3 or 5.
 

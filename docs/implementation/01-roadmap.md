@@ -95,6 +95,32 @@ The implementation follows an agile methodology with continuous integration of m
   - Business model pattern recognition
   - Management track record database
 
+#### Macro Analyst Agent Deployment
+
+- [ ] Deploy Macro Analyst Agent
+  - Reuse DD-008 regime detection (6 market regimes)
+  - Economic indicator analysis (FRED: GDP, CPI, rates, VIX)
+  - Sector favorability scoring (11 GICS sectors, 0-100 scale)
+  - Monthly report generation (8-12 pages PDF + interactive dashboard)
+  - Integration with Screening Agent (sector scores)
+  - Integration with Valuation Agent (discount rates)
+  - See [DD-022](../design-decisions/DD-022_MACRO_ANALYST_AGENT.md)
+
+- [ ] Macro Data Infrastructure
+  - FRED API setup (free, register for key at fred.stlouisfed.org)
+  - IMF/OECD API integration (free, no keys required)
+  - CBOE VIX data fetching
+  - Neo4j schema for macro memory (regime history, forecast accuracy)
+  - Monthly batch processing (2-4 hours report generation)
+  - Dashboard deployment (Plotly Dash / Streamlit / Tableau - tool TBD)
+
+- [ ] Macro Report System
+  - PDF report generation (8-12 pages, 6 sections)
+  - Interactive dashboard (4 quadrants: regime gauge, indicator heatmap, sector rotation, yield curve)
+  - API endpoints (5 RESTful endpoints for agent consumption)
+  - Gate integration (embed dashboards in Gate 1/2/5 UIs)
+  - See [DD-026](../design-decisions/DD-026_MACRO_REPORTS.md)
+
 #### Memory Infrastructure
 
 - [ ] Implement Knowledge Base Agent
@@ -299,6 +325,13 @@ Critical testing required for debate deadlock resolution system:
   - Statistical power calculation
   - Result analysis and reporting
   - Automatic pattern retirement on failure
+- [ ] Enhance Regime Detection with LLM Layer
+  - Add LLM analysis to DD-008 rule-based regime detection
+  - Hybrid: Rule-based (60%) + LLM narrative analysis (40%)
+  - LLM outputs: Classification + confidence + narrative rationale
+  - Human validation via Gate 6 (learning validation)
+  - Target: 90% accuracy (vs 85% rule-based)
+  - Fallback: LLM confidence <0.7 → use rule-based
 
 #### Memory Scalability Optimization (DD-005)
 

@@ -74,6 +74,12 @@ The system presents each candidate with historical context:
 
 This enables humans to leverage institutional memory for better candidate selection while adding their own experiential knowledge.
 
+**Macro Context** (Phase 2+):
+- Current market regime (e.g., BEAR_HIGH_RATES, confidence 85%)
+- Sector favorability rankings (11 GICS sectors, top 3 overweight, bottom 3 underweight)
+- Key macro risks (top 3 upside/downside scenarios)
+- Display: Embedded dashboard (regime gauge + sector heatmap) or summary table
+
 ### Gate 2: Research Direction with Precedents
 
 **Input Required**: Identify focus areas and concerns
@@ -105,6 +111,12 @@ After initial parallel analysis, humans guide the depth and direction of researc
 - Correcting any misinterpretations by agents
 
 The system shows where similar companies had unexpected issues, prompting proactive investigation.
+
+**Macro Context** (Phase 2+):
+- Monthly macro report highlights (regime analysis, sector implications)
+- Regime transition probabilities (scenarios for next 3-6 months)
+- Sector-specific outlook (if company in overweight/underweight sector, rationale)
+- Display: Report summary (1-page excerpt) or dashboard link
 
 ### Gate 3: Assumption Validation with Calibration
 
@@ -341,6 +353,16 @@ The executive summary includes:
 - Monitoring plan
 
 Humans make the final go/no-go decision with full transparency into AI reasoning and historical context.
+
+**Macro Context** (Phase 2+):
+- Full monthly macro report (8-12 pages PDF)
+- Company positioning within sector favorability framework
+- Discount rate used in valuation (regime-calibrated vs arbitrary default)
+- Three-layer decision context:
+  - **Macro**: Market regime, sector timing
+  - **Industry**: Competitive landscape (future Phase 3+)
+  - **Company**: Fundamental analysis
+- Display: PDF viewer + dashboard side-by-side
 
 ### Gate 6: Learning Validation (NEW)
 

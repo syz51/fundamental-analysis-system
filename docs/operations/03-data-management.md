@@ -54,6 +54,45 @@ Secondary sources supplement but don't replace primary analysis. They provide:
 - Sentiment context
 - Competitive intelligence
 
+#### Macro & Economic Data Sources
+
+**Free APIs (Phase 2)**:
+
+1. **FRED (Federal Reserve Economic Data)**
+   - Indicators: GDP, CPI, unemployment, Fed Funds Rate, 10Y Treasury, industrial production
+   - Update frequency: Daily for market data, monthly for economic releases
+   - API: https://fred.stlouisfed.org/docs/api/ (free, register for key)
+   - Rate limit: 120 requests/minute
+   - Coverage: US economic data, 800,000+ time series
+
+2. **IMF WEO Database**
+   - Indicators: Global GDP forecasts, inflation, government debt, current account
+   - Update frequency: Quarterly (Apr, Jul, Oct, Jan)
+   - API: https://www.imf.org/external/datamapper/api/help (free, no key)
+   - Coverage: 190 countries, global macro forecasts
+
+3. **OECD Stats**
+   - Indicators: 700 indicators for 27 EU countries + OECD members
+   - Update frequency: Monthly/quarterly depending on indicator
+   - API: https://data.oecd.org/api/ (free, no key)
+   - Coverage: OECD countries, harmonized indicators
+
+4. **CBOE (Volatility Indices)**
+   - Indicators: VIX (volatility index), put/call ratios
+   - Update frequency: Real-time during market hours
+   - API: Free via API or web scraping
+   - Coverage: US market sentiment indicators
+
+**Paid Options (Phase 3+, deferred)**:
+- Bloomberg Terminal: $32K/yr (comprehensive, real-time)
+- FactSet: $12K-$50K/yr (company data, screening, peer comps)
+- IBISWorld: $15K-$25K/yr (industry reports, competitive landscape)
+
+**Data Refresh Schedule**:
+- Market data (S&P, VIX): Daily at 5am ET (post-market close)
+- Economic indicators: Daily fetch, updates vary by release schedule
+- Macro reports: Monthly (1st week of month)
+
 ---
 
 ## Enhanced Data Storage Architecture
@@ -138,6 +177,9 @@ Cleaned, normalized, and structured data ready for analysis.
 - **/ratios**: Calculated financial metrics (parquet)
 - **/sentiment_scores**: NLP-derived sentiment (JSON)
 - **/peer_comparisons**: Comparative metrics across peers (parquet)
+- **/macro_indicators**: Economic time series (FRED, IMF, OECD) (JSON/CSV)
+- **/industry_reports**: (Future Phase 3+)
+- **/peer_groups**: (Future Phase 3+)
 
 **Retention**: 7-10 years (tiered: Hot 0-2yr, Warm 2-5yr, Cold 5-7yr)
 
@@ -183,6 +225,7 @@ Domain-specific caches for each specialist agent.
 - **/financial_agent**: Ratio patterns, accounting red flags, peer comparisons
 - **/strategy_agent**: Management patterns, capital allocation histories
 - **/valuation_agent**: Model templates, multiple histories, sector norms
+- **/macro_agent**: Regime patterns, forecast accuracy, sector rotation history
 
 **Technology**: Local PostgreSQL/SQLite per agent
 **Retention**: 30 days (with selective promotion to central graph)
@@ -258,6 +301,8 @@ Final analysis products.
 - **/reports**: Investment memos, summaries (PDF/HTML)
 - **/watchlists**: Position tracking configurations (JSON)
 - **/decision_logs**: Complete decision audit trails (JSON)
+- **/macro_reports**: Monthly PDFs, dashboards, forecast data
+  - **/archive**: All report versions (permanent retention)
 
 **Retention**: Permanent
 **Size Estimate**: ~10GB per year
