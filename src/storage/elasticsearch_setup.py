@@ -34,8 +34,8 @@ INDEX_SETTINGS = {
                 "filter": [
                     "lowercase",
                     "asciifolding",
-                    "financial_stop",
                     "financial_synonyms",
+                    "financial_stop",
                     "english_stemmer",
                 ],
             }
@@ -46,7 +46,7 @@ INDEX_SETTINGS = {
                 "stopwords": ["the", "a", "an", "and", "or", "but"],
             },
             "financial_synonyms": {
-                "type": "synonym_graph",
+                "type": "synonym",
                 "synonyms": [
                     (
                         "EBITDA, Earnings Before Interest Taxes Depreciation Amortization, "

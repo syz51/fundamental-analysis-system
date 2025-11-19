@@ -1,6 +1,5 @@
 """Pytest configuration and fixtures for integration tests requiring external services."""
 
-import asyncio
 import os
 
 import asyncpg
@@ -17,14 +16,6 @@ except ImportError:
 ES_URL = os.getenv("ES_URL", "http://localhost:9200")
 POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql://postgres:postgres@localhost:5432/fundamental_analysis_test")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Provide session-scoped event loop for session-scoped async fixtures."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture

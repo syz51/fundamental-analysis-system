@@ -198,7 +198,7 @@ class TestIndexSettings:
     def test_financial_synonyms_configuration(self):
         """Financial synonyms filter includes key financial terms."""
         synonyms_filter = INDEX_SETTINGS["analysis"]["filter"]["financial_synonyms"]
-        assert synonyms_filter["type"] == "synonym_graph"
+        assert synonyms_filter["type"] == "synonym"
         synonyms = synonyms_filter["synonyms"]
         # Check a few key synonyms
         ebitda_synonym = [s for s in synonyms if "EBITDA" in s]

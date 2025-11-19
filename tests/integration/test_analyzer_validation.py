@@ -141,10 +141,10 @@ async def test_ascii_folding(es_client):
 
     tokens = [token["token"] for token in response["tokens"]]
 
-    # Accented chars should be converted to ASCII
+    # Accented chars should be converted to ASCII (and then stemmed)
     assert "cafe" in tokens, f"'café' not folded to 'cafe'. Got: {tokens}"
-    assert any("resume" in t for t in tokens), f"'résumé' not folded correctly. Got: {tokens}"
-    assert any("naive" in t or "naiv" in t for t in tokens), f"'naïve' not folded correctly. Got: {tokens}"
+    assert any("resum" in t for t in tokens), f"'résumé' not folded/stemmed correctly. Got: {tokens}"
+    assert any("naiv" in t for t in tokens), f"'naïve' not folded/stemmed correctly. Got: {tokens}"
 
 
 @pytest.mark.asyncio
