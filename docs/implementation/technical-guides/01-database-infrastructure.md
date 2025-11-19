@@ -157,3 +157,7 @@ All tables in migration scripts are explicitly schema-qualified (e.g., `CREATE T
 
 - **Description**: "Initial schema"
 - **Content**: Contains the DDL for all base tables defined in Design Decisions DD-011, DD-012, DD-017, DD-019, and DD-020.
+
+## Related Guides
+
+- [Elasticsearch Setup & Search Component Guide](./03-elasticsearch-setup.md)
