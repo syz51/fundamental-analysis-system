@@ -15,24 +15,25 @@ Multi-agent fundamental analysis system for stock analysis. Uses autonomous AI a
 - **Human Interface**: Dashboard, notifications, feedback loop, analytics
 - **Memory & Learning**: Central knowledge graph, learning engine, pattern recognition
 - **Coordination**: Lead coordinator, debate facilitator, QC agent
-- **Specialist Agents**: Screening, business, financial, strategy, valuation (with memory)
+- **Specialist Agents**: Screening, business, financial, strategy, valuation, macro (with memory)
 - **Support**: Data collector, news monitor, knowledge base agent, report writer
 
-### 13 Agent Types
+### 14 Agent Types
 
 1. **Screening**: Initial filtering, quantitative screens (10Y revenue CAGR, margins, debt ratios)
 2. **Business Research**: SEC filings, SWOT, competitive moats, KPIs
 3. **Financial Analyst**: Statement analysis, ratios (ROE/ROA/ROIC), peer comparisons, red flags
 4. **Strategy Analyst**: Capital allocation, management track record, M&A review
 5. **Valuation**: DCF modeling, relative valuation (P/E, EV/EBITDA), scenarios
-6. **Data Collector**: API interfaces, document parsing, data quality
-7. **News Monitor**: Real-time tracking, event impact assessment
-8. **QC Agent**: Cross-verification, contradiction detection
-9. **Knowledge Base Agent**: Memory management, pattern recognition, institutional knowledge (NEW in v2.0)
-10. **Lead Coordinator**: Workflow orchestration, conflict resolution
-11. **Debate Facilitator**: Structured arguments, consensus building
-12. **Report Writer**: Investment memos, documentation
-13. **Watchlist Manager**: Position monitoring, alerts
+6. **Macro Analyst**: Market regime analysis, economic indicators, sector favorability, discount rates (NEW Phase 2)
+7. **Data Collector**: API interfaces, document parsing, data quality
+8. **News Monitor**: Real-time tracking, event impact assessment
+9. **QC Agent**: Cross-verification, contradiction detection
+10. **Knowledge Base Agent**: Memory management, pattern recognition, institutional knowledge (NEW in v2.0)
+11. **Lead Coordinator**: Workflow orchestration, conflict resolution
+12. **Debate Facilitator**: Structured arguments, consensus building
+13. **Report Writer**: Investment memos, documentation
+14. **Watchlist Manager**: Position monitoring, alerts
 
 ### Analysis Pipeline (12-day cycle)
 
@@ -88,6 +89,7 @@ See [Human Integration](docs/operations/02-human-integration.md) for details.
 - Financial providers (Koyfin, Bloomberg, Refinitiv)
 - News feeds (Reuters, Bloomberg)
 - Alternative data (web traffic, social sentiment)
+- Macro data (FRED, IMF, OECD, CBOE) - for Macro Analyst
 
 ## Project Setup
 

@@ -10,6 +10,7 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 
 - Automate screening and initial analysis of investment opportunities
 - Provide thorough fundamental analysis across business, financial, and strategic dimensions
+- Integrate top-down macro analysis with bottom-up company research (Phase 2+)
 - Build and leverage institutional knowledge through comprehensive memory systems
 - Learn from past decisions and continuously improve prediction accuracy
 - Enable human oversight and input at critical decision points
@@ -60,6 +61,7 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 ┌─────────────────────────────────────────────────────────┐
 │                  Specialist Agent Layer                   │
 │  Screening | Business | Financial | Strategy | Valuation  │
+│                       Macro                               │
 │        (Each with Local Memory Cache)                     │
 └─────────────────────────────────────────────────────────┘
                               ▲
@@ -107,10 +109,11 @@ This document outlines the design for a memory-enhanced multi-agent system that 
 
 #### Specialist Agent Layer
 
-- Five specialized agents (Screening, Business, Financial, Strategy, Valuation)
+- Six specialized agents (Screening, Business, Financial, Strategy, Valuation, Macro)
 - Each maintains local memory cache for domain-specific patterns
 - Performs deep analysis in respective domains
 - Participates in collaborative debates with historical context
+- Macro Analyst provides top-down economic context (regime analysis, sector favorability, discount rates)
 
 #### Support Layer
 
