@@ -62,9 +62,9 @@ async def test_synonym_expansion_ma(es_client):
     tokens = [token["token"] for token in response["tokens"]]
 
     # Should expand M&A to synonyms
-    assert any(
-        t in tokens for t in ["ma", "merger", "mergers", "acquisition", "acquisitions"]
-    ), f"M&A not expanded correctly. Got: {tokens}"
+    assert any(t in tokens for t in ["ma", "merger", "mergers", "acquisition", "acquisitions"]), (
+        f"M&A not expanded correctly. Got: {tokens}"
+    )
 
 
 @pytest.mark.asyncio
