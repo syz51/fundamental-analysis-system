@@ -157,7 +157,6 @@ jobs:
         run: |
           PYTHONPATH=$PWD uv run pytest tests/integration/ \
             -v \
-            -m "requires_es or requires_postgres or requires_redis" \
             --maxfail=3
 
       - name: Upload integration test logs
