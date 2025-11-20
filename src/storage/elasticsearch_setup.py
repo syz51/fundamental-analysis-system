@@ -27,9 +27,23 @@ INDEX_SETTINGS = {
     "index.translog.durability": "async",
     "index.translog.sync_interval": "5s",
     "analysis": {
+        "char_filter": {
+            "financial_char_filter": {
+                "type": "mapping",
+                "mappings": [
+                    "M&A=>MA",
+                    "P/E=>PE",
+                    "P/B=>PB",
+                    "D/E=>DE",
+                    "SG&A=>SGA",
+                    "R&D=>RD",
+                ],
+            }
+        },
         "analyzer": {
             "financial_analyzer": {
                 "type": "custom",
+                "char_filter": ["financial_char_filter"],
                 "tokenizer": "standard",
                 "filter": [
                     "lowercase",

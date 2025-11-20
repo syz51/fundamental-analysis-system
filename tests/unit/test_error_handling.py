@@ -11,7 +11,8 @@ import pytest
 from elastic_transport import ApiResponseMeta, HttpHeaders
 from elasticsearch.exceptions import ApiError
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
-from src.storage.search_tool import CircuitBreaker, SearchClient, retry_with_backoff
+
+from storage.search_tool import CircuitBreaker, SearchClient, retry_with_backoff
 
 pytestmark = pytest.mark.unit
 
@@ -40,7 +41,7 @@ def _create_api_error(message: str, status_code: int) -> ApiError:
 # --- Circuit Breaker Tests ---
 
 
-def test_circuit_breaker_initial_state():
+def test_circuit_breaker_initial_state() -> None:
     """Test circuit breaker starts in closed state."""
     cb = CircuitBreaker(failure_threshold=3, timeout=60)
     assert cb.state == "closed"
@@ -48,7 +49,7 @@ def test_circuit_breaker_initial_state():
     assert cb.can_execute() is True
 
 
-def test_circuit_breaker_opens_after_threshold():
+def test_circuit_breaker_opens_after_threshold() -> None:
     """Test circuit breaker opens after failure threshold."""
     cb = CircuitBreaker(failure_threshold=FAILURE_THRESHOLD_MED, timeout=60)
 
@@ -67,7 +68,7 @@ def test_circuit_breaker_opens_after_threshold():
     assert cb.can_execute() is False
 
 
-def test_circuit_breaker_resets_on_success():
+def test_circuit_breaker_resets_on_success() -> None:
     """Test circuit breaker resets failures on success."""
     cb = CircuitBreaker(failure_threshold=FAILURE_THRESHOLD_MED, timeout=60)
 
@@ -80,7 +81,7 @@ def test_circuit_breaker_resets_on_success():
     assert cb.state == "closed"
 
 
-def test_circuit_breaker_half_open_after_timeout():
+def test_circuit_breaker_half_open_after_timeout() -> None:
     """Test circuit breaker enters half-open state after timeout."""
     cb = CircuitBreaker(failure_threshold=FAILURE_THRESHOLD_LOW, timeout=0.1)  # 100ms timeout
 
@@ -97,16 +98,28 @@ def test_circuit_breaker_half_open_after_timeout():
     assert cb.state == "half-open"
 
 
+def test_circuit_breaker_half_open_stays_half_open() -> None:
+    """Test circuit breaker returns True when already in half-open state."""
+    cb = CircuitBreaker(failure_threshold=FAILURE_THRESHOLD_LOW, timeout=0.1)
+
+    # Manually set to half-open
+    cb.state = "half-open"
+
+    # Should return True and stay half-open
+    assert cb.can_execute() is True
+    assert cb.state == "half-open"
+
+
 # --- Retry Decorator Tests ---
 
 
 @pytest.mark.asyncio
-async def test_retry_succeeds_first_attempt():
+async def test_retry_succeeds_first_attempt() -> None:
     """Test retry decorator when function succeeds on first attempt."""
     call_count = 0
 
     @retry_with_backoff(max_retries=MAX_RETRIES_MED, base_delay=0.01, max_delay=0.1)
-    async def test_func():
+    async def test_func() -> str:
         nonlocal call_count
         call_count += 1
         return "success"
@@ -117,12 +130,12 @@ async def test_retry_succeeds_first_attempt():
 
 
 @pytest.mark.asyncio
-async def test_retry_succeeds_after_retries():
+async def test_retry_succeeds_after_retries() -> None:
     """Test retry decorator when function succeeds after failures."""
     call_count = 0
 
     @retry_with_backoff(max_retries=MAX_RETRIES_MED, base_delay=0.01, max_delay=0.1)
-    async def test_func():
+    async def test_func() -> str:
         nonlocal call_count
         call_count += 1
         if call_count < MAX_RETRIES_MED:
@@ -135,12 +148,12 @@ async def test_retry_succeeds_after_retries():
 
 
 @pytest.mark.asyncio
-async def test_retry_exhausts_attempts():
+async def test_retry_exhausts_attempts() -> None:
     """Test retry decorator when all attempts fail."""
     call_count = 0
 
     @retry_with_backoff(max_retries=MAX_RETRIES_LOW, base_delay=0.01, max_delay=0.1)
-    async def test_func():
+    async def test_func() -> None:
         nonlocal call_count
         call_count += 1
         raise ESConnectionError("Connection failed")
@@ -152,12 +165,12 @@ async def test_retry_exhausts_attempts():
 
 
 @pytest.mark.asyncio
-async def test_retry_rate_limit():
+async def test_retry_rate_limit() -> None:
     """Test retry decorator handles 429 rate limiting."""
     call_count = 0
 
     @retry_with_backoff(max_retries=MAX_RETRIES_LOW, base_delay=0.01, max_delay=0.1)
-    async def test_func():
+    async def test_func() -> str:
         nonlocal call_count
         call_count += 1
         if call_count < MAX_RETRIES_LOW:
@@ -170,12 +183,12 @@ async def test_retry_rate_limit():
 
 
 @pytest.mark.asyncio
-async def test_retry_non_retryable_error():
+async def test_retry_non_retryable_error() -> None:
     """Test retry decorator does not retry non-retryable errors."""
     call_count = 0
 
     @retry_with_backoff(max_retries=MAX_RETRIES_MED, base_delay=0.01, max_delay=0.1)
-    async def test_func():
+    async def test_func() -> None:
         nonlocal call_count
         call_count += 1
         raise ValueError("Invalid input")
@@ -187,12 +200,12 @@ async def test_retry_non_retryable_error():
 
 
 @pytest.mark.asyncio
-async def test_retry_api_error_non_429():
+async def test_retry_api_error_non_429() -> None:
     """Test retry decorator does not retry non-429 API errors."""
     call_count = 0
 
     @retry_with_backoff(max_retries=MAX_RETRIES_MED, base_delay=0.01, max_delay=0.1)
-    async def test_func():
+    async def test_func() -> None:
         nonlocal call_count
         call_count += 1
         raise _create_api_error("Bad request", 400)
@@ -207,7 +220,7 @@ async def test_retry_api_error_non_429():
 
 
 @pytest.mark.asyncio
-async def test_search_circuit_breaker_blocks_request():
+async def test_search_circuit_breaker_blocks_request() -> None:
     """Test search_tool respects circuit breaker state."""
     client = SearchClient()
 
@@ -219,7 +232,7 @@ async def test_search_circuit_breaker_blocks_request():
 
 
 @pytest.mark.asyncio
-async def test_search_connection_error_triggers_circuit_breaker():
+async def test_search_connection_error_triggers_circuit_breaker() -> None:
     """Test connection errors trigger circuit breaker."""
     client = SearchClient()
 
@@ -235,7 +248,7 @@ async def test_search_connection_error_triggers_circuit_breaker():
 
 
 @pytest.mark.asyncio
-async def test_search_success_resets_circuit_breaker():
+async def test_search_success_resets_circuit_breaker() -> None:
     """Test successful search resets circuit breaker failures."""
     client = SearchClient()
 
@@ -267,7 +280,7 @@ async def test_search_success_resets_circuit_breaker():
 
 
 @pytest.mark.asyncio
-async def test_search_api_error_does_not_trigger_circuit_breaker():
+async def test_search_api_error_does_not_trigger_circuit_breaker() -> None:
     """Test API errors (non-connection) don't trigger circuit breaker."""
     client = SearchClient()
 
@@ -283,7 +296,7 @@ async def test_search_api_error_does_not_trigger_circuit_breaker():
 
 
 @pytest.mark.asyncio
-async def test_hybrid_search_partial_failure():
+async def test_hybrid_search_partial_failure() -> None:
     """Test hybrid search when one query fails."""
     client = SearchClient()
 

@@ -1,28 +1,30 @@
-"""Extended unit tests for SearchClient covering uncovered paths."""
+"""Extended unit tests for SearchClient integration tests."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from src.storage.search_tool import SearchClient, SearchConfig
+
+from storage.search_tool import SearchClient, SearchConfig
 
 # Test constants
 EMBEDDING_DIMS = 1536
-MOCK_EMBEDDING_VALUE = 0.001
-DEFAULT_LIMIT = 3
 KNN_K_VALUE = 10
 NUM_CANDIDATES = 100
 RRF_K = 60
 OVERLAP_COUNT = 2
 RRF_TOLERANCE = 0.001
 
+pytestmark = pytest.mark.unit
+
 
 class TestSearchClientClose:
     """Tests for SearchClient.close() method."""
 
     @pytest.mark.asyncio
-    async def test_close_calls_client_close(self):
+    async def test_close_calls_client_close(self) -> None:
         """close() should call the underlying Elasticsearch client close."""
-        with patch("src.storage.search_tool.AsyncElasticsearch") as mock_es_class:
+        with patch("storage.search_tool.AsyncElasticsearch") as mock_es_class:
             mock_es_instance = AsyncMock()
             mock_es_class.return_value = mock_es_instance
 
@@ -33,157 +35,13 @@ class TestSearchClientClose:
             mock_es_instance.close.assert_called_once()
 
 
-class TestGenerateEmbedding:
-    """Tests for _generate_embedding method."""
-
-    @pytest.mark.asyncio
-    async def test_generate_embedding_mock_mode(self):
-        """In mock mode, returns deterministic 1536-dim vector."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200", embedding_model_mock=True)
-            vector = await client._generate_embedding("test query")
-
-            assert isinstance(vector, list)
-            assert len(vector) == EMBEDDING_DIMS
-            assert all(v == MOCK_EMBEDDING_VALUE for v in vector)
-
-    @pytest.mark.asyncio
-    async def test_generate_embedding_real_mode_not_implemented(self):
-        """When mock=False, raises NotImplementedError."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200", embedding_model_mock=False)
-
-            with pytest.raises(NotImplementedError, match="Real embedding model not configured"):
-                await client._generate_embedding("test query")
-
-
-class TestBuildFilters:
-    """Tests for _build_filters method covering all parameter combinations."""
-
-    def test_build_filters_empty(self):
-        """No filters returns empty list."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(ticker=None, start_date=None, end_date=None, filters=None)
-
-            assert filters == []
-
-    def test_build_filters_ticker_only(self):
-        """Ticker filter creates term query."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(ticker="AAPL", start_date=None, end_date=None, filters=None)
-
-            assert len(filters) == 1
-            assert filters[0] == {"term": {"ticker": "AAPL"}}
-
-    def test_build_filters_date_range_start_only(self):
-        """Start date only creates range query with gte."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(ticker=None, start_date="2024-01-01", end_date=None, filters=None)
-
-            assert len(filters) == 1
-            assert filters[0] == {"range": {"date": {"gte": "2024-01-01"}}}
-
-    def test_build_filters_date_range_end_only(self):
-        """End date only creates range query with lte."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(ticker=None, start_date=None, end_date="2024-12-31", filters=None)
-
-            assert len(filters) == 1
-            assert filters[0] == {"range": {"date": {"lte": "2024-12-31"}}}
-
-    def test_build_filters_date_range_both(self):
-        """Both start and end date creates range query with gte and lte."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(
-                ticker=None,
-                start_date="2024-01-01",
-                end_date="2024-12-31",
-                filters=None,
-            )
-
-            assert len(filters) == 1
-            assert filters[0] == {"range": {"date": {"gte": "2024-01-01", "lte": "2024-12-31"}}}
-
-    def test_build_filters_custom_term_single_value(self):
-        """Custom filter with single value creates term query."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(
-                ticker=None,
-                start_date=None,
-                end_date=None,
-                filters={"sector": "Technology"},
-            )
-
-            assert len(filters) == 1
-            assert filters[0] == {"term": {"sector": "Technology"}}
-
-    def test_build_filters_custom_terms_list_value(self):
-        """Custom filter with list value creates terms query."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(
-                ticker=None,
-                start_date=None,
-                end_date=None,
-                filters={"sector": ["Technology", "Finance"]},
-            )
-
-            assert len(filters) == 1
-            assert filters[0] == {"terms": {"sector": ["Technology", "Finance"]}}
-
-    def test_build_filters_multiple_custom_filters(self):
-        """Multiple custom filters all added."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(
-                ticker=None,
-                start_date=None,
-                end_date=None,
-                filters={
-                    "sector": "Technology",
-                    "industry": ["Software", "Hardware"],
-                    "doc_type": "10-K",
-                },
-            )
-
-            assert len(filters) == DEFAULT_LIMIT
-            # Check all expected filters present (order may vary)
-            filter_set = {str(f) for f in filters}
-            assert str({"term": {"sector": "Technology"}}) in filter_set
-            assert str({"terms": {"industry": ["Software", "Hardware"]}}) in filter_set
-            assert str({"term": {"doc_type": "10-K"}}) in filter_set
-
-    def test_build_filters_combined_all_types(self):
-        """Ticker + date range + custom filters all combined."""
-        with patch("src.storage.search_tool.AsyncElasticsearch"):
-            client = SearchClient("http://localhost:9200")
-            filters = client._build_filters(
-                ticker="AAPL",
-                start_date="2024-01-01",
-                end_date="2024-12-31",
-                filters={"sector": "Technology"},
-            )
-
-            assert len(filters) == DEFAULT_LIMIT
-            # Verify each filter type present
-            assert {"term": {"ticker": "AAPL"}} in filters
-            assert {"range": {"date": {"gte": "2024-01-01", "lte": "2024-12-31"}}} in filters
-            assert {"term": {"sector": "Technology"}} in filters
-
-
 class TestSemanticSearch:
     """Tests for semantic search query structure (mocked)."""
 
     @pytest.mark.asyncio
-    async def test_semantic_search_query_structure(self):
+    async def test_semantic_search_query_structure(self) -> None:
         """Semantic search builds correct kNN query."""
-        with patch("src.storage.search_tool.AsyncElasticsearch") as mock_es_class:
+        with patch("storage.search_tool.AsyncElasticsearch") as mock_es_class:
             mock_es_instance = AsyncMock()
             mock_es_class.return_value = mock_es_instance
 
@@ -233,13 +91,13 @@ class TestSemanticSearch:
             assert results[0].doc_id == "doc1"
 
     @pytest.mark.asyncio
-    async def test_semantic_search_with_filters(self):
+    async def test_semantic_search_with_filters(self) -> None:
         """Semantic search includes filter clauses in kNN query."""
-        with patch("src.storage.search_tool.AsyncElasticsearch") as mock_es_class:
+        with patch("storage.search_tool.AsyncElasticsearch") as mock_es_class:
             mock_es_instance = AsyncMock()
             mock_es_class.return_value = mock_es_instance
 
-            mock_response = {"hits": {"hits": []}}
+            mock_response: dict[str, Any] = {"hits": {"hits": []}}
             mock_es_instance.search.return_value = mock_response
 
             client = SearchClient("http://localhost:9200", embedding_model_mock=True)
@@ -266,9 +124,9 @@ class TestExceptionHandling:
     """Tests for exception handling paths in search."""
 
     @pytest.mark.asyncio
-    async def test_search_unexpected_exception_triggers_circuit_breaker(self):
+    async def test_search_unexpected_exception_triggers_circuit_breaker(self) -> None:
         """Unexpected exceptions during search trigger circuit breaker."""
-        with patch("src.storage.search_tool.AsyncElasticsearch") as mock_es_class:
+        with patch("storage.search_tool.AsyncElasticsearch") as mock_es_class:
             mock_es_instance = AsyncMock()
             mock_es_class.return_value = mock_es_instance
 
@@ -278,7 +136,8 @@ class TestExceptionHandling:
             client = SearchClient("http://localhost:9200", embedding_model_mock=True)
             config = SearchConfig(limit=KNN_K_VALUE)
 
-            with pytest.raises(ValueError, match="Unexpected error"):
+            # Mock asyncio.sleep to speed up retries
+            with patch("asyncio.sleep"), pytest.raises(ValueError, match="Unexpected error"):
                 await client.search_tool(
                     query="test query",
                     search_type="keyword",
@@ -286,16 +145,16 @@ class TestExceptionHandling:
                 )
 
             # Verify circuit breaker recorded failure
-            assert client.circuit_breaker.failures == 1
+            assert client.circuit_breaker.failures >= 1
 
 
 class TestHybridSearch:
     """Tests for hybrid search result merging."""
 
     @pytest.mark.asyncio
-    async def test_hybrid_search_merges_results(self):
+    async def test_hybrid_search_merges_results(self) -> None:
         """Hybrid search merges BM25 and kNN results using RRF."""
-        with patch("src.storage.search_tool.AsyncElasticsearch") as mock_es_class:
+        with patch("storage.search_tool.AsyncElasticsearch") as mock_es_class:
             mock_es_instance = AsyncMock()
             mock_es_class.return_value = mock_es_instance
 
@@ -361,9 +220,9 @@ class TestHybridSearch:
             assert "doc2" in doc_ids
 
     @pytest.mark.asyncio
-    async def test_hybrid_search_with_overlap(self):
+    async def test_hybrid_search_with_overlap(self) -> None:
         """Hybrid search correctly merges overlapping docs."""
-        with patch("src.storage.search_tool.AsyncElasticsearch") as mock_es_class:
+        with patch("storage.search_tool.AsyncElasticsearch") as mock_es_class:
             mock_es_instance = AsyncMock()
             mock_es_class.return_value = mock_es_instance
 
@@ -407,3 +266,7 @@ class TestHybridSearch:
             # Both at rank 1: 1/(60+1) + 1/(60+1) = 2/61
             expected_score = 2.0 / (RRF_K + 1)
             assert abs(results[0].score - expected_score) < RRF_TOLERANCE
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

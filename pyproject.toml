@@ -11,7 +11,7 @@ dependencies = [
 	"elasticsearch<9.0.0",
 	"greenlet>=3.2.4",
 	"pyyaml>=6.0",
-	"redis>=5.0.0",
+	"redis>=7.1.0",
 	"sqlalchemy>=2.0.44",
 ]
 
@@ -24,7 +24,7 @@ dev = [
 	"pytest-mock>=3.14.0",
 	"pytest-env>=1.1.5",
 	"ruff>=0.8.4",
-	"mypy>=1.14.0",
+	"pyright>=1.1.400",
 	"bandit[toml]>=1.8.0",
 	"pre-commit>=4.0.1",
 ]
@@ -32,11 +32,18 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["src"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = ["-v", "--strict-markers", "--tb=short", "-n=auto"]
+addopts = [
+	"-v",
+	"--strict-markers",
+	"--tb=short",
+	"-n=auto",
+	"--dist=loadgroup",
+]
 markers = [
 	"unit: Unit tests that don't require external services",
 	"integration: Integration tests requiring external services (ES, Postgres, Redis)",
@@ -61,7 +68,7 @@ exclude = [
 	"__pycache__",
 	"*.egg-info",
 	".pytest_cache",
-	".mypy_cache",
+	".pyright",
 	".ruff_cache",
 	"build",
 	"dist",
@@ -101,39 +108,33 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
-[tool.mypy]
-python_version = "3.13"
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_any_unimported = false
-disallow_any_generics = true
-disallow_subclassing_any = true
-disallow_untyped_calls = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
-show_error_codes = true
-show_column_numbers = true
-pretty = true
-
-[[tool.mypy.overrides]]
-module = "elasticsearch.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "redis.*"
-ignore_missing_imports = true
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportUnknownParameterType = false
+include = ["src", "tests"]
+exclude = [
+	"**/__pycache__",
+	"**/.venv",
+	"**/node_modules",
+	"src/storage/migrations",
+	"docs/design-flaws",
+]
+stubPath = ""
+venvPath = "."
+venv = ".venv"
+executionEnvironments = [
+	{ root = "src" },
+	{ root = "tests", extraPaths = ["src"] }
+]
 
 [tool.bandit]
-exclude_dirs = ["tests", ".venv", "build"]
+exclude_dirs = ["tests", ".venv", "build", "docs/design-flaws"]
 skips = ["B101", "B601"]
 
 [tool.coverage.run]

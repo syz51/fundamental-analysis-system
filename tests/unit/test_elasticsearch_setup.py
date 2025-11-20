@@ -1,5 +1,6 @@
 """Unit tests for Elasticsearch index setup and mappings."""
 
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -10,7 +11,8 @@ from elasticsearch.exceptions import (
 from elasticsearch.exceptions import (
     ConnectionError as ESConnectionError,
 )
-from src.storage.elasticsearch_setup import (
+
+from storage.elasticsearch_setup import (
     INDEX_SETTINGS,
     get_core_properties,
     get_news_mapping,
@@ -30,12 +32,12 @@ NUM_INDICES = 3
 class TestCoreProperties:
     """Tests for get_core_properties schema."""
 
-    def test_get_core_properties_returns_dict(self):
+    def test_get_core_properties_returns_dict(self) -> None:
         """Core properties should return dictionary."""
         props = get_core_properties()
         assert isinstance(props, dict)
 
-    def test_get_core_properties_has_identity_fields(self):
+    def test_get_core_properties_has_identity_fields(self) -> None:
         """Core schema includes doc_id, doc_type, source."""
         props = get_core_properties()
         assert "doc_id" in props
@@ -45,7 +47,7 @@ class TestCoreProperties:
         assert "source" in props
         assert props["source"]["type"] == "keyword"
 
-    def test_get_core_properties_has_company_linking(self):
+    def test_get_core_properties_has_company_linking(self) -> None:
         """Core schema includes ticker, company_name, cik."""
         props = get_core_properties()
         assert "ticker" in props
@@ -55,7 +57,7 @@ class TestCoreProperties:
         assert "cik" in props
         assert props["cik"]["type"] == "keyword"
 
-    def test_get_core_properties_has_temporal_fields(self):
+    def test_get_core_properties_has_temporal_fields(self) -> None:
         """Core schema includes date, fiscal_year, fiscal_quarter."""
         props = get_core_properties()
         assert "date" in props
@@ -65,7 +67,7 @@ class TestCoreProperties:
         assert "fiscal_quarter" in props
         assert props["fiscal_quarter"]["type"] == "keyword"
 
-    def test_get_core_properties_has_classification(self):
+    def test_get_core_properties_has_classification(self) -> None:
         """Core schema includes sector, industry."""
         props = get_core_properties()
         assert "sector" in props
@@ -73,7 +75,7 @@ class TestCoreProperties:
         assert "industry" in props
         assert props["industry"]["type"] == "keyword"
 
-    def test_get_core_properties_has_search_fields(self):
+    def test_get_core_properties_has_search_fields(self) -> None:
         """Core schema includes text and embedding for hybrid search."""
         props = get_core_properties()
         assert "text" in props
@@ -84,7 +86,7 @@ class TestCoreProperties:
         assert props["embedding"]["dims"] == EMBEDDING_DIMS
         assert props["embedding"]["similarity"] == "cosine"
 
-    def test_get_core_properties_has_metadata(self):
+    def test_get_core_properties_has_metadata(self) -> None:
         """Core schema includes indexed_at, updated_at."""
         props = get_core_properties()
         assert "indexed_at" in props
@@ -96,14 +98,14 @@ class TestCoreProperties:
 class TestDomainMappings:
     """Tests for domain-specific mapping functions."""
 
-    def test_sec_filings_includes_core_properties(self):
+    def test_sec_filings_includes_core_properties(self) -> None:
         """SEC filings mapping includes all core properties."""
         mapping = get_sec_filings_mapping()
         core_props = get_core_properties()
         for key in core_props:
             assert key in mapping["properties"]
 
-    def test_sec_filings_extensions(self):
+    def test_sec_filings_extensions(self) -> None:
         """SEC filings has filing_type, accession_number, section, etc."""
         mapping = get_sec_filings_mapping()
         props = mapping["properties"]
@@ -119,14 +121,14 @@ class TestDomainMappings:
         assert "net_income" in props
         assert "market_cap" in props
 
-    def test_transcripts_includes_core_properties(self):
+    def test_transcripts_includes_core_properties(self) -> None:
         """Transcripts mapping includes all core properties."""
         mapping = get_transcripts_mapping()
         core_props = get_core_properties()
         for key in core_props:
             assert key in mapping["properties"]
 
-    def test_transcripts_extensions(self):
+    def test_transcripts_extensions(self) -> None:
         """Transcripts has call_type, speaker, segment, etc."""
         mapping = get_transcripts_mapping()
         props = mapping["properties"]
@@ -140,14 +142,14 @@ class TestDomainMappings:
         assert "sentiment_score" in props
         assert props["sentiment_score"]["type"] == "float"
 
-    def test_news_includes_core_properties(self):
+    def test_news_includes_core_properties(self) -> None:
         """News mapping includes all core properties."""
         mapping = get_news_mapping()
         core_props = get_core_properties()
         for key in core_props:
             assert key in mapping["properties"]
 
-    def test_news_extensions(self):
+    def test_news_extensions(self) -> None:
         """News has headline, author, publication, event_type, etc."""
         mapping = get_news_mapping()
         props = mapping["properties"]
@@ -167,7 +169,7 @@ class TestDomainMappings:
 class TestIndexSettings:
     """Tests for INDEX_SETTINGS configuration."""
 
-    def test_index_settings_structure(self):
+    def test_index_settings_structure(self) -> None:
         """INDEX_SETTINGS has required configuration keys."""
         assert "number_of_shards" in INDEX_SETTINGS
         assert INDEX_SETTINGS["number_of_shards"] == NUM_SHARDS
@@ -177,16 +179,18 @@ class TestIndexSettings:
         assert "max_result_window" in INDEX_SETTINGS
         assert INDEX_SETTINGS["max_result_window"] == MAX_RESULT_WINDOW
 
-    def test_index_settings_has_analysis(self):
+    def test_index_settings_has_analysis(self) -> None:
         """INDEX_SETTINGS includes analysis configuration."""
         assert "analysis" in INDEX_SETTINGS
-        analysis = INDEX_SETTINGS["analysis"]
+        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
         assert "analyzer" in analysis
         assert "filter" in analysis
 
-    def test_financial_analyzer_configuration(self):
+    def test_financial_analyzer_configuration(self) -> None:
         """Financial analyzer uses correct tokenizer and filters."""
-        analyzer = INDEX_SETTINGS["analysis"]["analyzer"]["financial_analyzer"]
+        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        analyzers = cast(dict[str, Any], analysis["analyzer"])
+        analyzer = cast(dict[str, Any], analyzers["financial_analyzer"])
         assert analyzer["type"] == "custom"
         assert analyzer["tokenizer"] == "standard"
         assert "lowercase" in analyzer["filter"]
@@ -195,9 +199,11 @@ class TestIndexSettings:
         assert "financial_synonyms" in analyzer["filter"]
         assert "english_stemmer" in analyzer["filter"]
 
-    def test_financial_synonyms_configuration(self):
+    def test_financial_synonyms_configuration(self) -> None:
         """Financial synonyms filter includes key financial terms."""
-        synonyms_filter = INDEX_SETTINGS["analysis"]["filter"]["financial_synonyms"]
+        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        filters = cast(dict[str, Any], analysis["filter"])
+        synonyms_filter = cast(dict[str, Any], filters["financial_synonyms"])
         assert synonyms_filter["type"] == "synonym"
         synonyms = synonyms_filter["synonyms"]
         # Check a few key synonyms
@@ -206,9 +212,11 @@ class TestIndexSettings:
         pe_synonym = [s for s in synonyms if "P/E" in s[0:10]]
         assert len(pe_synonym) > 0
 
-    def test_stopwords_configuration(self):
+    def test_stopwords_configuration(self) -> None:
         """Financial stop filter has appropriate stopwords."""
-        stop_filter = INDEX_SETTINGS["analysis"]["filter"]["financial_stop"]
+        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        filters = cast(dict[str, Any], analysis["filter"])
+        stop_filter = cast(dict[str, Any], filters["financial_stop"])
         assert stop_filter["type"] == "stop"
         assert "the" in stop_filter["stopwords"]
         assert "a" in stop_filter["stopwords"]
@@ -218,14 +226,14 @@ class TestInitializeIndices:
     """Tests for initialize_indices function with mocked Elasticsearch."""
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_success(self):
+    async def test_initialize_indices_success(self) -> None:
         """Initialize indices successfully creates all indices."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
         mock_es.indices.exists.return_value = False
         mock_es.indices.create.return_value = {"acknowledged": True}
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Verify connection attempt
@@ -245,7 +253,7 @@ class TestInitializeIndices:
         mock_es.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_connection_retry(self):
+    async def test_initialize_indices_connection_retry(self) -> None:
         """Connection failure triggers exponential backoff retry."""
         mock_es = AsyncMock()
         mock_es.ping.side_effect = [
@@ -257,7 +265,7 @@ class TestInitializeIndices:
         mock_es.indices.create.return_value = {"acknowledged": True}
 
         with (
-            patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es),
+            patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es),
             patch("asyncio.sleep") as mock_sleep,
         ):
             await initialize_indices("http://localhost:9200", max_retries=3)
@@ -274,13 +282,13 @@ class TestInitializeIndices:
         assert mock_es.indices.create.call_count == NUM_INDICES
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_connection_failure(self):
+    async def test_initialize_indices_connection_failure(self) -> None:
         """Complete connection failure stops initialization."""
         mock_es = AsyncMock()
         mock_es.ping.side_effect = ESConnectionError("Connection refused")
 
         with (
-            patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es),
+            patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es),
             patch("asyncio.sleep"),
         ):
             await initialize_indices("http://localhost:9200", max_retries=3)
@@ -296,13 +304,13 @@ class TestInitializeIndices:
         mock_es.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_already_exists(self):
+    async def test_initialize_indices_already_exists(self) -> None:
         """Existing indices are skipped."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
         mock_es.indices.exists.return_value = True
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Verify existence checked
@@ -312,7 +320,7 @@ class TestInitializeIndices:
         mock_es.indices.create.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_partial_failure(self):
+    async def test_initialize_indices_partial_failure(self) -> None:
         """Failure on one index continues with others."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
@@ -329,14 +337,14 @@ class TestInitializeIndices:
             {"acknowledged": True},
         ]
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Verify all attempts made despite middle failure
         assert mock_es.indices.create.call_count == NUM_INDICES
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_api_error(self):
+    async def test_initialize_indices_api_error(self) -> None:
         """ApiError during creation is handled gracefully."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
@@ -348,7 +356,7 @@ class TestInitializeIndices:
 
         mock_es.indices.create.side_effect = ApiError("Internal error", meta=mock_meta, body={})
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Verify attempts made for all indices
@@ -358,14 +366,14 @@ class TestInitializeIndices:
         mock_es.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_transport_error(self):
+    async def test_initialize_indices_transport_error(self) -> None:
         """TransportError during creation is handled gracefully."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
         mock_es.indices.exists.return_value = False
         mock_es.indices.create.side_effect = TransportError("Network error")
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Verify attempts made for all indices
@@ -375,14 +383,14 @@ class TestInitializeIndices:
         mock_es.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_unexpected_error(self):
+    async def test_initialize_indices_unexpected_error(self) -> None:
         """Unexpected exceptions are caught and logged."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
         mock_es.indices.exists.return_value = False
         mock_es.indices.create.side_effect = ValueError("Unexpected error")
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Verify attempts made for all indices
@@ -392,14 +400,14 @@ class TestInitializeIndices:
         mock_es.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_initialize_indices_creates_with_correct_mappings(self):
+    async def test_initialize_indices_creates_with_correct_mappings(self) -> None:
         """Indices are created with correct settings and mappings."""
         mock_es = AsyncMock()
         mock_es.ping.return_value = True
         mock_es.indices.exists.return_value = False
         mock_es.indices.create.return_value = {"acknowledged": True}
 
-        with patch("src.storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
+        with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
             await initialize_indices("http://localhost:9200")
 
         # Check first index call (sec_filings)

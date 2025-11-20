@@ -43,7 +43,7 @@ REPO_ROOT = DOCS_DIR.parent
 
 def parse_frontmatter(filepath):
     """Extract YAML frontmatter from markdown file."""
-    with open(filepath, encoding="utf-8") as f:
+    with Path(filepath).open(encoding="utf-8") as f:
         content = f.read()
 
     match = re.match(r"^---\n(.*?)\n---\n(.*)", content, re.DOTALL)
@@ -64,7 +64,7 @@ def write_markdown(filepath, frontmatter, body):
     """Write frontmatter and body to markdown file."""
     frontmatter_yaml = yaml.dump(frontmatter, default_flow_style=False, sort_keys=False)
     content = f"---\n{frontmatter_yaml}---\n{body}"
-    with open(filepath, "w", encoding="utf-8") as f:
+    with Path(filepath).open("w", encoding="utf-8") as f:
         f.write(content)
 
 
@@ -90,7 +90,7 @@ def get_dd_info(dd_id):
     dd_filename = dd_file.name
 
     # Try to get title from frontmatter first
-    with open(dd_file, encoding="utf-8") as f:
+    with dd_file.open(encoding="utf-8") as f:
         content = f.read()
 
     # Check if has frontmatter
@@ -121,7 +121,7 @@ def find_references(flaw_filename):
     # Search in all markdown files
     for md_file in REPO_ROOT.glob("**/*.md"):
         if md_file.is_file() and ".git" not in str(md_file):
-            with open(md_file, encoding="utf-8") as f:
+            with md_file.open(encoding="utf-8") as f:
                 content = f.read()
                 if pattern in content:
                     count = content.count(pattern)
@@ -139,12 +139,12 @@ def update_references(flaw_filename):
 
     for md_file in REPO_ROOT.glob("**/*.md"):
         if md_file.is_file() and ".git" not in str(md_file):
-            with open(md_file, encoding="utf-8") as f:
+            with md_file.open(encoding="utf-8") as f:
                 content = f.read()
 
             if old_pattern in content:
                 new_content = content.replace(old_pattern, new_pattern)
-                with open(md_file, "w", encoding="utf-8") as f:
+                with md_file.open("w", encoding="utf-8") as f:
                     f.write(new_content)
                 updated_files.append(md_file)
 
@@ -190,18 +190,14 @@ def create_resolution_template(dd_id=None, dd_filename=None):
 """
 
 
-def main():
+def main():  # noqa: PLR0912, PLR0915
     parser = argparse.ArgumentParser(description="Mark a design flaw as resolved")
     parser.add_argument("flaw_id", type=int, help="Flaw ID number")
     parser.add_argument("--dd", help="Design decision ID (e.g., DD-013)")
     parser.add_argument("--desc", help="Resolution description")
-    parser.add_argument(
-        "--date", help="Resolution date (YYYY-MM-DD, defaults to today)"
-    )
+    parser.add_argument("--date", help="Resolution date (YYYY-MM-DD, defaults to today)")
     parser.add_argument("--yes", action="store_true", help="Skip confirmation prompt")
-    parser.add_argument(
-        "--force", action="store_true", help="Force overwrite existing resolution data"
-    )
+    parser.add_argument("--force", action="store_true", help="Force overwrite existing resolution data")
     parser.add_argument(
         "--force-template",
         action="store_true",
@@ -355,9 +351,7 @@ def main():
     if has_resolution_section and not args.force_template:
         # Skip template insertion, keep existing body
         new_body = body
-        print(
-            "\n  Note: Resolution section already exists, skipping template insertion"
-        )
+        print("\n  Note: Resolution section already exists, skipping template insertion")
         print("        Use --force-template to override")
     else:
         # Insert resolution template at top of body
@@ -393,17 +387,20 @@ def main():
 
     # Regenerate INDEX.md
     print("\nRegenerating INDEX.md...")
-    try:
-        subprocess.run(
-            ["python", "generate_index.py"],
-            cwd=DESIGN_FLAWS_DIR,
-            check=True,
-            capture_output=True,
-        )
-        print("✅ INDEX.md regenerated")
-    except subprocess.CalledProcessError as e:
-        print(f"Warning: Failed to regenerate INDEX.md: {e}")
-        print("Run 'python generate_index.py' manually")
+    generate_script = DESIGN_FLAWS_DIR / "generate_index.py"
+    if not generate_script.exists():
+        print(f"Warning: {generate_script} not found, skipping INDEX.md regeneration")
+    else:
+        try:
+            subprocess.run(  # noqa: S603
+                [sys.executable, str(generate_script)],
+                check=True,
+                capture_output=True,
+            )
+            print("✅ INDEX.md regenerated")
+        except subprocess.CalledProcessError as e:
+            print(f"Warning: Failed to regenerate INDEX.md: {e}")
+            print(f"Run 'python {generate_script}' manually")
 
     print(f"\n{'=' * 60}")
     print(f"✅ Flaw #{args.flaw_id} marked as resolved")

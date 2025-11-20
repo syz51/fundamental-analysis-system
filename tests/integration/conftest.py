@@ -1,12 +1,19 @@
 """Pytest configuration and fixtures for integration tests requiring external services."""
 
 import os
+from collections.abc import AsyncGenerator
+from types import ModuleType
+from typing import Any
 
 import asyncpg
 import pytest
+from alembic import command
+from alembic.config import Config
 from elasticsearch import AsyncElasticsearch
-from src.storage.search_tool import SearchClient
 
+from storage.search_tool import SearchClient
+
+redis: ModuleType | None
 try:
     import redis.asyncio as redis
 except ImportError:
@@ -18,8 +25,31 @@ POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql://postgres:postgres@localho
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 
+@pytest.fixture(scope="session")
+def run_migrations() -> None:
+    """
+    Session-scoped fixture to run database migrations once before all integration tests.
+
+    Configures Alembic to use the test database and runs all migrations to head.
+    This ensures the database schema is up-to-date before any tests execute.
+    """
+    # Convert asyncpg URL to SQLAlchemy format for Alembic
+    alembic_url = POSTGRES_URL.replace("postgresql://", "postgresql+asyncpg://")
+
+    # Configure Alembic for test database
+    alembic_cfg = Config("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url", alembic_url)
+
+    # Run migrations to latest version
+    try:
+        command.upgrade(alembic_cfg, "head")
+        print(f"\nRan database migrations for {alembic_url}")
+    except Exception as e:
+        pytest.skip(f"Failed to run database migrations: {e}")
+
+
 @pytest.fixture
-async def es_client():
+async def es_client() -> AsyncGenerator[AsyncElasticsearch]:
     """
     Function-scoped Elasticsearch client fixture.
 
@@ -41,7 +71,7 @@ async def es_client():
 
 
 @pytest.fixture
-async def search_client():
+async def search_client() -> AsyncGenerator[SearchClient]:
     """
     Function-scoped SearchClient fixture.
 
@@ -56,14 +86,15 @@ async def search_client():
 
 
 @pytest.fixture
-async def postgres_pool():
+async def postgres_pool(run_migrations: None) -> AsyncGenerator[asyncpg.Pool]:  # noqa: ARG001 - fixture dependency
     """
     Function-scoped PostgreSQL connection pool fixture.
 
     Provides an asyncpg connection pool for integration tests.
     Automatically closes the pool after the test completes.
+
+    Depends on run_migrations to ensure schema exists before connecting.
     """
-    pool = None
     try:
         pool = await asyncpg.create_pool(POSTGRES_URL, min_size=1, max_size=5)
         print(f"\nConnected to PostgreSQL at {POSTGRES_URL}")
@@ -72,12 +103,11 @@ async def postgres_pool():
 
     yield pool
 
-    if pool is not None:
-        await pool.close()
+    await pool.close()
 
 
 @pytest.fixture
-async def postgres_conn(postgres_pool):
+async def postgres_conn(postgres_pool: asyncpg.Pool) -> AsyncGenerator[asyncpg.Connection]:
     """
     Function-scoped PostgreSQL connection fixture.
 
@@ -91,7 +121,7 @@ async def postgres_conn(postgres_pool):
 
 
 @pytest.fixture
-async def redis_client():
+async def redis_client() -> AsyncGenerator[Any]:
     """
     Function-scoped Redis client fixture.
 
