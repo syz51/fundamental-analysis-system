@@ -92,11 +92,28 @@ See [Human Integration](docs/operations/02-human-integration.md) for details.
 
 ### Data Sources
 
-- SEC EDGAR (10-K, 10-Q, 8-K, proxies)
-- Financial providers (Koyfin, Bloomberg, Refinitiv)
-- News feeds (Reuters, Bloomberg)
-- Alternative data (web traffic, social sentiment)
-- Macro data (FRED, IMF, OECD, CBOE) - for Macro Analyst
+**Hybrid Approach** (DD-032): Different data sources for different pipeline stages
+
+**Screening Stage (Days 1-2)**:
+
+- **Yahoo Finance API** (primary): 10Y financial metrics for S&P 500 (revenue, EPS, margins, ROE/ROA/ROIC)
+- Purpose: Fast quantitative screening, 95% data quality acceptable
+- Cost: $0-$50/month
+- Fallback: SEC EDGAR if Yahoo unavailable
+
+**Deep Analysis Stage (Days 3-7, post-Gate 1)**:
+
+- **SEC EDGAR** (primary): Full 10-K/10-Q/8-K parsing with multi-tier recovery (EdgarTools + custom tiers)
+- Purpose: Qualitative data (MD&A, risk factors), amendment tracking, 98.55% data quality
+- Cost: $3-$6/month for 10-20 approved companies
+- On-demand only (not bulk backfill)
+
+**Other Sources**:
+
+- Financial providers (Koyfin, Bloomberg, Refinitiv) - future consideration
+- News feeds (Reuters, Bloomberg) - News Monitor Agent
+- Alternative data (web traffic, social sentiment) - future consideration
+- Macro data (FRED, IMF, OECD, CBOE) - Macro Analyst
 
 ## Project Setup
 
