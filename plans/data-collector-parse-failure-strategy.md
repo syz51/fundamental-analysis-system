@@ -138,6 +138,7 @@ Filing → Tier 0 (EdgarTools) → Success (95% parsed)
 - 1 remaining → Tier 4 human review (0.1% of total) ✅ Manageable!
 
 **Tool Selection Rationale**:
+
 - Research found NO existing tool handles context disambiguation, validation, or learning
 - EdgarTools best-in-class for baseline parsing (95% vs 92-93% if custom-built)
 - Commercial tools (Calcbench $20K-$50K) don't solve edge cases, can't customize
@@ -194,12 +195,14 @@ class FilingParser:
 ```
 
 **Features**:
+
 - 10-30x faster than custom lxml parsing
 - Handles XBRL, iXBRL, multiple accounting standards
 - Standardization layer for custom tag variations
 - Well-tested (1000+ test cases)
 
 **Limitations** (Why we need Tiers 1.5-4):
+
 - No context disambiguation (restated vs original, consolidated vs parent-only)
 - No holding company / SPAC / bankruptcy special handling
 - No data validation layer
@@ -1036,15 +1039,15 @@ Simulation revealed **critical gaps** in claimed success rates and identified hi
 
 #### Scenario Coverage
 
-| Failure Type | % of Failures | Scenarios Tested | Tier 1 Success | Tier 2 Success | Issues Found |
-|--------------|--------------|------------------|----------------|----------------|--------------|
-| Non-standard tags | 40% | 3 scenarios | 0/3 | 2/3 | 1 false positive |
-| Foreign filers (IFRS) | 25% | 2 scenarios | 0/2 | 1/2 | 1 false positive |
-| Amended filings | 15% | 1 scenario | 0/1 | 1/1 | - |
-| Missing tags | 10% | 1 scenario | 0/1 | 0/1 | Tier 3 success |
-| Data corruption | 5% | 1 scenario | 0/1 | 1/1 | - |
-| Edge cases | 5% | 2 scenarios | 0/2 | 1/2 | Tier 3 success |
-| **TOTAL** | **100%** | **10** | **0/10 (0%)** | **6/10 (60%)** | **2 false positives** |
+| Failure Type          | % of Failures | Scenarios Tested | Tier 1 Success | Tier 2 Success | Issues Found          |
+| --------------------- | ------------- | ---------------- | -------------- | -------------- | --------------------- |
+| Non-standard tags     | 40%           | 3 scenarios      | 0/3            | 2/3            | 1 false positive      |
+| Foreign filers (IFRS) | 25%           | 2 scenarios      | 0/2            | 1/2            | 1 false positive      |
+| Amended filings       | 15%           | 1 scenario       | 0/1            | 1/1            | -                     |
+| Missing tags          | 10%           | 1 scenario       | 0/1            | 0/1            | Tier 3 success        |
+| Data corruption       | 5%            | 1 scenario       | 0/1            | 1/1            | -                     |
+| Edge cases            | 5%            | 2 scenarios      | 0/2            | 1/2            | Tier 3 success        |
+| **TOTAL**             | **100%**      | **10**           | **0/10 (0%)**  | **6/10 (60%)** | **2 false positives** |
 
 #### Critical Issues Discovered
 
@@ -1062,6 +1065,7 @@ Silent data quality failures where incorrect data accepted with high confidence:
 Claimed 60% recovery, actual 0% in simulation (realistic estimate: 10%).
 
 **Root causes**:
+
 - No metadata awareness (doesn't check accounting_standard before strategy selection)
 - Can't disambiguate contexts (consolidated vs parent, restated vs original, annual vs quarterly)
 - Too strict validation (rejects valid edge cases like negative equity, zero revenue SPACs)
@@ -1072,6 +1076,7 @@ Claimed 60% recovery, actual 0% in simulation (realistic estimate: 10%).
 Claimed 2% (0.2% of total filings), actual 5-10% based on simulation.
 
 **Reasons**:
+
 - Policy decisions (GAAP vs non-GAAP) more common than expected (~5% of filings)
 - Tier 1 weakness forces more escalations upstream
 - Novel filing types require new parser rules
@@ -1080,27 +1085,27 @@ Claimed 2% (0.2% of total filings), actual 5-10% based on simulation.
 
 **Current Design (No Improvements)**:
 
-| Tier | Recovery Rate | Cumulative Success | Data Quality |
-|------|--------------|-------------------|--------------|
-| Initial | 95% | 95% | 95% |
-| Tier 1 | 10% of failures (0.5%) | 95.5% | 95.5% |
-| Tier 2 | 50% of remaining (1.7%) | 97.2% | **95.0%** (-2.2% false positives) |
-| Tier 3 | 75% of remaining (1.7%) | 98.9% | 96.7% |
-| Tier 4 | 100% of remaining (0.5%) | 99.4% | 97.2% |
-| Unparseable | - | - | - |
+| Tier        | Recovery Rate            | Cumulative Success | Data Quality                      |
+| ----------- | ------------------------ | ------------------ | --------------------------------- |
+| Initial     | 95%                      | 95%                | 95%                               |
+| Tier 1      | 10% of failures (0.5%)   | 95.5%              | 95.5%                             |
+| Tier 2      | 50% of remaining (1.7%)  | 97.2%              | **95.0%** (-2.2% false positives) |
+| Tier 3      | 75% of remaining (1.7%)  | 98.9%              | 96.7%                             |
+| Tier 4      | 100% of remaining (0.5%) | 99.4%              | 97.2%                             |
+| Unparseable | -                        | -                  | -                                 |
 
 **Actual outcome**: 97.2% good data, 2.8% unparseable/incorrect (vs claimed 98% good data)
 
 **With Phase 1 Improvements** (see Section 10):
 
-| Tier | Recovery Rate | Cumulative Success | Data Quality |
-|------|--------------|-------------------|--------------|
-| Initial | 95% | 95% | 95% |
-| Tier 1.5 Smart | 35% of failures (1.75%) | 96.75% | 96.75% |
-| Tier 2 Enhanced | 60% of remaining (1.9%) | 98.65% | **98.35%** (-0.3% false positives) |
-| Tier 2.5 Validation | Catches 66% of false positives | - | **98.55%** |
-| Tier 3 | 75% of remaining (1.0%) | 99.55% | 99.55% |
-| Tier 4 | 100% of remaining (0.3%) | 99.85% | 99.85% |
+| Tier                | Recovery Rate                  | Cumulative Success | Data Quality                       |
+| ------------------- | ------------------------------ | ------------------ | ---------------------------------- |
+| Initial             | 95%                            | 95%                | 95%                                |
+| Tier 1.5 Smart      | 35% of failures (1.75%)        | 96.75%             | 96.75%                             |
+| Tier 2 Enhanced     | 60% of remaining (1.9%)        | 98.65%             | **98.35%** (-0.3% false positives) |
+| Tier 2.5 Validation | Catches 66% of false positives | -                  | **98.55%**                         |
+| Tier 3              | 75% of remaining (1.0%)        | 99.55%             | 99.55%                             |
+| Tier 4              | 100% of remaining (0.3%)       | 99.85%             | 99.85%                             |
 
 **Improved outcome**: 99.85% good data, 0.15% unparseable ✅
 
@@ -1108,24 +1113,24 @@ Claimed 2% (0.2% of total filings), actual 5-10% based on simulation.
 
 **Current Design**:
 
-| Component | Frequency | Cost per Call | Total Cost |
-|-----------|-----------|---------------|------------|
-| Tier 1 | 1,000 filings (5%) | $0 | $0 |
-| Tier 2 LLM | 450 filings (2.25%) | $0.15 | $67.50 |
-| Tier 3 QC | 225 filings (1.125%) | $0.30 | $67.50 |
-| Tier 4 Human | 100 filings (0.5%) | 20 min | 33 hours |
-| **TOTAL** | - | - | **$135 + 33 hrs** |
+| Component    | Frequency            | Cost per Call | Total Cost        |
+| ------------ | -------------------- | ------------- | ----------------- |
+| Tier 1       | 1,000 filings (5%)   | $0            | $0                |
+| Tier 2 LLM   | 450 filings (2.25%)  | $0.15         | $67.50            |
+| Tier 3 QC    | 225 filings (1.125%) | $0.30         | $67.50            |
+| Tier 4 Human | 100 filings (0.5%)   | 20 min        | 33 hours          |
+| **TOTAL**    | -                    | -             | **$135 + 33 hrs** |
 
 **With Phase 1 Improvements**:
 
-| Component | Frequency | Cost per Call | Total Cost |
-|-----------|-----------|---------------|------------|
-| Tier 1.5 | 1,000 filings (5%) | $0 | $0 |
-| Tier 2 Enhanced | 325 filings (1.625%) | $0.15 | $48.75 |
-| Tier 2.5 Validation | (no LLM cost) | $0 | $0 |
-| Tier 3 QC | 130 filings (0.65%) | $0.30 | $39.00 |
-| Tier 4 Human | 60 filings (0.3%) | 20 min | 20 hours |
-| **TOTAL** | - | - | **$87.75 + 20 hrs** |
+| Component           | Frequency            | Cost per Call | Total Cost          |
+| ------------------- | -------------------- | ------------- | ------------------- |
+| Tier 1.5            | 1,000 filings (5%)   | $0            | $0                  |
+| Tier 2 Enhanced     | 325 filings (1.625%) | $0.15         | $48.75              |
+| Tier 2.5 Validation | (no LLM cost)        | $0            | $0                  |
+| Tier 3 QC           | 130 filings (0.65%)  | $0.30         | $39.00              |
+| Tier 4 Human        | 60 filings (0.3%)    | 20 min        | 20 hours            |
+| **TOTAL**           | -                    | -             | **$87.75 + 20 hrs** |
 
 **Savings**: $47.25 + 13 hours labor + 3.6% better data quality
 
@@ -1414,17 +1419,20 @@ Target financial statement sections instead of first N bytes
 ### Phase B Implementation (With Improvements)
 
 1. **Implement Tier 1.5** in `filing_parser.py` (3 days)
+
    - Smart deterministic parsing with metadata awareness
    - Context disambiguation logic
    - XML error recovery
    - Test on 100 sample filings (target: 35% recovery)
 
 2. **Implement Enhanced Tier 2** in `storage_pipeline.py` (1 day)
+
    - Updated LLM prompt with metadata context
    - Intelligent XBRL sampling
    - Test on 50 Tier 1 failures (target: 60% recovery, <5% false positives)
 
 3. **Implement Tier 2.5** validation layer (2 days)
+
    - Data consistency checks
    - Metadata-based validation
    - False positive detection
