@@ -39,6 +39,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 | DD-020 | [Memory System Access Control](DD-020_MEMORY_ACCESS_CONTROL.md)                            | Approved | 2025-11-18 | Memory Architecture, Data Management | [Memory System](../architecture/02-memory-system.md), [Data Management](../operations/03-data-management.md), [Agents Support](../architecture/04-agents-support.md), [DD-018](DD-018_MEMORY_FAILURE_RESILIENCE.md), [DD-019](DD-019_DATA_TIER_OPERATIONS.md), [Flaw #20](../design-flaws/resolved/20-access-control.md)                                                                                                                                                                               |
 | DD-021 | [Neo4j High Availability Architecture](DD-021_NEO4J_HA.md)                                 | Approved | 2025-11-18 | Memory Architecture                  | [Memory System](../architecture/02-memory-system.md), [Tech Requirements](../implementation/02-tech-requirements.md), [DD-005](DD-005_MEMORY_SCALABILITY_OPTIMIZATION.md), [DD-019](DD-019_DATA_TIER_OPERATIONS.md), [Flaw #21](../design-flaws/resolved/21-scalability.md)                                                                                                                                                                                                                            |
 | DD-030 | [Elasticsearch Client-Side RRF Implementation](DD-030_ELASTICSEARCH_RRF_IMPLEMENTATION.md) | Approved | 2025-11-19 | Implementation, Memory Architecture  | [DD-027](DD-027_UNIFIED_HYBRID_SEARCH_ARCHITECTURE.md), [DD-029](DD-029_ELASTICSEARCH_INDEX_MAPPING_STANDARD.md), [Memory System](../architecture/02-memory-system.md)                                                                                                                                                                                                                                                                                                                                 |
+| DD-031 | [SEC Filing Parser Tool Selection](DD-031_SEC_FILING_PARSER_TOOL_SELECTION.md)            | Approved | 2025-11-20 | Implementation, Data Management      | [data-collector-implementation.md](../../plans/data-collector-implementation.md), [parse-failure-strategy.md](../../plans/data-collector-parse-failure-strategy.md), [parse-failure-improvements-phase1.md](../../plans/parse-failure-improvements-phase1.md)                                                                                                                                                                                                                                         |
+| DD-032 | [Hybrid Data Sourcing Strategy](DD-032_HYBRID_DATA_SOURCING.md)                           | Approved | 2025-11-20 | Data Management, Implementation      | [DD-031](DD-031_SEC_FILING_PARSER_TOOL_SELECTION.md), [data-collector-implementation.md](../../plans/data-collector-implementation.md), [yahoo-finance-integration-plan.md](../../plans/yahoo-finance-integration-plan.md)                                                                                                                                                                                                                                                                            |
 
 ---
 
@@ -68,6 +70,8 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 - **DD-020**: Memory System Access Control (5-role RBAC, permission matrix L1/L2/L3, audit logging)
 - **DD-021**: Neo4j High Availability Architecture (3 core + 2 replica cluster, Raft consensus, <10s failover)
 - **DD-030**: Elasticsearch Client-Side RRF Implementation (parallel query execution, Python-based fusion)
+- **DD-031**: SEC Filing Parser Tool Selection (EdgarTools + custom multi-tier, 98.55% quality, $88 for 20K filings)
+- **DD-032**: Hybrid Data Sourcing Strategy (Yahoo Finance for screening, SEC EDGAR for deep analysis, ~$10/month)
 
 ### 🟡 Under Review
 
@@ -109,11 +113,14 @@ Track all major architectural and implementation decisions for the Multi-Agent F
 ### Implementation
 
 - **Search & Retrieval**: DD-030
+- **Data Collection & Parsing**: DD-031
+- **Data Sourcing Strategy**: DD-032
 
 ### Data Management
 
 - **Retention & Storage Strategy**: DD-009, DD-013
-- **Data Quality & Contradiction Resolution**: DD-010
+- **Data Quality & Contradiction Resolution**: DD-010, DD-031
+- **Data Sourcing & Hybrid Approach**: DD-032
 - **Access Control & Security**: DD-020
 
 ### Cross-Cutting Concerns
@@ -178,4 +185,4 @@ Track questions that need decisions:
 
 ---
 
-**Last Updated**: 2025-11-19 (added DD-030; resolved Flaw #19-M6, Flaws #12, #13, #15, #17, #20, #21, #22, #23, #24, #25, #26)
+**Last Updated**: 2025-11-20 (added DD-032: Hybrid Data Sourcing Strategy; added DD-031, DD-030; resolved Flaw #19-M6, Flaws #12, #13, #15, #17, #20, #21, #22, #23, #24, #25, #26)

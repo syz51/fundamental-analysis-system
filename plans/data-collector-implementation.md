@@ -13,7 +13,7 @@
 
 #### ✅ Operational Components
 
-**PostgreSQL (Structured Data)**
+**_PostgreSQL (Structured Data)_**
 
 - Docker service: `postgres:18.1` on port 5432
 - Schema: 8 schemas, 15+ tables fully migrated via Alembic
@@ -25,7 +25,7 @@
 - Migration: `a125ac7b2db7_initial_schema.py` deployed
 - **Gap**: No Python client code yet
 
-**MinIO/S3 (Object Storage)**
+**_MinIO/S3 (Object Storage)_**
 
 - Docker service: `minio/minio:latest` on ports 9000/9001
 - Buckets created via `scripts/setup_minio.sh`:
@@ -35,7 +35,7 @@
 - Storage capacity: 10-15TB planned
 - **Gap**: No Python client (boto3/minio SDK not in dependencies)
 
-**Redis L1 (Working Memory)**
+**_Redis L1 (Working Memory)_**
 
 - Docker service: `redis:latest` on port 6379
 - Persistence: AOF + RDB hybrid (DD-028)
@@ -46,7 +46,7 @@
 - Dependencies: `redis>=5.0.0`
 - **Gap**: No Python client wrapper
 
-**Elasticsearch (Document Search)**
+**_Elasticsearch (Document Search)_**
 
 - Docker service: `elasticsearch:8.14.0` on port 9200
 - Indices: `sec_filings`, `transcripts`, `news` (created but empty)
@@ -55,14 +55,14 @@
 
 #### ❌ Not Needed for Data Collector
 
-**Neo4j (L3 Knowledge Graph)**
+**_Neo4j (L3 Knowledge Graph)_**
 
 - Status: Not implemented
 - Why deferred: Data collector fetches/stores raw data only
 - Graph relationships created by analyst agents (Business Research, Financial Analyst) during analysis
 - Phase 2 dependency for analyst agents, NOT data collector
 
-**Redis L2 (Agent Cache)**
+**_Redis L2 (Agent Cache)_**
 
 - Status: Operational (port 6380) but not needed yet
 - Why deferred: Used by analyst agents for caching recent analysis context
@@ -255,26 +255,65 @@ COMPANY_TICKERS = "https://www.sec.gov/files/company_tickers.json"
 
 **B2. Filing Parser** (`src/agents/data_collector/filing_parser.py`)
 
-**Document Formats**:
+**Tool Selection Decision** (DD-027): Use **EdgarTools** as Tier 0 foundation + custom multi-tier recovery
 
-- **HTML filings**: Pre-2009 filings, text extraction via BeautifulSoup
-- **XBRL filings**: 2009+ filings, structured XML with financial data tags
-- **Inline XBRL (iXBRL)**: 2019+ filings, HTML with embedded XBRL tags
+**Research Finding**: Existing SEC filing parsers (EdgarTools, py-xbrl, Calcbench, sec-api.io) achieve 92-95% success rate but **none handle critical edge cases**:
+- Context disambiguation (restated vs original, consolidated vs parent-only)
+- Mixed GAAP/IFRS extraction
+- Holding companies, SPACs, data validation
+- Cost: Commercial tools $20K-$50K vs our $88 for 20K filings
+
+**Multi-Tier Parsing Architecture**:
 
 ```python
 # Interface design
 class FilingParser:
+    # Tier 0: EdgarTools (handles 95% of filings fast)
+    async def parse_with_edgartools(accession_number: str) -> dict
+
+    # Tier 1.5: Smart deterministic fallback (metadata-aware)
+    async def parse_smart_deterministic(filing_content: bytes, metadata: dict) -> dict
+
+    # Tier 2: LLM-assisted parsing (semantic understanding)
+    async def parse_with_llm(filing_content: bytes, metadata: dict) -> dict
+
+    # Tier 2.5: Data validation layer
+    async def validate_financials(data: dict, metadata: dict) -> tuple[bool, list[str]]
+
+    # Helper methods
     def extract_metadata(filing_content: bytes) -> dict
-    def parse_xbrl_financials(filing_content: bytes) -> dict
     def extract_text(filing_content: bytes) -> str
-    def validate_filing(filing_content: bytes) -> bool
 ```
+
+**Tier 0: EdgarTools Foundation**
+
+- **What it handles**: 95% of standard filings (10-K, 10-Q, 8-K, 20-F)
+- **Features**: Fast (10-30x speedup), XBRL standardization, multi-period analysis
+- **Limitations**: No context disambiguation, no custom validation
+- **Cost**: Free, open source
+
+```python
+from edgartools import Filing
+
+filing = Filing(accession_number)
+xbrl = filing.xbrl()
+financials = xbrl.statements  # Income, balance sheet, cash flow
+```
+
+**Tier 1.5: Smart Deterministic Fallback**
+
+- **When triggered**: EdgarTools fails or returns incomplete data
+- **Features**: Metadata-aware tag selection (IFRS vs US-GAAP), context disambiguation, encoding fixes
+- **Recovery rate**: 35% of Tier 0 failures
+- **Implementation**: Custom lxml-based parser with business logic
 
 **Metadata Extraction**:
 
 - Ticker, CIK, company name
 - Filing date, period end date, fiscal year/quarter
-- Form type (10-K, 10-Q, 8-K)
+- Form type (10-K, 10-Q, 8-K, 20-F)
+- Accounting standard (US-GAAP vs IFRS)
+- Company type (operating, holding company, SPAC)
 - Accession number (unique identifier)
 
 **XBRL Financial Parsing** (Priority):
@@ -282,7 +321,7 @@ class FilingParser:
 - Income statement: Revenue, operating income, net income, EPS
 - Balance sheet: Assets, liabilities, equity, cash, debt
 - Cash flow: Operating CF, investing CF, financing CF
-- Key tags: `us-gaap:Revenues`, `us-gaap:NetIncomeLoss`, `us-gaap:Assets`
+- Tag support: `us-gaap:*`, `ifrs-full:*`, custom extensions
 
 **Text Extraction** (Phase 2):
 
@@ -291,32 +330,35 @@ class FilingParser:
 - Item 8: Financial statements
 - Risk factors, legal proceedings
 
-**Data Validation**:
+**Data Validation (Tier 2.5)**:
 
-- Schema compliance (required fields present)
-- Data type checks (dates valid, numbers numeric)
-- Consistency: Assets = Liabilities + Equity
-- Outlier detection: Revenue >$0, debt ratios reasonable
+- Accounting standard consistency (IFRS filer shouldn't have US-GAAP primary tags)
+- Balance sheet equation: Assets = Liabilities + Equity (1% tolerance)
+- Holding company consolidated check
+- Value ranges: Revenue ≥$0, net income vs revenue reasonableness
+- Completeness: Minimum 5/8 core metrics
 
 **Dependencies**:
 
 ```toml
-beautifulsoup4 = "^4.12.0"
-lxml = "^5.0.0"
-python-edgar = "^4.0.0"  # XBRL parsing library
+edgartools = "^3.0.0"  # Tier 0 XBRL parser (10-30x faster)
+beautifulsoup4 = "^4.12.0"  # HTML text extraction
+lxml = "^5.0.0"  # Tier 1.5 custom XBRL parsing
 ```
 
 **Testing**:
 
 - Unit tests: Parse sample 10-K XBRL (AAPL Q4 2023)
-- Validation tests: Reject malformed filings
-- Edge cases: Missing tags, non-GAAP adjustments
+- Tier 0 tests: EdgarTools integration, verify 95% baseline
+- Tier 1.5 tests: Metadata-aware parsing, context disambiguation
+- Validation tests: Reject false positives, balance sheet checks
+- Edge cases: Missing tags, IFRS filers, holding companies, SPACs, amended filings
 
 **B3. Storage Pipeline** (`src/agents/data_collector/storage_pipeline.py`)
 
 **Workflow**:
 
-```
+```text
 1. Check Redis L1 cache → if exists, skip
 2. Fetch filing from SEC EDGAR
 3. Upload raw filing to MinIO
@@ -369,19 +411,55 @@ class StoragePipeline:
 
 ### Phase C: Data Collector Agent (2-3 days)
 
+**UPDATED**: Per DD-032 (Hybrid Data Sourcing Strategy), Phase C now uses **Yahoo Finance for screening** instead of SEC backfill. SEC parsing happens on-demand after Human Gate 1 approves companies for deep analysis.
+
+**C0. Yahoo Finance Screening Backfill** (NEW - Day 6.5)
+
+**Purpose**: Fetch 10Y financial metrics for all S&P 500 companies to enable immediate screening (Days 1-2 of analysis pipeline)
+
+**Implementation**: See `plans/yahoo-finance-integration-plan.md` for full details
+
+**Quick Backfill**:
+```bash
+# Fetch Yahoo Finance data for all S&P 500 (takes ~4-10 min)
+python -m src.data_collector yahoo-backfill
+
+# Result: 500 companies with screening metrics in PostgreSQL
+# data_source='yahoo_finance'
+```
+
+**What gets stored**:
+- Revenue CAGR (10Y, 5Y)
+- Operating margin, net margin (3Y avg)
+- ROE, ROA, ROIC (3Y avg)
+- Debt/equity, current ratio (latest)
+
+**Screening flow**:
+1. Yahoo backfill (4-10 min) → PostgreSQL
+2. Screening Agent queries Yahoo data (filter by CAGR, margins, ratios)
+3. Generate summaries: "AAPL: 18% 10Y CAGR, 25% operating margin, ROE 35%"
+4. Human Gate 1 selects ~10-20 candidates
+5. **Trigger SEC parsing** for approved companies only (C1 below)
+
 **C1. Agent Implementation** (`src/agents/data_collector/agent.py`)
 
 **Agent Responsibilities**:
 
-- Receive fetch requests (ticker, form_types, date_range)
-- Orchestrate storage pipeline for multiple filings
-- Manage task queue (prioritize recent filings)
+- **Screening stage**: Fetch Yahoo Finance data for S&P 500 (bulk)
+- **Deep analysis stage**: Receive fetch requests for approved companies (ticker, form_types, date_range)
+- Orchestrate storage pipeline for SEC filings (post-Gate 1)
+- Manage task queue (prioritize approved companies)
 - Report progress to human dashboard
 - Handle errors gracefully (don't crash on single filing failure)
 
 ```python
 # Interface design
 class DataCollectorAgent:
+    # NEW: Yahoo Finance methods (screening)
+    async def yahoo_backfill_sp500() -> dict  # Fetch all S&P 500 screening data
+    async def yahoo_fetch(tickers: list[str]) -> dict  # Fetch specific companies
+
+    # Existing: SEC EDGAR methods (deep analysis, post-Gate 1)
     async def fetch_company(ticker: str, form_types: list[str] = ["10-K", "10-Q"])
     async def fetch_batch(tickers: list[str])
     async def monitor_new_filings(watch_tickers: list[str])
@@ -517,7 +595,7 @@ moto = "^5.0.0"  # Mock AWS S3
 
 ### Phase D: Infrastructure Validation (1 day)
 
-**D1. End-to-End Test**
+**_D1. End-to-End Test_**
 
 **Test Case**: Fetch 10 real companies, verify complete pipeline
 
@@ -554,7 +632,7 @@ moto = "^5.0.0"  # Mock AWS S3
 - Memory usage: <500MB for agent process
 - Error rate: <5%
 
-**D2. Documentation**
+**_D2. Documentation_**
 
 **Update Roadmap** (`docs/implementation/01-roadmap.md`):
 
@@ -618,8 +696,6 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 
 **Dependencies**: PostgreSQL, MinIO, Redis L1 (all must be running)
 
-````
-
 ---
 
 ## 4. Deferred to Phase 2
@@ -629,6 +705,7 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 **Why deferred**: Analyst agents need search functionality, not data collector
 
 **What's missing**:
+
 - Document indexing pipeline (bulk upload to Elasticsearch)
 - Embedding generation (currently mock vectors)
 - Search API integration (keyword + semantic + hybrid)
@@ -636,6 +713,7 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 **When needed**: Phase 2 when Business Research Agent needs to search filings
 
 **Estimate**: 2-3 days
+
 - Batch indexing (1000 docs/min throughput)
 - Embedding model integration (OpenAI or local)
 - Search relevance tuning (BM25 + vector weights)
@@ -645,16 +723,19 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 **Why deferred**: Analyst agents create graph relationships, not data collector
 
 **What's missing**:
+
 - Neo4j Docker service
 - Graph schema (Company, Analysis, Pattern nodes)
 - Python neo4j-driver client
 
 **When needed**: Phase 2 when analyst agents run and need to store:
+
 - Company → Analysis relationships
 - Pattern recognition (similar companies)
 - Agent track record (which agents identified good insights)
 
 **Estimate**: 5-7 days
+
 - Neo4j setup + schema: 2 days
 - Python client + query builders: 2 days
 - Integration with analyst agents: 3 days
@@ -664,11 +745,13 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 **Why deferred**: Analyst agents cache recent analysis, not data collector
 
 **What's missing**:
+
 - Redis L2 client wrapper (port 6380 already operational)
 - Cache invalidation strategy
 - TTL management (30 days)
 
 **When needed**: Phase 2 when analyst agents need to cache:
+
 - Recent financial analysis summaries
 - Peer comparison results
 - Industry context
@@ -680,6 +763,7 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 **Why deferred**: Data collector writes only, Financial Analyst reads
 
 **What's missing**:
+
 - Pre-computed views for "latest financial statement per company"
 - Refresh mechanisms (manual or automated after bulk inserts)
 - Composite views joining income/balance/cash flow
@@ -689,6 +773,7 @@ python -m src.agents.data_collector monitor --watch-list watchlist.txt
 **Performance benefit**: 100x speedup for "show all companies' latest quarters" queries
 
 **Implementation**:
+
 ```sql
 -- Latest income statement per company
 CREATE MATERIALIZED VIEW financial_data.latest_income_statements AS
@@ -733,7 +818,7 @@ LEFT JOIN financial_data.latest_cash_flows cf USING (ticker, period_end_date);
 CREATE INDEX idx_latest_income_ticker ON financial_data.latest_income_statements(ticker);
 CREATE INDEX idx_latest_balance_ticker ON financial_data.latest_balance_sheets(ticker);
 CREATE INDEX idx_latest_cashflow_ticker ON financial_data.latest_cash_flows(ticker);
-````
+```
 
 **Refresh strategy**:
 
@@ -773,21 +858,36 @@ await session.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY financial_data.lat
 - **Day 2**: MinIO client (upload/download, multipart, retry)
 - **Day 3**: Redis L1 client (deduplication, task tracking, rate limiting)
 
-### Week 2: SEC EDGAR Integration (Days 4-7)
+### Week 2: SEC EDGAR Integration (Days 4-6.5)
 
 - **Day 4**: EDGAR client (rate limiting, filing search, CIK lookup)
-- **Day 5**: Filing parser (XBRL parsing, metadata extraction)
-- **Day 6**: Storage pipeline (orchestration, error handling, transactions)
-- **Day 7**: Integration testing (end-to-end with real SEC data)
+- **Day 5**: Filing parser - **REVISED WITH EDGARTOOLS**
+  - Morning: EdgarTools integration + Tier 0 wrapper (4 hours)
+  - Afternoon: Tier 1.5 smart deterministic stub (4 hours)
+  - **Time saved**: 0.5 days (EdgarTools handles 95% baseline vs building from scratch)
+- **Day 6**: Storage pipeline (orchestration, error handling, multi-tier flow)
+- **Day 6.5**: Integration testing (EdgarTools + Tier 1.5 end-to-end)
 
-### Week 2-3: Agent + Validation (Days 8-11)
+### Week 2-3: Yahoo Finance + Agent + Validation (Days 7-10)
 
-- **Day 8**: Agent implementation (task queue, concurrency, state management)
-- **Day 9**: Configuration + testing (unit tests, mock tests)
-- **Day 10**: Load testing (1000 filings, performance validation)
-- **Day 11**: End-to-end validation (10 companies) + documentation
+- **Day 6.5**: Yahoo Finance integration (per `yahoo-finance-integration-plan.md`, 2-3 days compressed)
+  - YahooFinanceClient implementation
+  - Screening metrics calculator
+  - PostgreSQL data_source column
+  - S&P 500 backfill test
+- **Day 7**: Agent implementation (task queue, concurrency, state management)
+  - Add yahoo_backfill_sp500() and yahoo_fetch() methods
+  - Update SEC fetch to trigger post-Gate 1
+- **Day 8**: Configuration + testing (unit tests, mock tests)
+- **Day 9**: Load testing (Yahoo: 500 companies, SEC: 100 filings for baseline validation)
+- **Day 10**: End-to-end validation (Yahoo screening + SEC deep analysis for 10 companies) + documentation
 
-**Total**: 11 days (can compress to 8 days with parallel work on storage clients)
+**Total**: 10 days (unchanged, Yahoo integration fits in Day 6.5-7 alongside agent work)
+
+**EdgarTools Impact**:
+- **Time saved**: 0.5 days (Day 5 reduced from 1.0 → 0.5 days)
+- **Complexity reduced**: No need to build basic XBRL parser from scratch
+- **Quality improved**: Battle-tested parser handles 95% baseline vs 92-93% if custom-built
 
 ---
 
@@ -821,30 +921,275 @@ await session.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY financial_data.lat
 
 ---
 
-## 7. Unresolved Questions
+## 7. Filing Amendments Strategy
+
+### Decision: Keep Both Versions (Recommended)
+
+**Problem**: Companies file amended reports (10-K/A, 10-Q/A) to correct errors in original filings. The system must decide whether to overwrite original filings or maintain version history.
+
+**Chosen Approach**: Store both original and amended filings with full version tracking.
+
+---
+
+### Schema Support (Already Implemented)
+
+The existing PostgreSQL schema (`774d9680756d_data_collector_schemas.py`) already supports versioning:
+
+**Key columns in `document_registry.filings`**:
+
+- `version` (INTEGER): Increments for each amendment (1, 2, 3, ...)
+- `is_latest` (BOOLEAN): TRUE only for most recent version
+- `superseded_by` (UUID): Points to the filing that supersedes this one
+
+**Automated triggers** (lines 197-285 in migration):
+
+- `update_latest_version()`: Automatically marks old versions as `is_latest=false` when amendment inserted
+- Similar triggers for financial_data tables
+
+---
+
+### Implementation
+
+**When Data Collector encounters 10-K/A amendment**:
+
+```python
+# In storage_pipeline.py
+async def process_filing(self, cik: str, accession_number: str, form_type: str):
+    """Process filing with amendment detection"""
+
+    # Check if this is an amendment (form_type ends with /A)
+    is_amendment = form_type.endswith("/A")  # e.g., "10-K/A", "10-Q/A"
+
+    if is_amendment:
+        # Find original filing for same period
+        base_form = form_type.rstrip("/A")  # "10-K/A" → "10-K"
+        original = await postgres.get_filing_by_period(
+            ticker=ticker,
+            period_end_date=period_end_date,
+            form_type=base_form
+        )
+
+        if original:
+            # Insert amendment as new version
+            amendment_id = await postgres.insert_document_metadata(
+                ticker=ticker,
+                filing_date=filing_date,
+                form_type=form_type,
+                s3_path=s3_path,
+                version=original.version + 1  # Increment version
+            )
+
+            # Link original to amendment
+            await postgres.supersede_filing(
+                old_filing_id=original.filing_id,
+                new_filing_id=amendment_id
+            )
+            # Result: original.is_latest = false, original.superseded_by = amendment_id
+            #         amendment.is_latest = true, amendment.version = original.version + 1
+
+    else:
+        # Regular filing, version = 1
+        await postgres.insert_document_metadata(
+            ticker=ticker,
+            filing_date=filing_date,
+            form_type=form_type,
+            s3_path=s3_path,
+            version=1
+        )
+```
+
+**Both filings stored in MinIO**:
+
+- Original: `raw/sec_filings/AAPL/2024/0000320193-24-000010.html`
+- Amendment: `raw/sec_filings/AAPL/2024/0000320193-24-000123.html`
+
+**Both financial statements in PostgreSQL**:
+
+- Original: `version=1, is_latest=false`
+- Amendment: `version=2, is_latest=true`
+
+---
+
+### Rationale for Keeping Both Versions
+
+**1. Audit Trail for Analysts**
+
+- Business Research Agent can see what data was originally filed vs corrected
+- Shows what analysts/investors saw at the time of original filing
+- Critical for understanding historical decision-making context
+
+**2. Red Flag Detection**
+
+- Pattern: Company frequently amends earnings → Red flag (accounting irregularities)
+- Business Research Agent flags in SWOT analysis: "Company has filed 3 10-K/A amendments in last 2 years"
+- Strategy Analyst evaluates management credibility (frequent errors indicate poor controls)
+
+**3. QC Agent Analysis**
+
+- QC Agent compares original vs amended financial data
+- Detects what changed: Revenue adjustment? Debt reclassification? Related-party transaction disclosure?
+- Example: "Amendment increased revenue by 5% - investigate aggressive revenue recognition"
+
+**4. Regulatory Compliance**
+
+- SEC investigations may require amendment history
+- Audit trail demonstrates system tracked all versions
+- Legal requirement for some investment advisors
+
+**5. Learning Opportunities (L3 Knowledge Graph)**
+
+- Pattern recognition: Which companies amend frequently?
+- Correlation analysis: Do frequent amendments predict underperformance?
+- Track record: Companies that amend → Historical performance
+
+---
+
+### Query Patterns (For Analyst Agents)
+
+**Get latest financial data only** (most common):
+
+```sql
+SELECT * FROM financial_data.income_statements
+WHERE ticker = 'AAPL'
+  AND fiscal_year = 2024
+  AND is_latest = true;  -- Only latest version
+```
+
+**Get version history** (for QC Agent):
+
+```sql
+SELECT version, revenue, net_income, is_latest, superseded_by
+FROM financial_data.income_statements
+WHERE ticker = 'AAPL'
+  AND period_end_date = '2024-09-30'
+ORDER BY version;
+-- Result: Shows original vs amended values
+```
+
+**Detect frequent amendments** (for Business Research Agent):
+
+```sql
+SELECT ticker, COUNT(*) as amendment_count
+FROM document_registry.filings
+WHERE form_type LIKE '%/A'  -- All amendments
+  AND filing_date > CURRENT_DATE - INTERVAL '2 years'
+GROUP BY ticker
+HAVING COUNT(*) >= 3
+ORDER BY amendment_count DESC;
+-- Result: Companies with 3+ amendments in 2 years (red flag)
+```
+
+---
+
+### Storage Impact
+
+**Frequency**: S&P 500 files ~25 amendments/year out of ~500 annual 10-Ks = **~5% amendment rate**
+
+**Storage overhead**:
+
+- 20,000 filings × 5% = 1,000 amendments
+- 1,000 × 5MB/filing = **5GB additional MinIO storage**
+- 1,000 × 10 financial metrics = **10,000 additional PostgreSQL rows**
+
+**Verdict**: Negligible overhead (~5%) for significant analytical value
+
+---
+
+### Alternative Approaches (Not Chosen)
+
+**Option B: Overwrite Original** (❌ NOT RECOMMENDED)
+
+- Delete original filing from PostgreSQL + MinIO
+- Insert amendment as if it's the original
+- **Critical flaw**: Lose historical context, can't detect amendment patterns
+- Only suitable for real-time data feeds where history doesn't matter
+
+**Option C: Metadata Only** (⚠️ ACCEPTABLE IF STORAGE CONSTRAINED)
+
+- Keep original metadata in PostgreSQL (for audit)
+- Keep original raw filing in MinIO
+- **Don't parse** original into financial_data (only parse amendment)
+- **Trade-off**: Can see that amendment happened, but can't analyze what changed
+
+---
+
+### Integration with Analyst Agents (Phase 2)
+
+**Business Research Agent**:
+
+- Check amendment history during SWOT analysis
+- Red flag: "Company filed 10-K/A on [date], amended revenue from $X to $Y (+5%)"
+- Include in risk factors if frequent amendments detected
+
+**QC Agent**:
+
+- Compare original vs amended financial data
+- Alert if material changes (revenue >5%, debt >10%, equity restatement)
+- Track which companies amend frequently (feed to L3 knowledge graph)
+
+**Financial Analyst Agent**:
+
+- Always query `is_latest=true` for current analysis
+- Can query version history if QC Agent flags discrepancy
+- Calculate metrics using latest version only
+
+---
+
+### Success Metrics
+
+**Implementation readiness**: ✅ Schema already supports versioning (migration `774d9680756d`)
+
+**Testing checklist**:
+
+- ✅ Test `supersede_filing()` method (existing in postgres_client.py:294-326)
+- ✅ Verify triggers auto-update `is_latest` flag
+- ✅ Test version increment logic
+- ✅ Test query filtering `is_latest=true`
+
+**Phase D validation**:
+
+- Fetch a real amended filing (e.g., find recent 10-K/A in SEC EDGAR)
+- Process both original + amendment
+- Verify both stored, original marked `is_latest=false`
+- Verify analyst queries only return latest version by default
+
+---
+
+## 8. Unresolved Questions
 
 1. **SEC EDGAR downtime** - How handle 503 errors during market hours (high traffic)?
 2. **XBRL parsing edge cases** - Non-GAAP adjustments, restated financials, foreign filers?
 3. **Storage limits** - MinIO 10-15TB sufficient for 5 years of data?
-4. **Backfill strategy** - Fetch all historical filings or only recent 1 year?
+4. **Backfill strategy** - ✅ **RESOLVED** - See DD-032 (Hybrid: Yahoo Finance for screening, SEC on-demand for deep analysis)
 5. **Data retention** - How long keep raw filings vs just parsed financials?
-6. **Filing amendments** - How handle 10-K/A amended filings (overwrite or version)?
+6. **Filing amendments** - ✅ **RESOLVED** - See Section 7 (Keep both versions with versioning)
 7. **Concurrency scaling** - Can increase workers beyond 10 without hitting SEC limits?
-8. **Parse failure threshold** - When alert human vs auto-skip filing?
+8. **Parse failure threshold** - ✅ **RESOLVED** - See `data-collector-parse-failure-strategy.md` (Multi-tier agent recovery)
+9. **Yahoo Finance API selection** - ✅ **RESOLVED** - See DD-032 & `yahoo-finance-integration-plan.md` (Use yfinance library, fallback to Alpha Vantage or SEC)
+
+**Note**: Questions 4, 6, 8, and 9 have been resolved and documented in separate strategy documents.
 
 ---
 
-## 8. Related Design Decisions
+## 9. Related Design Decisions
 
+- **DD-032**: Hybrid Data Sourcing Strategy (Yahoo Finance for screening, SEC EDGAR for deep analysis) - **NEW**
+- **DD-031**: SEC Filing Parser Tool Selection (EdgarTools + multi-tier recovery for deep analysis)
 - **DD-027**: Elasticsearch Unified Hybrid Search (deferred indexing to Phase 2)
 - **DD-028**: Redis 3-tier persistence strategy (using L1 only for now)
 - **DD-029**: Elasticsearch index mapping (indices created, awaiting documents)
 - **DD-009**: S3 tiered storage (raw bucket with versioning)
 - **DD-019**: PostgreSQL partitioning (financial_data partitioned by year)
 
+### Related Strategy Documents
+
+- **yahoo-finance-integration-plan.md**: Implementation plan for Yahoo Finance API client (screening data) - **NEW**
+- **data-collector-backfill-strategy.md**: Comprehensive analysis of backfill options, recommended hybrid approach
+- **data-collector-parse-failure-strategy.md**: Multi-tier agent recovery system for XBRL parsing failures
+
 ---
 
-## 9. Next Steps After Completion
+## 10. Next Steps After Completion
 
 **Phase 2 Prerequisites**:
 
@@ -860,7 +1205,3 @@ await session.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY financial_data.lat
 4. Implement Elasticsearch indexing (analyst agents need search)
 
 **Estimated Phase 2 Start**: Week 3 (after data collector validation complete)
-
-```
-
-```
