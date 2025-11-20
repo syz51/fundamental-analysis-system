@@ -6,12 +6,13 @@ Requires Elasticsearch running with indices created via elasticsearch_setup.py.
 """
 
 import pytest
+from elasticsearch import AsyncElasticsearch
 
 pytestmark = [pytest.mark.integration, pytest.mark.requires_elasticsearch]
 
 
 @pytest.mark.asyncio
-async def test_synonym_expansion_ebitda(es_client):
+async def test_synonym_expansion_ebitda(es_client: AsyncElasticsearch) -> None:
     """Test EBITDA synonym expansion."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -38,7 +39,7 @@ async def test_synonym_expansion_ebitda(es_client):
 
 
 @pytest.mark.asyncio
-async def test_synonym_expansion_pe_ratio(es_client):
+async def test_synonym_expansion_pe_ratio(es_client: AsyncElasticsearch) -> None:
     """Test P/E ratio synonym expansion."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -52,7 +53,7 @@ async def test_synonym_expansion_pe_ratio(es_client):
 
 
 @pytest.mark.asyncio
-async def test_synonym_expansion_ma(es_client):
+async def test_synonym_expansion_ma(es_client: AsyncElasticsearch) -> None:
     """Test M&A synonym expansion."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -68,7 +69,7 @@ async def test_synonym_expansion_ma(es_client):
 
 
 @pytest.mark.asyncio
-async def test_stopword_removal(es_client):
+async def test_stopword_removal(es_client: AsyncElasticsearch) -> None:
     """Test stopword removal."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -91,7 +92,7 @@ async def test_stopword_removal(es_client):
 
 
 @pytest.mark.asyncio
-async def test_stemming(es_client):
+async def test_stemming(es_client: AsyncElasticsearch) -> None:
     """Test English stemming."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -117,7 +118,7 @@ async def test_stemming(es_client):
 
 
 @pytest.mark.asyncio
-async def test_case_insensitivity(es_client):
+async def test_case_insensitivity(es_client: AsyncElasticsearch) -> None:
     """Test lowercase filter."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -132,7 +133,7 @@ async def test_case_insensitivity(es_client):
 
 
 @pytest.mark.asyncio
-async def test_ascii_folding(es_client):
+async def test_ascii_folding(es_client: AsyncElasticsearch) -> None:
     """Test ASCII folding for accented characters."""
     response = await es_client.indices.analyze(
         index="sec_filings",
@@ -148,7 +149,7 @@ async def test_ascii_folding(es_client):
 
 
 @pytest.mark.asyncio
-async def test_complex_financial_text(es_client):
+async def test_complex_financial_text(es_client: AsyncElasticsearch) -> None:
     """Test analyzer on realistic financial text."""
     text = """
     Apple's EBITDA margins improved significantly, with P/E ratio declining to 25.

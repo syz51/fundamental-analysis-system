@@ -1,11 +1,13 @@
 """
 RRF (Reciprocal Rank Fusion) Scoring Tests
 
-Tests the RRF merge function with known inputs to validate scoring correctness.
+Tests the RRFScorer class with known inputs to validate scoring correctness.
 """
 
 import pytest
-from src.storage.search_tool import SearchClient, SearchResult
+
+from storage.rrf_scorer import RRFScorer
+from storage.search_types import SearchResult
 
 pytestmark = pytest.mark.unit
 
@@ -26,9 +28,9 @@ def create_search_result(doc_id: str, score: float, content: str = "test") -> Se
     )
 
 
-def test_rrf_merge_basic():
+def test_rrf_merge_basic() -> None:
     """Test basic RRF merge with two result lists."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     # List 1: BM25 results
     list1 = [
@@ -44,8 +46,7 @@ def test_rrf_merge_basic():
         create_search_result("doc1", 0.85),  # rank 3
     ]
 
-    k = 60
-    merged = client._rrf_merge([list1, list2], k=k)
+    merged = scorer.merge([list1, list2])
 
     # Calculate expected scores (1-based ranking: rank+1)
     # doc1: 1/(60+1) + 1/(60+3) = 1/61 + 1/63 = 0.0164 + 0.0159 = 0.0323
@@ -66,9 +67,9 @@ def test_rrf_merge_basic():
     assert abs(merged[3].score - 0.0159) < PRECISION_THRESHOLD, f"doc3 score incorrect: {merged[3].score}"
 
 
-def test_rrf_merge_single_list():
+def test_rrf_merge_single_list() -> None:
     """Test RRF merge with single result list (should preserve order)."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     list1 = [
         create_search_result("doc1", 10.0),
@@ -76,8 +77,7 @@ def test_rrf_merge_single_list():
         create_search_result("doc3", 5.0),
     ]
 
-    k = 60
-    merged = client._rrf_merge([list1], k=k)
+    merged = scorer.merge([list1])
 
     # Order should be preserved
     assert merged[0].doc_id == "doc1"
@@ -90,9 +90,9 @@ def test_rrf_merge_single_list():
     assert abs(merged[2].score - 1 / 63) < PRECISION_THRESHOLD
 
 
-def test_rrf_merge_no_overlap():
+def test_rrf_merge_no_overlap() -> None:
     """Test RRF merge with completely disjoint result sets."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     list1 = [
         create_search_result("doc1", 10.0),
@@ -104,8 +104,7 @@ def test_rrf_merge_no_overlap():
         create_search_result("doc4", 0.90),
     ]
 
-    k = 60
-    merged = client._rrf_merge([list1, list2], k=k)
+    merged = scorer.merge([list1, list2])
 
     # All docs should appear
     assert len(merged) == EXPECTED_NO_OVERLAP_COUNT
@@ -113,9 +112,9 @@ def test_rrf_merge_no_overlap():
     assert doc_ids == {"doc1", "doc2", "doc3", "doc4"}
 
 
-def test_rrf_merge_complete_overlap():
+def test_rrf_merge_complete_overlap() -> None:
     """Test RRF merge with identical result sets."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     list1 = [
         create_search_result("doc1", 10.0),
@@ -127,8 +126,7 @@ def test_rrf_merge_complete_overlap():
         create_search_result("doc2", 0.90),
     ]
 
-    k = 60
-    merged = client._rrf_merge([list1, list2], k=k)
+    merged = scorer.merge([list1, list2])
 
     # Should have 2 docs (overlap)
     assert len(merged) == EXPECTED_COMPLETE_OVERLAP_COUNT
@@ -142,32 +140,32 @@ def test_rrf_merge_complete_overlap():
     assert abs(merged[1].score - expected_doc2) < PRECISION_THRESHOLD
 
 
-def test_rrf_merge_different_k_values():
+def test_rrf_merge_different_k_values() -> None:
     """Test RRF merge with different k constants."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     list1 = [create_search_result("doc1", 10.0)]
     list2 = [create_search_result("doc1", 0.95)]
 
     # Test k=60 (default)
-    merged_60 = client._rrf_merge([list1, list2], k=60)
+    merged_60 = scorer.merge([list1, list2])
     expected_60 = 1 / 61 + 1 / 61
     assert abs(merged_60[0].score - expected_60) < PRECISION_THRESHOLD
 
     # Test k=1 (very aggressive fusion)
-    merged_1 = client._rrf_merge([list1, list2], k=1)
+    merged_1 = scorer.merge([list1, list2], k=1)
     expected_1 = 1 / 2 + 1 / 2  # (k=1, rank=1) -> 1/(1+1) = 0.5 each
     assert abs(merged_1[0].score - expected_1) < PRECISION_THRESHOLD
 
     # Test k=100 (more conservative fusion)
-    merged_100 = client._rrf_merge([list1, list2], k=100)
+    merged_100 = scorer.merge([list1, list2], k=100)
     expected_100 = 1 / 101 + 1 / 101
     assert abs(merged_100[0].score - expected_100) < PRECISION_THRESHOLD
 
 
-def test_rrf_merge_ranking_bias():
+def test_rrf_merge_ranking_bias() -> None:
     """Test that RRF properly handles ranking bias (top results matter more)."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     # Doc1 appears 1st in both lists (strong signal)
     # Doc2 appears 1st in list1, 10th in list2 (mixed signal)
@@ -192,8 +190,7 @@ def test_rrf_merge_ranking_bias():
         ]
     )
 
-    k = 60
-    merged = client._rrf_merge([list1, list2], k=k)
+    merged = scorer.merge([list1, list2])
 
     # doc1 should be first (rank 1+1 in both lists)
     assert merged[0].doc_id == "doc1"
@@ -206,34 +203,41 @@ def test_rrf_merge_ranking_bias():
     assert doc2_pos < doc3_pos, f"doc2 (pos {doc2_pos}) should rank higher than doc3 (pos {doc3_pos})"
 
 
-def test_rrf_merge_invalid_k():
+def test_rrf_merge_invalid_k() -> None:
     """Test RRF merge with invalid k value."""
-    client = SearchClient()
+    # Test invalid k in constructor
+    with pytest.raises(ValueError, match="RRF constant k must be positive"):
+        RRFScorer(default_k=0)
 
+    with pytest.raises(ValueError, match="RRF constant k must be positive"):
+        RRFScorer(default_k=-5)
+
+    # Test invalid k in merge method
+    scorer = RRFScorer(default_k=60)
     list1 = [create_search_result("doc1", 10.0)]
 
     with pytest.raises(ValueError, match="RRF constant k must be positive"):
-        client._rrf_merge([list1], k=0)
+        scorer.merge([list1], k=0)
 
     with pytest.raises(ValueError, match="RRF constant k must be positive"):
-        client._rrf_merge([list1], k=-5)
+        scorer.merge([list1], k=-5)
 
 
-def test_rrf_merge_empty_lists():
+def test_rrf_merge_empty_lists() -> None:
     """Test RRF merge with empty input lists."""
-    client = SearchClient()
+    scorer = RRFScorer(default_k=60)
 
     # Empty lists should return empty result
-    merged = client._rrf_merge([], k=60)
+    merged = scorer.merge([])
     assert merged == []
 
     # Single empty list
-    merged = client._rrf_merge([[]], k=60)
+    merged = scorer.merge([[]])
     assert merged == []
 
     # Mix of empty and non-empty
     list1 = [create_search_result("doc1", 10.0)]
-    merged = client._rrf_merge([list1, []], k=60)
+    merged = scorer.merge([list1, []])
     assert len(merged) == 1
     assert merged[0].doc_id == "doc1"
 

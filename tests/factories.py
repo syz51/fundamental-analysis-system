@@ -4,6 +4,7 @@ Provides factory functions to create test documents, search results,
 and other data structures used across unit and integration tests.
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -169,13 +170,13 @@ class DocumentFactory:
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """Create multiple documents of the same type."""
-        factory_map = {
+        factory_map: dict[str, Callable[..., dict[str, Any]]] = {
             "sec_filing": DocumentFactory.create_sec_filing,
             "transcript": DocumentFactory.create_transcript,
             "news": DocumentFactory.create_news,
         }
 
-        factory = factory_map.get(doc_type, DocumentFactory.create_sec_filing)
+        factory: Callable[..., dict[str, Any]] = factory_map.get(doc_type, DocumentFactory.create_sec_filing)
 
         return [factory(doc_id=f"{doc_type}_{i:03d}", **kwargs) for i in range(count)]
 

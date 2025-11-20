@@ -10,10 +10,10 @@ For detailed setup instructions, schema definitions, and migration guides, pleas
 
 ## Directory Structure
 
-*   **`migrations/`**: Alembic migration scripts and configuration.
-    *   `versions/`: Individual migration files (e.g., `a125ac7b2db7_initial_schema.py`).
-    *   `env.py`: Alembic environment configuration with `asyncpg` support.
-    *   `script.py.mako`: Template for new migration files.
+- **`migrations/`**: Alembic migration scripts and configuration.
+  - `versions/`: Individual migration files (e.g., `a125ac7b2db7_initial_schema.py`).
+  - `env.py`: Alembic environment configuration with `asyncpg` support.
+  - `script.py.mako`: Template for new migration files.
 
 ## Quick Start (Migrations)
 

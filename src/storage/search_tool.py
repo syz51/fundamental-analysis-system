@@ -1,9 +1,7 @@
 import asyncio
 import logging
 import time
-from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
@@ -19,6 +17,11 @@ from elasticsearch.exceptions import (
 from elasticsearch.exceptions import (
     ConnectionError as ESConnectionError,
 )
+
+from storage.embedding_generator import EmbeddingGenerator
+from storage.filter_builder import SearchFilterBuilder
+from storage.rrf_scorer import RRFScorer
+from storage.search_types import SearchConfig, SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -125,27 +128,6 @@ def retry_with_backoff(
     return decorator
 
 
-@dataclass
-class SearchConfig:
-    """Configuration for search filtering and pagination."""
-
-    ticker: str | None = None
-    start_date: str | None = None
-    end_date: str | None = None
-    doc_types: list[str] | None = None
-    filters: dict[str, Any] | None = None
-    limit: int = 10
-
-
-@dataclass
-class SearchResult:
-    doc_id: str
-    score: float
-    content: str
-    metadata: dict[str, Any]
-    source_index: str
-
-
 class SearchClient:
     def __init__(
         self,
@@ -154,92 +136,15 @@ class SearchClient:
         default_rrf_k: int = 60,
     ):
         self.client = AsyncElasticsearch(hosts=[es_url])
-        self.embedding_model_mock = embedding_model_mock
-        self.default_rrf_k = default_rrf_k
         self.circuit_breaker = CircuitBreaker(failure_threshold=5, timeout=60)
+
+        # Initialize utility components
+        self.rrf_scorer = RRFScorer(default_k=default_rrf_k)
+        self.filter_builder = SearchFilterBuilder()
+        self.embedding_generator = EmbeddingGenerator(use_mock=embedding_model_mock)
 
     async def close(self) -> None:
         await self.client.close()
-
-    async def _generate_embedding(self, text: str) -> list[float]:  # noqa: ARG002
-        """
-        Generates a 1536-dimensional embedding vector.
-
-        TODO: Replace with actual call to OpenAI or local model.
-        Currently unused parameter 'text' will be used when real embedding model is integrated.
-        """
-        if self.embedding_model_mock:
-            # Return a random normalized vector or zero vector for testing
-            # Using a simple deterministic pattern for now to avoid random import if not needed
-            return [0.001] * 1536
-        else:
-            raise NotImplementedError("Real embedding model not configured")
-
-    def _build_filters(
-        self,
-        ticker: str | None,
-        start_date: str | None,
-        end_date: str | None,
-        filters: dict[str, Any] | None,
-    ) -> list[dict[str, Any]]:
-        """
-        Constructs Elasticsearch filter clauses.
-        """
-        es_filters = []
-
-        if ticker:
-            es_filters.append({"term": {"ticker": ticker}})
-
-        if start_date or end_date:
-            range_clause: dict[str, str] = {}
-            if start_date:
-                range_clause["gte"] = start_date
-            if end_date:
-                range_clause["lte"] = end_date
-            range_filter: dict[str, Any] = {"range": {"date": range_clause}}
-            es_filters.append(range_filter)
-
-        if filters:
-            for key, value in filters.items():
-                if isinstance(value, list):
-                    filter_dict: dict[str, Any] = {"terms": {key: value}}
-                    es_filters.append(filter_dict)
-                else:
-                    filter_dict_term: dict[str, Any] = {"term": {key: value}}
-                    es_filters.append(filter_dict_term)
-
-        return es_filters
-
-    def _rrf_merge(self, result_lists: list[list[SearchResult]], k: int = 60) -> list[SearchResult]:
-        """
-        Combines multiple lists of SearchResults using Reciprocal Rank Fusion.
-
-        Score = sum(1 / (k + rank)) where rank is 1-based (first result = rank 1).
-        Implementation uses enumerate (0-indexed) + 1 to achieve 1-based ranking.
-        """
-        if k <= 0:
-            raise ValueError(f"RRF constant k must be positive, got {k}")
-
-        fused_scores: dict[str, float] = defaultdict(float)
-        doc_map = {}
-
-        for r_list in result_lists:
-            for rank, result in enumerate(r_list):
-                fused_scores[result.doc_id] += 1.0 / (k + rank + 1)
-                if result.doc_id not in doc_map:
-                    doc_map[result.doc_id] = result
-
-        # Sort by fused score descending
-        sorted_doc_ids = sorted(fused_scores.keys(), key=lambda x: fused_scores[x], reverse=True)
-
-        final_results = []
-        for doc_id in sorted_doc_ids:
-            original_result = doc_map[doc_id]
-            # Update score to RRF score
-            original_result.score = fused_scores[doc_id]
-            final_results.append(original_result)
-
-        return final_results
 
     @retry_with_backoff(max_retries=3, base_delay=1.0, max_delay=10.0)
     async def search_tool(
@@ -268,7 +173,7 @@ class SearchClient:
         indices = ",".join(config.doc_types) if config.doc_types else "sec_filings,transcripts,news"
 
         # 2. Build Filters (Shared)
-        filter_clauses = self._build_filters(config.ticker, config.start_date, config.end_date, config.filters)
+        filter_clauses = self.filter_builder.build(config.ticker, config.start_date, config.end_date, config.filters)
 
         # Log request context
         logger.info(
@@ -298,7 +203,7 @@ class SearchClient:
             if search_type == "keyword":
                 keyword_body: dict[str, Any] = {
                     "size": config.limit,
-                    "_source": {"exclude": ["embedding"]},
+                    "_source": {"excludes": ["embedding"]},
                     "query": {
                         "bool": {
                             "must": [{"match": {"text": query}}],
@@ -313,10 +218,10 @@ class SearchClient:
                 return results
 
             elif search_type == "semantic":
-                vector = await self._generate_embedding(query)
+                vector = await self.embedding_generator.generate(query)
                 semantic_body: dict[str, Any] = {
                     "size": config.limit,
-                    "_source": {"exclude": ["embedding"]},
+                    "_source": {"excludes": ["embedding"]},
                     "knn": {
                         "field": "embedding",
                         "query_vector": vector,
@@ -333,12 +238,12 @@ class SearchClient:
 
             elif search_type == "hybrid":
                 # Execute BM25 and kNN in parallel
-                vector = await self._generate_embedding(query)
+                vector = await self.embedding_generator.generate(query)
 
                 # Query A: BM25
                 bm25_body: dict[str, Any] = {
                     "size": config.limit,
-                    "_source": {"exclude": ["embedding"]},
+                    "_source": {"excludes": ["embedding"]},
                     "query": {
                         "bool": {
                             "must": [{"match": {"text": query}}],
@@ -350,7 +255,7 @@ class SearchClient:
                 # Query B: kNN
                 knn_body: dict[str, Any] = {
                     "size": config.limit,
-                    "_source": {"exclude": ["embedding"]},
+                    "_source": {"excludes": ["embedding"]},
                     "knn": {
                         "field": "embedding",
                         "query_vector": vector,
@@ -370,7 +275,7 @@ class SearchClient:
                 knn_results = parse_response(knn_resp)
 
                 # Merge with RRF
-                results = self._rrf_merge([bm25_results, knn_results], k=self.default_rrf_k)
+                results = self.rrf_scorer.merge([bm25_results, knn_results])
                 self.circuit_breaker.record_success()
                 logger.info(f"Hybrid search successful: returned {len(results)} results")
                 return results
