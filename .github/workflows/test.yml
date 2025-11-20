@@ -6,49 +6,56 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
       - name: Install dependencies
         run: uv sync --extra dev
 
       - name: Run unit tests with coverage
         run: |
-          PYTHONPATH=$PWD uv run pytest tests/unit/ \
+          uv run pytest tests/unit/ \
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml \
             --cov-report=html \
+            --cov-fail-under=95 \
+            -n=auto \
             -v
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: unit-tests-coverage
           fail_ci_if_error: false
-
-      - name: Check coverage threshold
-        run: |
-          PYTHONPATH=$PWD uv run pytest tests/unit/ \
-            --cov=src \
-            --cov-fail-under=95 \
-            --quiet
 
       - name: Upload coverage HTML
         uses: actions/upload-artifact@v4
@@ -62,100 +69,31 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
 
-    services:
-      elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
-        env:
-          discovery.type: single-node
-          xpack.security.enabled: false
-          ES_JAVA_OPTS: -Xms512m -Xmx512m
-        ports:
-          - 9200:9200
-        options: >-
-          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis-l1:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis-l2:
-        image: redis:7-alpine
-        ports:
-          - 6380:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis-checkpoint:
-        image: redis:7-alpine
-        ports:
-          - 6381:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
       - name: Install dependencies
         run: uv sync --extra dev
 
-      - name: Wait for Elasticsearch
-        run: |
-          until curl -s http://localhost:9200/_cluster/health | grep -q '"status":"green\|yellow"'; do
-            echo "Waiting for Elasticsearch..."
-            sleep 2
-          done
-          echo "Elasticsearch is ready"
-
-      - name: Initialize Elasticsearch indices
-        run: |
-          PYTHONPATH=$PWD uv run python -m src.storage.elasticsearch_setup
-
       - name: Run integration tests
-        env:
-          ES_URL: http://localhost:9200
-          POSTGRES_URL: postgresql://testuser:testpass@localhost:5432/testdb
-          REDIS_L1_URL: redis://localhost:6379
-          REDIS_L2_URL: redis://localhost:6380
-          REDIS_CHECKPOINT_URL: redis://localhost:6381
         run: |
-          PYTHONPATH=$PWD uv run pytest tests/integration/ \
+          uv run pytest tests/integration/ \
             -v \
             --maxfail=3
 
@@ -174,15 +112,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
       - name: Install dependencies
         run: uv sync --extra dev
@@ -192,6 +138,9 @@ jobs:
 
       - name: Run ruff format check
         run: uv run ruff format --check src/ tests/
+
+      - name: Run pyright type checking
+        run: uv run pyright src/ tests/
 
   test-summary:
     name: Test Summary

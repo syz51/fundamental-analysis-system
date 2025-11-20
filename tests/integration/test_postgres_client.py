@@ -17,14 +17,16 @@ from storage.postgres_client import (
     PostgresClient,
 )
 
-# Test database URL (separate from production)
-TEST_DB_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/fundamental_analysis_test"
-
 
 @pytest.fixture
-async def pg_client(run_migrations: None) -> AsyncGenerator[PostgresClient]:  # noqa: ARG001 - fixture dependency
-    """Create PostgreSQL client for testing."""
-    client = PostgresClient(database_url=TEST_DB_URL, pool_size=2, max_overflow=3)
+async def pg_client(run_migrations: None, postgres_url: str) -> AsyncGenerator[PostgresClient]:  # noqa: ARG001 - fixture dependency
+    """Create PostgreSQL client for testing using testcontainer's dynamic URL."""
+    # Convert to SQLAlchemy async format
+    test_db_url = postgres_url.replace("postgresql://", "postgresql+asyncpg://").replace(
+        "postgresql+psycopg2://", "postgresql+asyncpg://"
+    )
+
+    client = PostgresClient(database_url=test_db_url, pool_size=2, max_overflow=3)
     yield client
     await client.close()
 

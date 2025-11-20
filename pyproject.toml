@@ -27,6 +27,7 @@ dev = [
 	"pyright>=1.1.400",
 	"bandit[toml]>=1.8.0",
 	"pre-commit>=4.0.1",
+	"testcontainers>=4.9.0",
 ]
 
 [tool.pytest.ini_options]
@@ -42,21 +43,16 @@ addopts = [
 	"--strict-markers",
 	"--tb=short",
 	"-n=auto",
-	"--dist=loadgroup",
+	"--dist=loadfile",
 ]
 markers = [
 	"unit: Unit tests that don't require external services",
-	"integration: Integration tests requiring external services (ES, Postgres, Redis)",
+	"integration: Integration tests requiring external services (uses testcontainers)",
 	"slow: Tests that take significant time to run",
-	"requires_elasticsearch: Tests requiring Elasticsearch connection",
-	"requires_postgresql: Tests requiring PostgreSQL connection",
-	"requires_redis: Tests requiring Redis connection",
+	"requires_elasticsearch: Tests requiring Elasticsearch (auto-started via testcontainers)",
+	"requires_postgresql: Tests requiring PostgreSQL (auto-started via testcontainers)",
+	"requires_redis: Tests requiring Redis (auto-started via testcontainers)",
 ]
-
-[tool.pytest_env]
-ES_URL = "http://localhost:9200"
-POSTGRES_URL = "postgresql://postgres:postgres@localhost:5432/fundamental_analysis_test"
-REDIS_URL = "redis://localhost:6379/0"
 
 [tool.ruff]
 line-length = 120
