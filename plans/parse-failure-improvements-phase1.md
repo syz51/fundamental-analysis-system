@@ -27,12 +27,12 @@ Simulation of 10 realistic parse failure scenarios revealed:
 
 ### Phase 1 Deliverables
 
-| Improvement | Dev Time | Impact |
-|-------------|----------|--------|
-| **Tier 1.5: Smart Deterministic** | 3 days | +25% fewer LLM calls, 35% recovery rate |
-| **Tier 2: Enhanced LLM Prompt** | 1 day | -25% Tier 3 escalations, fewer false positives |
-| **Tier 2.5: Data Validation** | 2 days | Catch 66% of false positives before storage |
-| **TOTAL** | **6 days** | **98.55% data quality, $47 saved per 20K filings** |
+| Improvement                       | Dev Time   | Impact                                             |
+| --------------------------------- | ---------- | -------------------------------------------------- |
+| **Tier 1.5: Smart Deterministic** | 3 days     | +25% fewer LLM calls, 35% recovery rate            |
+| **Tier 2: Enhanced LLM Prompt**   | 1 day      | -25% Tier 3 escalations, fewer false positives     |
+| **Tier 2.5: Data Validation**     | 2 days     | Catch 66% of false positives before storage        |
+| **TOTAL**                         | **6 days** | **98.55% data quality, $47 saved per 20K filings** |
 
 ---
 
@@ -254,6 +254,7 @@ class ParseValidator:
 ```
 
 **Testing**:
+
 - Unit tests with mock data for each validation rule
 - Test cases: IFRS mismatch, unbalanced balance sheet, missing consolidated, negative revenue
 
@@ -377,6 +378,7 @@ class StoragePipeline:
 ```
 
 **Testing**:
+
 - Integration test: Feed known false positive scenarios (Scenario #5, #10 from simulation)
 - Verify validation catches issues and escalates to Tier 3
 
@@ -419,6 +421,7 @@ class ParseMetrics:
 ```
 
 **Logging**:
+
 ```python
 # In storage_pipeline.py, add metrics logging
 logger.info(
@@ -437,6 +440,7 @@ logger.info(
 **Goal**: Handle EdgarTools failures (5% of filings) with 35% recovery rate via metadata-aware parsing
 
 **Context**: Research showed EdgarTools best-in-class for baseline (95% success, 10-30x faster). Tier 1.5 handles edge cases EdgarTools doesn't:
+
 - Context disambiguation (consolidated vs parent, restated vs original)
 - Holding companies, SPACs, bankruptcy filings
 - Mixed GAAP/IFRS extraction
@@ -524,6 +528,7 @@ class FilingParser:
 ```
 
 **Testing**:
+
 - Integration test: Fetch 10 real filings via EdgarTools
 - Verify 95% success rate on random sample
 - Measure performance improvement vs custom lxml
@@ -801,6 +806,7 @@ class FilingParser:
 ```
 
 **Testing**:
+
 - Unit tests for encoding fixes
 - Test metadata-informed tag selection (IFRS vs US-GAAP)
 - Test context disambiguation (consolidated, restated, annual)
@@ -810,6 +816,7 @@ class FilingParser:
 Run Tier 1.5 on the 10 failure scenarios from simulation:
 
 **Expected outcomes**:
+
 - Scenario #1 (IFRS foreign filer): ✅ Recover (metadata selects IFRS tags)
 - Scenario #3 (Amended with restated): ✅ Recover (prefer "As_Restated")
 - Scenario #4 (Bankruptcy negative equity): ✅ Recover (remove validation block)
@@ -838,6 +845,7 @@ Run Tier 1.5 on the 10 failure scenarios from simulation:
 See Section 10, Improvement #2 in `data-collector-parse-failure-strategy.md` for full prompt.
 
 Key additions:
+
 - Filing metadata context (accounting_standard, company_type, form_type)
 - Special case handling (IFRS, holding companies, SPACs, restated, GAAP vs non-GAAP)
 - Explicit extraction rules (primary statements, not reconciliations)
@@ -942,25 +950,25 @@ Run enhanced Tier 2 on scenarios that failed original Tier 2:
 
 ### Development Timeline
 
-| Day | Tasks | Owner |
-|-----|-------|-------|
-| **Day 1** | Task 1.1: Create validation module | Dev |
-| | Task 1.2: Integrate into pipeline | Dev |
-| | Unit tests for validation | Dev |
-| **Day 2** | Task 1.3: Add metrics tracking | Dev |
-| | Integration tests | Dev |
-| **Day 3** | Task 2.0: **NEW** EdgarTools integration (Tier 0) | Dev |
-| | Test EdgarTools on 100 random filings | Dev |
-| | Validate 95% baseline success rate | Dev |
-| **Day 4** | Task 2.1: Implement Tier 1.5 fallback | Dev |
-| | Unit tests for smart deterministic | Dev |
-| **Day 5** | Task 2.2: Test on simulation scenarios | Dev |
-| | Task 2.3: Integration and performance tests | Dev |
-| **Day 6** | Task 3.1: Enhanced LLM prompt | Dev |
-| | Task 3.2: Intelligent sampling | Dev |
-| | Task 3.3: Test enhanced Tier 2 | Dev |
-| | Final validation against all 10 scenarios | Dev |
-| | Documentation updates | Dev |
+| Day       | Tasks                                             | Owner |
+| --------- | ------------------------------------------------- | ----- |
+| **Day 1** | Task 1.1: Create validation module                | Dev   |
+|           | Task 1.2: Integrate into pipeline                 | Dev   |
+|           | Unit tests for validation                         | Dev   |
+| **Day 2** | Task 1.3: Add metrics tracking                    | Dev   |
+|           | Integration tests                                 | Dev   |
+| **Day 3** | Task 2.0: **NEW** EdgarTools integration (Tier 0) | Dev   |
+|           | Test EdgarTools on 100 random filings             | Dev   |
+|           | Validate 95% baseline success rate                | Dev   |
+| **Day 4** | Task 2.1: Implement Tier 1.5 fallback             | Dev   |
+|           | Unit tests for smart deterministic                | Dev   |
+| **Day 5** | Task 2.2: Test on simulation scenarios            | Dev   |
+|           | Task 2.3: Integration and performance tests       | Dev   |
+| **Day 6** | Task 3.1: Enhanced LLM prompt                     | Dev   |
+|           | Task 3.2: Intelligent sampling                    | Dev   |
+|           | Task 3.3: Test enhanced Tier 2                    | Dev   |
+|           | Final validation against all 10 scenarios         | Dev   |
+|           | Documentation updates                             | Dev   |
 
 ### Deployment Checklist
 
@@ -979,13 +987,13 @@ Run enhanced Tier 2 on scenarios that failed original Tier 2:
 
 ### Acceptance Criteria
 
-| Metric | Current | Target (Phase 1) | Measurement |
-|--------|---------|------------------|-------------|
-| **Data Quality** | 95% | 98.5% | % filings with correct data |
-| **Tier 1 Recovery** | 10% | 35% | % failures recovered by Tier 1.5 |
-| **Tier 2 False Positives** | 20% | <5% | % LLM results caught by Tier 2.5 |
-| **Human Escalations** | 10% | 5% | % filings needing human review |
-| **LLM Cost (20K filings)** | $135 | $88 | Total LLM API spend |
+| Metric                     | Current | Target (Phase 1) | Measurement                      |
+| -------------------------- | ------- | ---------------- | -------------------------------- |
+| **Data Quality**           | 95%     | 98.5%            | % filings with correct data      |
+| **Tier 1 Recovery**        | 10%     | 35%              | % failures recovered by Tier 1.5 |
+| **Tier 2 False Positives** | 20%     | <5%              | % LLM results caught by Tier 2.5 |
+| **Human Escalations**      | 10%     | 5%               | % filings needing human review   |
+| **LLM Cost (20K filings)** | $135    | $88              | Total LLM API spend              |
 
 ### Post-Deployment Monitoring
 
@@ -1002,12 +1010,12 @@ If any metric misses target by >10%, investigate and adjust before scaling.
 
 ## 7. Risks and Mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| **Validation too strict** - Rejects valid filings | High | Medium | Adjustable tolerance thresholds, log all rejections for review |
-| **Tier 1.5 increases parse time** | Medium | Low | Performance benchmarking, optimize hot paths |
-| **Enhanced prompt increases LLM cost** | Low | Medium | 100KB vs 50KB is marginal (~$0.03/call), savings from fewer calls offsets |
-| **Real filings differ from simulation** | High | Medium | Test on 500 random real filings before full deployment |
+| Risk                                              | Impact | Likelihood | Mitigation                                                                |
+| ------------------------------------------------- | ------ | ---------- | ------------------------------------------------------------------------- |
+| **Validation too strict** - Rejects valid filings | High   | Medium     | Adjustable tolerance thresholds, log all rejections for review            |
+| **Tier 1.5 increases parse time**                 | Medium | Low        | Performance benchmarking, optimize hot paths                              |
+| **Enhanced prompt increases LLM cost**            | Low    | Medium     | 100KB vs 50KB is marginal (~$0.03/call), savings from fewer calls offsets |
+| **Real filings differ from simulation**           | High   | Medium     | Test on 500 random real filings before full deployment                    |
 
 ---
 

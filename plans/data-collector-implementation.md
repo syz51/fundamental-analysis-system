@@ -258,6 +258,7 @@ COMPANY_TICKERS = "https://www.sec.gov/files/company_tickers.json"
 **Tool Selection Decision** (DD-027): Use **EdgarTools** as Tier 0 foundation + custom multi-tier recovery
 
 **Research Finding**: Existing SEC filing parsers (EdgarTools, py-xbrl, Calcbench, sec-api.io) achieve 92-95% success rate but **none handle critical edge cases**:
+
 - Context disambiguation (restated vs original, consolidated vs parent-only)
 - Mixed GAAP/IFRS extraction
 - Holding companies, SPACs, data validation
@@ -420,6 +421,7 @@ class StoragePipeline:
 **Implementation**: See `plans/yahoo-finance-integration-plan.md` for full details
 
 **Quick Backfill**:
+
 ```bash
 # Fetch Yahoo Finance data for all S&P 500 (takes ~4-10 min)
 python -m src.data_collector yahoo-backfill
@@ -429,12 +431,14 @@ python -m src.data_collector yahoo-backfill
 ```
 
 **What gets stored**:
+
 - Revenue CAGR (10Y, 5Y)
 - Operating margin, net margin (3Y avg)
 - ROE, ROA, ROIC (3Y avg)
 - Debt/equity, current ratio (latest)
 
 **Screening flow**:
+
 1. Yahoo backfill (4-10 min) → PostgreSQL
 2. Screening Agent queries Yahoo data (filter by CAGR, margins, ratios)
 3. Generate summaries: "AAPL: 18% 10Y CAGR, 25% operating margin, ROE 35%"
@@ -885,6 +889,7 @@ await session.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY financial_data.lat
 **Total**: 10 days (unchanged, Yahoo integration fits in Day 6.5-7 alongside agent work)
 
 **EdgarTools Impact**:
+
 - **Time saved**: 0.5 days (Day 5 reduced from 1.0 → 0.5 days)
 - **Complexity reduced**: No need to build basic XBRL parser from scratch
 - **Quality improved**: Battle-tested parser handles 95% baseline vs 92-93% if custom-built
