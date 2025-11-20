@@ -96,10 +96,10 @@ See [Human Integration](docs/operations/02-human-integration.md) for details.
 
 **Screening Stage (Days 1-2)**:
 
-- **Yahoo Finance API** (primary): 10Y financial metrics for S&P 500 (revenue, EPS, margins, ROE/ROA/ROIC)
-- Purpose: Fast quantitative screening, 95% data quality acceptable
-- Cost: $0-$50/month
-- Fallback: SEC EDGAR if Yahoo unavailable
+- **Financial data API** (TBD): 10Y financial metrics for S&P 500 (revenue, EPS, margins, ROE/ROA/ROIC)
+- Purpose: Fast quantitative screening
+- Cost: TBD
+- Fallback: SEC EDGAR if primary unavailable
 
 **Deep Analysis Stage (Days 3-7, post-Gate 1)**:
 

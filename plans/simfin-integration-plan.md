@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This plan outlines integration of SimFin as the primary data source for the Screening Agent (Days 1-2 of analysis pipeline), replacing Yahoo Finance API due to reliability concerns. Implementation uses free tier initially for flow validation, with upgrade path to START tier ($15/mo) for production 10Y data requirements.
+This plan outlines integration of SimFin as a potential data source for the Screening Agent (Days 1-2 of analysis pipeline). Implementation uses free tier initially for flow validation, with upgrade path to START tier ($15/mo) for production 10Y data requirements.
 
 **Key Decision**: SimFin START tier offers optimal cost/performance balance at $15/month ($9/month annual), providing exactly 10Y historical data needed within $0-$50 budget.
 
@@ -32,9 +32,8 @@ This plan outlines integration of SimFin as the primary data source for the Scre
 
 **Current State (DD-032)**:
 
-- Primary: Yahoo Finance API (yfinance)
+- Status: API provider selection pending
 - Fallback: SEC EDGAR
-- Issue: yfinance has major reliability problems in 2024 (429 errors, unpredictable rate limiting)
 
 **Requirements**:
 

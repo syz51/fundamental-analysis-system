@@ -24,7 +24,7 @@
 
 - ❌ Day 1 (0/3): Dependencies partially installed (Redis exists), migration needed, RedisClient missing
 - ❌ Day 2 (0/2): SP500Manager missing, CLI commands missing
-- ❌ Day 3 (0/1): YahooFinanceClient missing
+- ❌ Day 3 (0/1): FinancialAPIClient missing (provider TBD)
 - ❌ Day 4 (0/1): ScreeningCalculator missing
 - ❌ Day 5 (0/1): StoragePipeline missing
 - ❌ Day 6 (0/2): BulkOperations missing, bulk CLI commands missing
