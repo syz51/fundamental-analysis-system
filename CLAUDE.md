@@ -92,21 +92,24 @@ See [Human Integration](docs/operations/02-human-integration.md) for details.
 
 ### Data Sources
 
-**Unified SEC Approach**: Self-made SEC layer with edgartools for all pipeline stages
+**Unified SEC Approach**: EdgarTools for all pipeline stages (DD-033)
 
 **Screening Stage (Days 1-2)**:
 
-- **Self-made SEC layer** (with edgartools): 10Y financial metrics for S&P 500 (revenue, EPS, margins, ROE/ROA/ROIC)
-- Purpose: Fast quantitative screening via parsed SEC filings
-- Cost: $0 (free SEC EDGAR API)
-- Quality: 98.55% achievable with multi-tier parser
+- **EdgarTools on-demand queries**: Query 500 S&P companies individually via SEC EDGAR API
+- Metrics: 10Y revenue CAGR, margins, ROE/ROA/ROIC, debt ratios
+- Performance: 2.5-5 min for full S&P 500 screening
+- Quality: 95% (Tier 0) or 98.55% (multi-tier if needed)
+- Cost: $0 (free SEC EDGAR API, 10 req/sec rate limit)
+- Pattern: On-demand per-company queries (NOT bulk download)
 
 **Deep Analysis Stage (Days 3-7, post-Gate 1)**:
 
-- **SEC EDGAR** (primary): Full 10-K/10-Q/8-K parsing with multi-tier recovery (EdgarTools + custom tiers)
-- Purpose: Qualitative data (MD&A, risk factors), amendment tracking, 98.55% data quality
-- Cost: $3-$6/month for 10-20 approved companies
-- On-demand only (not bulk backfill)
+- **EdgarTools + multi-tier parser**: Full 10-K/10-Q/8-K parsing (Tiers 0-4 per DD-031)
+- Purpose: Qualitative data (MD&A, risk factors), amendment tracking
+- Quality: 98.55% with multi-tier recovery system
+- Cost: $0 (same infrastructure as screening)
+- Volume: 10-20 approved companies only (not 500)
 
 **Other Sources**:
 
