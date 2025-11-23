@@ -200,11 +200,13 @@ The system requires sophisticated infrastructure to support parallel agent execu
 **Status**: Consolidated into Elasticsearch per [DD-027: Unified Hybrid Search Architecture](../design-decisions/DD-027_UNIFIED_HYBRID_SEARCH_ARCHITECTURE.md)
 
 **Previous Approach** (fragmented):
+
 - Separate vector database (Pinecone, Weaviate, Qdrant) for embeddings
 - Required sync between text DB (Elasticsearch) and vector DB
 - Complex client-side score merging for hybrid queries
 
 **Current Approach** (unified):
+
 - Elasticsearch 8+ handles both text (BM25) and vector (kNN) search
 - Single atomic index updates (no sync drift)
 - Native RRF scoring for hybrid queries
@@ -598,10 +600,9 @@ END $$;
 #### External APIs
 
 - **SEC EDGAR**: Free, rate-limited to 10 requests/second
-- **Financial data providers**:
-  - Koyfin (preferred for coverage)
-  - Alpha Vantage (backup)
-  - Yahoo Finance (free tier)
+- **Financial data providers** (TBD - under evaluation):
+  - Various commercial and open-source options being evaluated
+  - Selection criteria: coverage, quality, cost, rate limits
 - **News feeds**:
   - NewsAPI.org
   - Reuters API (if budget allows)

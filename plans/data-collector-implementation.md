@@ -412,22 +412,22 @@ class StoragePipeline:
 
 ### Phase C: Data Collector Agent (2-3 days)
 
-**UPDATED**: Per DD-032 (Hybrid Data Sourcing Strategy), Phase C now uses **Yahoo Finance for screening** instead of SEC backfill. SEC parsing happens on-demand after Human Gate 1 approves companies for deep analysis.
+**UPDATED**: Per DD-032 (Hybrid Data Sourcing Strategy), Phase C now uses **financial data API for screening** instead of SEC backfill. SEC parsing happens on-demand after Human Gate 1 approves companies for deep analysis. API provider selection is pending.
 
-**C0. Yahoo Finance Screening Backfill** (NEW - Day 6.5)
+**C0. Financial API Screening Backfill** (NEW - Day 6.5)
 
-**Purpose**: Fetch 10Y financial metrics for all S&P 500 companies to enable immediate screening (Days 1-2 of analysis pipeline)
+**Purpose**: Fetch 10Y financial metrics for all S&P 500 companies to enable immediate screening (Days 1-2 of analysis pipeline) - API provider TBD
 
-**Implementation**: See `plans/yahoo-finance-integration-plan.md` for full details
+**Implementation**: Depends on API provider selection
 
 **Quick Backfill**:
 
 ```bash
-# Fetch Yahoo Finance data for all S&P 500 (takes ~4-10 min)
-python -m src.data_collector yahoo-backfill
+# Fetch financial data for all S&P 500 (timing varies by provider)
+python -m src.data_collector api-backfill
 
 # Result: 500 companies with screening metrics in PostgreSQL
-# data_source='yahoo_finance'
+# data_source='financial_api'
 ```
 
 **What gets stored**:
@@ -439,8 +439,8 @@ python -m src.data_collector yahoo-backfill
 
 **Screening flow**:
 
-1. Yahoo backfill (4-10 min) → PostgreSQL
-2. Screening Agent queries Yahoo data (filter by CAGR, margins, ratios)
+1. API backfill (timing varies) → PostgreSQL
+2. Screening Agent queries API data (filter by CAGR, margins, ratios)
 3. Generate summaries: "AAPL: 18% 10Y CAGR, 25% operating margin, ROE 35%"
 4. Human Gate 1 selects ~10-20 candidates
 5. **Trigger SEC parsing** for approved companies only (C1 below)
@@ -449,7 +449,7 @@ python -m src.data_collector yahoo-backfill
 
 **Agent Responsibilities**:
 
-- **Screening stage**: Fetch Yahoo Finance data for S&P 500 (bulk)
+- **Screening stage**: Fetch financial API data for S&P 500 (bulk) - provider TBD
 - **Deep analysis stage**: Receive fetch requests for approved companies (ticker, form_types, date_range)
 - Orchestrate storage pipeline for SEC filings (post-Gate 1)
 - Manage task queue (prioritize approved companies)
@@ -459,9 +459,9 @@ python -m src.data_collector yahoo-backfill
 ```python
 # Interface design
 class DataCollectorAgent:
-    # NEW: Yahoo Finance methods (screening)
-    async def yahoo_backfill_sp500() -> dict  # Fetch all S&P 500 screening data
-    async def yahoo_fetch(tickers: list[str]) -> dict  # Fetch specific companies
+    # NEW: SEC Screening methods
+    async def screening_backfill_sp500() -> dict  # Fetch latest 10-K for all S&P 500
+    async def screening_fetch(tickers: list[str]) -> dict  # Fetch specific companies
 
     # Existing: SEC EDGAR methods (deep analysis, post-Gate 1)
     async def fetch_company(ticker: str, form_types: list[str] = ["10-K", "10-Q"])
@@ -1165,12 +1165,12 @@ ORDER BY amendment_count DESC;
 1. **SEC EDGAR downtime** - How handle 503 errors during market hours (high traffic)?
 2. **XBRL parsing edge cases** - Non-GAAP adjustments, restated financials, foreign filers?
 3. **Storage limits** - MinIO 10-15TB sufficient for 5 years of data?
-4. **Backfill strategy** - ✅ **RESOLVED** - See DD-032 (Hybrid: Yahoo Finance for screening, SEC on-demand for deep analysis)
+4. **Backfill strategy** - ✅ **RESOLVED** - Unified SEC approach: Latest 10-K for screening, full 10Y history for deep analysis
 5. **Data retention** - How long keep raw filings vs just parsed financials?
 6. **Filing amendments** - ✅ **RESOLVED** - See Section 7 (Keep both versions with versioning)
 7. **Concurrency scaling** - Can increase workers beyond 10 without hitting SEC limits?
 8. **Parse failure threshold** - ✅ **RESOLVED** - See `data-collector-parse-failure-strategy.md` (Multi-tier agent recovery)
-9. **Yahoo Finance API selection** - ✅ **RESOLVED** - See DD-032 & `yahoo-finance-integration-plan.md` (Use yfinance library, fallback to Alpha Vantage or SEC)
+9. **Data source selection** - ✅ **RESOLVED** - Unified SEC EDGAR approach with edgartools (archived DD-032)
 
 **Note**: Questions 4, 6, 8, and 9 have been resolved and documented in separate strategy documents.
 
@@ -1178,7 +1178,7 @@ ORDER BY amendment_count DESC;
 
 ## 9. Related Design Decisions
 
-- **DD-032**: Hybrid Data Sourcing Strategy (Yahoo Finance for screening, SEC EDGAR for deep analysis) - **NEW**
+- **DD-032**: Hybrid Data Sourcing Strategy - **ARCHIVED** (replaced by unified SEC approach)
 - **DD-031**: SEC Filing Parser Tool Selection (EdgarTools + multi-tier recovery for deep analysis)
 - **DD-027**: Elasticsearch Unified Hybrid Search (deferred indexing to Phase 2)
 - **DD-028**: Redis 3-tier persistence strategy (using L1 only for now)
@@ -1188,7 +1188,7 @@ ORDER BY amendment_count DESC;
 
 ### Related Strategy Documents
 
-- **yahoo-finance-integration-plan.md**: Implementation plan for Yahoo Finance API client (screening data) - **NEW**
+- **simfin-integration-plan.md**: SimFin integration plan - **ARCHIVED** (not using third-party APIs)
 - **data-collector-backfill-strategy.md**: Comprehensive analysis of backfill options, recommended hybrid approach
 - **data-collector-parse-failure-strategy.md**: Multi-tier agent recovery system for XBRL parsing failures
 

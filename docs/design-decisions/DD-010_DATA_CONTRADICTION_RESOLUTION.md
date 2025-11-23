@@ -282,7 +282,7 @@ class SourceCredibility:
             'REFINITIV': 0.95,      # Refinitiv Eikon
             'FACTSET': 0.95,        # FactSet
             'REUTERS': 0.90,        # Reuters news/data
-            'YAHOO_FINANCE': 0.85,  # Yahoo Finance
+            'FINANCIAL_API': 0.85,  # Third-party financial data APIs
             'ALT_DATA': 0.85,       # Alternative data providers
             'NEWS': 0.80,           # General financial news
             'BLOG': 0.70,           # Unverified sources
@@ -690,7 +690,7 @@ class ContradictionQueue:
 
 **1. Source type hierarchy completeness?**
 
-Current taxonomy: SEC, Bloomberg, Refinitiv, FactSet, Reuters, Yahoo Finance, Alt Data, News, Blog
+Current taxonomy: SEC, Bloomberg, Refinitiv, FactSet, Reuters, Financial APIs, Alt Data, News, Blog
 
 **Missing source types**:
 

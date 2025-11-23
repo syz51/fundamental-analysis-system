@@ -1,9 +1,9 @@
 # Hybrid Data Sourcing Strategy
 
-**Status**: Approved
+**Status**: Under Review
 **Date**: 2025-11-20
 **Decider(s)**: System Architect
-**Related Docs**: `plans/data-collector-implementation.md`, `plans/yahoo-finance-integration-plan.md`
+**Related Docs**: `plans/data-collector-implementation.md`
 **Related Decisions**: DD-031 (SEC Filing Parser Tool Selection)
 
 ---
@@ -17,7 +17,7 @@ Data Collector Agent requires financial data for two distinct use cases with dif
 
 **Original Plan**: Parse all SEC filings upfront (20K filings backfill, 4.2 hours, $88 cost)
 
-**Question**: Do we need to parse SEC filings for screening, or can we use pre-aggregated data from Yahoo Finance/TradingView for initial filtering?
+**Question**: Do we need to parse SEC filings for screening, or can we use pre-aggregated data from third-party APIs for initial filtering?
 
 **Key Requirements**:
 
@@ -41,14 +41,17 @@ Data Collector Agent requires financial data for two distinct use cases with dif
 
 ## Decision
 
-**Use Yahoo Finance API for screening stage, SEC EDGAR parsing for deep analysis stage (hybrid approach)**
+Use self-made SEC layer (with edgartools) for both screening and deep analysis stages
+
+**NOTE**: Single unified data source approach - edgartools-based parser provides both quantitative metrics for screening and qualitative data for deep analysis
 
 **Architecture**:
 
 ```text
 Screening Stage (Days 1-2):
-  Yahoo Finance API
-    ↓ Fetch revenue, margins, ROE for all S&P 500
+  SEC EDGAR Data Layer (edgartools-based parser)
+    ↓ Fetch & parse latest 10-K for all S&P 500
+    ↓ Multi-tier parser extracts revenue, margins, ROE
   Screening Agent applies quantitative filters
     ↓ 10Y CAGR ≥ 15%, margins ≥ 8%, etc.
   Generate numerical summaries
@@ -65,22 +68,22 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
   Business/Financial/Strategy Agents analyze
 ```
 
-**Target**: 0 hours screening backfill, ~$10/month ongoing cost
+**Target**: <30 min screening backfill (500 companies × latest 10-K), $0 cost (free SEC EDGAR API)
 
 ---
 
 ## Options Considered
 
-### Option 1: Yahoo Finance Only (No SEC Parsing)
+### Option 1: Third-Party API Only (No SEC Parsing)
 
-**Description**: Use Yahoo Finance API for all stages (screening + deep analysis)
+**Description**: Use third-party financial data API for all stages (screening + deep analysis)
 
 **Pros**:
 
 - Simplest implementation (single data source)
 - No parsing complexity
 - Immediate availability
-- Free or low cost ($0-$50/month)
+- Potentially low cost
 
 **Cons**:
 
@@ -90,9 +93,9 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 - **Unknown historical depth**: May not have full 10Y quarterly data for all companies
 - **No validation control**: Can't implement balance sheet checks, false positive detection
 - **No learning capability**: Black box, can't improve over time
-- **95% quality ceiling**: Insufficient for deep analysis (need 98.55%)
+- **Quality concerns**: May be insufficient for deep analysis (need 98.55%)
 
-**Estimated Effort**: 2-3 days integration
+**Estimated Effort**: 2-3 days integration (varies by provider)
 
 ---
 
@@ -119,29 +122,28 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 
 ---
 
-### Option 3: Hybrid Approach (Yahoo Finance + SEC EDGAR) - CHOSEN
+### Option 3: Unified SEC EDGAR Approach (edgartools-based) - CHOSEN
 
-**Description**: Use Yahoo Finance for screening (Days 1-2), SEC EDGAR parsing for deep analysis (Days 3-7, on-demand after Gate 1)
+**Description**: Use self-made SEC layer with edgartools for both screening (Days 1-2) and deep analysis (Days 3-7)
 
 **Pros**:
 
-- **Faster MVP**: Screening starts immediately (no backfill wait)
-- **Lower cost**: ~$10/month vs $88 upfront + ongoing parsing
-- **Right tool for job**: Speed for screening (95% OK), quality for analysis (98.55%)
-- **Reduced upfront complexity**: Don't need full parser until Phase 2
-- **Smaller parsing volume**: Only ~10-20 companies/month pass Gate 1 (vs 500 companies upfront)
-- **Still get all critical data**: Qualitative sections, amendments, validation for approved companies
+- **Single authoritative source**: SEC EDGAR for all stages (no data consistency issues)
+- **No API costs**: $0 ongoing costs (free SEC EDGAR access)
+- **Unified parser**: Same multi-tier edgartools parser for screening + deep analysis
+- **98.55% quality**: Consistent high quality for both screening and deep analysis
+- **No third-party dependencies**: No vendor lock-in, rate limit risks, or API degradation
+- **Amendment tracking**: Built-in from start, not just deep analysis
 
 **Cons**:
 
-- **Two data sources**: Screening uses Yahoo, analysis uses SEC (consistency risk)
-- **Yahoo dependency**: If Yahoo API degrades, screening blocked
-- **Screening quality**: 95% from Yahoo vs 98.55% if parsed SEC
-- **Still need SEC parser**: Can't eliminate DD-031 complexity, just defer volume
+- **Initial backfill time**: ~30 min for S&P 500 latest 10-Ks (vs instant API fetch)
+- **Parser complexity upfront**: Need multi-tier parser from day 1
+- **Rate limits**: SEC 10 req/sec shared across screening + deep analysis
 
 **Estimated Effort**:
 
-- Yahoo Finance integration: 2-3 days
+- Third-party API integration: 2-3 days (varies by provider)
 - SEC parser: 10 days (same as DD-031, but triggered later)
 - **Total**: Same timeline, but screening unblocked earlier
 
@@ -181,33 +183,33 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 
 **2. Cost-Benefit Analysis**:
 
-- Yahoo Finance screening: $0-$50/month
+- Third-party API screening: TBD (varies by provider)
 - SEC parsing for 10-20 companies/month: $3-$6/month (vs $88 for 20K upfront)
-- **Total**: ~$10/month vs $88 upfront (original plan)
+- **Total**: TBD based on API selection vs $88 upfront (original plan)
 
 **3. Time to Value**:
 
-- Yahoo Finance: Immediate (screening starts Day 1)
+- Third-party API: Immediate (screening starts Day 1, subject to integration)
 - SEC backfill: 4.2 hours delay before screening possible
 - **Hybrid wins**: Unblocks screening, defers parsing cost
 
 **4. Data Requirements by Stage**:
 
-| Requirement            | Screening | Deep Analysis | Yahoo Has? | SEC Has? |
-| ---------------------- | --------- | ------------- | ---------- | -------- |
-| Revenue, EPS, margins  | ✅        | ✅            | ✅         | ✅       |
-| 10Y history            | ✅        | ✅            | ⚠️ Maybe   | ✅       |
-| Quarterly granularity  | ❌        | ✅            | ⚠️ Maybe   | ✅       |
-| MD&A, risk factors     | ❌        | ✅            | ❌         | ✅       |
-| Amendment tracking     | ❌        | ✅            | ❌         | ✅       |
-| Context disambiguation | ❌        | ✅            | ❌         | ✅       |
-| Data validation        | ❌        | ✅            | ❌         | ✅       |
+| Requirement            | Screening | Deep Analysis | 3rd Party API? | SEC Has? |
+| ---------------------- | --------- | ------------- | -------------- | -------- |
+| Revenue, EPS, margins  | ✅        | ✅            | Likely ✅      | ✅       |
+| 10Y history            | ✅        | ✅            | Varies         | ✅       |
+| Quarterly granularity  | ❌        | ✅            | Varies         | ✅       |
+| MD&A, risk factors     | ❌        | ✅            | ❌             | ✅       |
+| Amendment tracking     | ❌        | ✅            | ❌             | ✅       |
+| Context disambiguation | ❌        | ✅            | ❌             | ✅       |
+| Data validation        | ❌        | ✅            | ❌             | ✅       |
 
-**Conclusion**: Yahoo Finance covers 100% of screening needs, 0% of deep analysis unique needs
+**Conclusion**: Third-party APIs typically cover screening needs, not deep analysis unique needs
 
 **5. Volume Economics**:
 
-- Screening: All S&P 500 (500 companies) → Yahoo Finance bulk fetch efficient
+- Screening: All S&P 500 (500 companies) → Third-party API bulk fetch efficient
 - Deep analysis: ~10-20 companies/month pass Gate 1 → SEC parsing on-demand efficient
 - Parsing all 500 upfront is wasteful when only 2-4% proceed to analysis
 
@@ -223,8 +225,8 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 **Con-Hybrid**:
 
 1. Two data sources (consistency risk) → **Mitigation**: Mark `data_source` in PostgreSQL, QC Agent can flag discrepancies
-2. Yahoo dependency for screening → **Mitigation**: Fallback to SEC parsing if Yahoo degrades
-3. Screening quality 95% vs 98.55% → **Mitigation**: Lenient thresholds to avoid false negatives; high-stakes decisions use SEC data anyway
+2. API dependency for screening → **Mitigation**: Fallback to SEC parsing if API degrades
+3. Screening quality varies by provider → **Mitigation**: Lenient thresholds to avoid false negatives; high-stakes decisions use SEC data anyway
 4. Still need SEC parser → **Mitigation**: True, but volume reduced 25x (20 companies/month vs 500 upfront)
 
 ---
@@ -234,32 +236,31 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 ### Positive Impacts
 
 - **Immediate screening capability**: No 4.2hr backfill wait
-- **Lower upfront cost**: ~$10/month vs $88 for 20K filings
+- **Lower upfront cost**: Depends on API selection vs $88 for 20K filings
 - **Reduced parsing volume**: 10-20 companies/month vs 500 companies upfront (25x reduction)
 - **Simpler Phase 1**: Can validate screening logic without building full parser first
 - **Preserved data quality**: Deep analysis still gets 98.55% quality, amendments, qualitative data
-- **Flexibility**: If Yahoo Finance insufficient, can fall back to SEC parsing for screening
+- **Flexibility**: If API insufficient, can fall back to SEC parsing for screening
 
 ### Negative Impacts / Tradeoffs
 
-- **Data source inconsistency**: Screening uses Yahoo, analysis uses SEC → Need to track source in database
-- **Yahoo Finance dependency**: Screening blocked if Yahoo API degrades → Need fallback strategy
-- **Screening quality**: 95% vs 98.55% → Acceptable per user confirmation ("maybe not at screen stage that much")
+- **Data source inconsistency**: Screening uses API, analysis uses SEC → Need to track source in database
+- **API dependency**: Screening blocked if API degrades → Need fallback strategy
+- **Screening quality**: Quality varies by provider vs 98.55% from SEC
 - **Can't eliminate SEC parser**: Still need DD-031 multi-tier parser, just defer volume
 
 ### Affected Components
 
 **New Components**:
 
-- `src/data_collector/yahoo_finance_client.py`: API client for bulk financial data fetch
-- `src/agents/screening/yahoo_data_adapter.py`: Map Yahoo fields to screening metrics
-- `tests/integration/test_yahoo_finance.py`: Validate 10Y data availability for S&P 500
+- `src/data_collector/financial_api_client.py`: API client for bulk financial data fetch (provider TBD)
+- `src/agents/screening/api_data_adapter.py`: Map API fields to screening metrics
+- `tests/integration/test_financial_api.py`: Validate 10Y data availability for S&P 500
 
 **Updated Components**:
 
-- `src/storage/postgres_client.py`: Add `data_source` field ('yahoo_finance' | 'sec_edgar')
-- `plans/data-collector-implementation.md`: Phase C updated to use Yahoo Finance for screening
-- `plans/yahoo-finance-integration-plan.md`: New plan for implementation (NEW)
+- `src/storage/postgres_client.py`: Add `data_source` field ('financial_api' | 'sec_edgar')
+- `plans/data-collector-implementation.md`: Phase C updated to use financial API for screening
 - `CLAUDE.md`: Data Sources section updated with hybrid approach
 
 **Unchanged Components** (from DD-031):
@@ -274,31 +275,29 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 
 ### Technical Details
 
-**Yahoo Finance Integration (Screening)**:
+**Financial API Integration (Screening)**:
 
 ```python
-# Library options (TBD - see Open Questions)
-import yfinance as yf  # Option 1: yfinance (most popular)
-# OR
-from alpha_vantage.fundamentaldata import FundamentalData  # Option 2: Alpha Vantage
+# API provider TBD - placeholder implementation
+from financial_api_client import FinancialDataClient
+
+client = FinancialDataClient(api_key=config.api_key)
 
 # Fetch 10Y financials for S&P 500
 for ticker in sp500_tickers:
-    stock = yf.Ticker(ticker)
-    financials = stock.financials  # Annual income statement
-    balance_sheet = stock.balance_sheet
-    cash_flow = stock.cashflow
+    # Fetch data from API (implementation varies by provider)
+    financials = await client.get_financials(ticker, years=10)
 
     # Calculate screening metrics
-    revenue_10y_cagr = calculate_cagr(financials.loc['Total Revenue'], 10)
-    operating_margin = financials.loc['Operating Income'] / financials.loc['Total Revenue']
-    roe = calculate_roe(financials, balance_sheet)
+    revenue_10y_cagr = calculate_cagr(financials.revenue, 10)
+    operating_margin = financials.operating_income / financials.revenue
+    roe = calculate_roe(financials)
 
-    # Store in PostgreSQL with data_source='yahoo_finance'
+    # Store in PostgreSQL with data_source='financial_api'
     await postgres.insert_financial_data(
         ticker=ticker,
         metrics={'revenue_cagr_10y': revenue_10y_cagr, ...},
-        data_source='yahoo_finance'
+        data_source='financial_api'
     )
 ```
 
@@ -338,7 +337,7 @@ for ticker in approved_tickers:
 ALTER TABLE financial_data.income_statements
 ADD COLUMN data_source VARCHAR(20) DEFAULT 'sec_edgar';
 
--- Query latest data (preferring SEC over Yahoo)
+-- Query latest data (preferring SEC over third-party API)
 SELECT * FROM financial_data.income_statements
 WHERE ticker = 'AAPL'
   AND is_latest = true
@@ -348,35 +347,35 @@ LIMIT 1;
 
 **Fallback Strategy**:
 
-1. **If Yahoo Finance API degrades**:
+1. **If API degrades**:
 
    - Log warning, attempt retry (3x with backoff)
    - If persistent failure: Fall back to SEC parsing for screening
-   - Notify human: "Yahoo Finance unavailable, screening using SEC data (slower)"
+   - Notify human: "Financial API unavailable, screening using SEC data (slower)"
 
 2. **If data quality issues detected**:
-   - QC Agent compares Yahoo screening data vs SEC deep analysis data
+   - QC Agent compares API screening data vs SEC deep analysis data
    - Flag discrepancies >10% (e.g., revenue differs significantly)
-   - Log patterns: "Yahoo Finance consistently overestimates Company X revenue by 12%"
+   - Log patterns for monitoring and provider evaluation
 
 **Testing Requirements**:
 
-- Validate Yahoo Finance has 10Y data for all S&P 500 companies
-- Measure data quality: Compare Yahoo vs SEC for 100 random companies
-- Test fallback: Disable Yahoo API, verify SEC parsing fallback works
-- Performance: Measure Yahoo bulk fetch latency vs SEC parsing latency
+- Validate API has 10Y data for all S&P 500 companies
+- Measure data quality: Compare API vs SEC for 100 random companies
+- Test fallback: Disable API, verify SEC parsing fallback works
+- Performance: Measure API bulk fetch latency vs SEC parsing latency
 
 **Rollback Strategy**:
 
-- If Yahoo Finance insufficient: Switch to SEC parsing for screening (use DD-031 implementation)
-- If cost becomes issue: Optimize Yahoo API tier or renegotiate pricing
+- If API insufficient: Switch to SEC parsing for screening (use DD-031 implementation)
+- If cost becomes issue: Evaluate alternative providers or switch to SEC-only
 - If data quality unacceptable: Increase screening threshold leniency or switch to SEC
 
-**Estimated Implementation Effort**: 2-3 days (Yahoo Finance integration)
+**Estimated Implementation Effort**: 2-3 days (varies by API provider selection)
 
 **Dependencies**:
 
-- Yahoo Finance API library (yfinance, Alpha Vantage, or Yahoo Finance Premium - TBD)
+- Financial API selection and library integration (provider TBD)
 - PostgreSQL schema update (add `data_source` column)
 - SEC parser from DD-031 (deferred to after Gate 1, not blocking screening)
 
@@ -384,12 +383,11 @@ LIMIT 1;
 
 ## Open Questions
 
-1. **Yahoo Finance API/library selection**: Which option provides best coverage for 10Y historical data at scale?
+1. **Financial API provider selection**: Which option provides best coverage for 10Y historical data at scale?
 
-   - **Option A**: `yfinance` library (free, most popular, may have rate limits)
-   - **Option B**: Alpha Vantage API (free tier 5 req/min, premium $50/month)
-   - **Option C**: Yahoo Finance Premium API (if exists, pricing unknown)
-   - **Blocking**: No - can start with yfinance, switch if insufficient
+   - **Evaluation criteria**: Data coverage, quality, cost, rate limits, ease of integration
+   - **Options to evaluate**: Various commercial and open-source financial data APIs
+   - **Blocking**: Yes - must select provider before implementation
 
 2. **Screening summary requirements**: Do summaries need qualitative business context ("operates in 3 segments, expanding internationally") or just quantitative metrics ("18% 10Y CAGR, 12% margin, ROE 15%")?
 
@@ -398,30 +396,29 @@ LIMIT 1;
 
 3. **Data transition strategy**: When company moves from screening → deep analysis, do we:
 
-   - **Option A**: Re-fetch all 10Y data from SEC, discard Yahoo data (cleanest)
-   - **Option B**: Keep Yahoo screening data, augment with SEC qualitative sections only
-   - **Option C**: Use Yahoo for screening metrics, SEC for all deep analysis (complete replacement)
+   - **Option A**: Re-fetch all 10Y data from SEC, discard API data (cleanest)
+   - **Option B**: Keep API screening data, augment with SEC qualitative sections only
+   - **Option C**: Use API for screening metrics, SEC for all deep analysis (complete replacement)
    - **Blocking**: No - recommend Option C (complete replacement) for consistency
 
-4. **Fallback strategy specifics**: If Yahoo Finance API degrades, do we:
-   - **Option A**: Pause screening until Yahoo recovers
+4. **Fallback strategy specifics**: If API degrades, do we:
+   - **Option A**: Pause screening until API recovers
    - **Option B**: Fall back to SEC parsing for screening (slower but functional)
-   - **Option C**: Use cached Yahoo data from previous fetch (stale but fast)
+   - **Option C**: Use cached API data from previous fetch (stale but fast)
    - **Blocking**: No - recommend Option B (SEC fallback) for resilience
 
 ---
 
 ## References
 
-### Yahoo Finance Data Sources
+### Financial Data API Options (TBD)
 
-- **yfinance**: <https://github.com/ranaroussi/yfinance> (11K+ stars, unofficial Yahoo Finance API wrapper)
-- **Alpha Vantage**: <https://www.alphavantage.co/> (free tier + premium, official API)
-- **Yahoo Finance Premium**: Pricing/availability unknown (need research)
+- Various commercial and open-source providers to be evaluated
+- Selection criteria: data coverage, quality, cost, rate limits, ease of integration
 
 ### Industry Benchmarks
 
-- Yahoo Finance data quality: ~95% (industry standard for aggregated data)
+- Third-party aggregated data quality: ~95% (industry standard)
 - SEC EDGAR data quality: 98.55% achievable with multi-tier parsing (DD-031)
 - Typical screening false negative rate: 2-5% acceptable (can adjust thresholds)
 
@@ -435,10 +432,10 @@ LIMIT 1;
 
 ## Status History
 
-| Date       | Status   | Notes                                       |
-| ---------- | -------- | ------------------------------------------- |
-| 2025-11-20 | Proposed | Research completed, recommendation drafted  |
-| 2025-11-20 | Approved | Decision to use hybrid Yahoo + SEC approach |
+| Date       | Status       | Notes                                                  |
+| ---------- | ------------ | ------------------------------------------------------ |
+| 2025-11-20 | Proposed     | Research completed, recommendation drafted             |
+| 2025-11-20 | Under Review | API provider selection pending, hybrid approach chosen |
 
 ---
 
@@ -448,18 +445,19 @@ LIMIT 1;
 
 | Approach            | Screening Cost | Deep Analysis Cost   | Total/Month | Data Quality        |
 | ------------------- | -------------- | -------------------- | ----------- | ------------------- |
-| **Hybrid (Chosen)** | $0-$50 (Yahoo) | $3-$6 (SEC 10-20 co) | **~$10**    | 95% → 98.55%        |
-| Yahoo only          | $0-$50         | $0-$50               | $50         | 95% (all stages)    |
+| **Hybrid (Chosen)** | TBD (API)      | $3-$6 (SEC 10-20 co) | **TBD**     | Varies → 98.55%     |
+| API only            | TBD            | TBD                  | TBD         | Varies (all stages) |
 | SEC only (original) | $0             | Amortized $88/20K    | ~$5         | 98.55% (all stages) |
-| Commercial          | $1K-$5K+       | $1K-$5K+             | $1K-$5K+    | Unknown             |
+| Commercial          | $1K-$5K+       | $1K-$5K+             | $1K-$5K+    | Provider-dependent  |
 
-**Winner**: Hybrid (best balance of cost, speed, quality per stage)
+**Winner**: Hybrid (best balance of cost, speed, quality per stage, pending API selection)
 
 **Note**: SEC-only has lowest cost long-term, but hybrid wins on time-to-value (immediate screening vs 4.2hr backfill) and defers complexity.
 
 ### Future Considerations
 
-- **Phase 2 optimization**: After validating screening accuracy, may refine Yahoo vs SEC data source strategy
-- **Yahoo Finance monitoring**: Set up alerts for API degradation, rate limit violations
-- **Data quality tracking**: QC Agent logs Yahoo vs SEC discrepancies to inform future sourcing decisions
-- **Alternative consideration**: If Yahoo Finance insufficient, can switch to SEC parsing for screening (DD-031 already designed)
+- **Phase 2 optimization**: After validating screening accuracy, may refine API vs SEC data source strategy
+- **API monitoring**: Set up alerts for API degradation, rate limit violations
+- **Data quality tracking**: QC Agent logs API vs SEC discrepancies to inform future sourcing decisions
+- **Alternative consideration**: If API insufficient, can switch to SEC parsing for screening (DD-031 already designed)
+- **Provider evaluation**: Ongoing assessment of API alternatives as market evolves
