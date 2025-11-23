@@ -118,27 +118,29 @@ Screening Cycle #47:
 3. Successful screenings promote patterns from L2 → L3 (validated at Gate 6)
 4. Failed screenings update L2 false positive/negative tracking
 
-### Data Sources (DD-032: Hybrid Approach)
+### Data Sources (Unified SEC Approach)
 
-**Screening Stage (Days 1-2)**: Yahoo Finance API (primary)
+**Screening Stage (Days 1-2)**: Self-made SEC layer with edgartools
 
 - **Metrics**: 10Y revenue/EPS/margins, ROE/ROA/ROIC, debt ratios
 - **Universe**: S&P 500 (~500 companies)
-- **Quality**: 95% acceptable (quantitative screening tolerant to minor errors)
-- **Cost**: $0-$50/month
-- **Fallback**: SEC EDGAR if Yahoo unavailable (slower but more accurate)
+- **Quality**: 98.55% (same multi-tier parser as deep analysis)
+- **Cost**: $0 (free SEC EDGAR API)
+- **Performance**: ~30 min for 500 companies (latest 10-K only)
 
-**Why Not SEC EDGAR for Screening?**
+**Why SEC EDGAR for Screening?**
 
-- Bulk 10-K parsing for 500 companies = 15-30 min (vs 5 min Yahoo API)
-- Screening needs numerical metrics, not qualitative narratives
-- Save SEC parsing for deep analysis stage (Days 3-7, post-Gate 1)
+- Single authoritative source (no data consistency issues)
+- Zero ongoing costs vs third-party APIs
+- Same parser reused for deep analysis (no duplication)
+- Sufficient performance (~30 min one-time backfill acceptable)
 
 **Data Flow**:
 
 ```
-Yahoo Finance API (500 companies)
-  ↓ Fetch revenue, margins, ROE, debt metrics
+SEC EDGAR API (500 companies, latest 10-K)
+  ↓ Parse via edgartools multi-tier parser
+  ↓ Extract revenue, margins, ROE, debt metrics
 Screener Agent (quantitative filters)
   ↓ 10Y CAGR ≥ 15%, margins ≥ 8%, debt/EBITDA < 3.0
 ~30-50 candidates
@@ -147,7 +149,7 @@ Top 10-20 candidates
   ↓
 Human Gate 1 (approve for deep analysis)
   ↓
-SEC EDGAR (approved companies only, Days 3-7)
+SEC EDGAR (approved companies, full 10Y history, Days 3-7)
 ```
 
 ---

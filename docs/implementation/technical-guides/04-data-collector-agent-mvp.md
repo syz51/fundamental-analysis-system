@@ -25,7 +25,7 @@
 | Layer         | Tooling (must-use)                                                                                                               | Purpose                                                                                    |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Agent runtime | **Google ADK (Vertex AI Agent Developer Kit)**                                                                                   | Declarative agent graphs, tool adapters, secure secret handling, built-in monitoring hooks |
-| External data | SEC EDGAR HTTP endpoints, SimFin START tier ($15/mo, 5 req/sec), Finnhub (fallback)                                              | Filing acquisition + screening metrics                                                     |
+| External data | SEC EDGAR HTTP endpoints (free, 10 req/sec)                                                                                       | Filing acquisition + screening metrics via edgartools parser                               |
 | Parsing       | `edgartools`, custom deterministic parser, Sonnet 4.5 (Tier 2), QC Agent (Tier 3)                                                | Multi-tier recovery per parse failure strategy                                             |
 | Storage       | PostgreSQL schemas (`document_registry`, `financial_data`, `metadata`), MinIO buckets (`raw`, `processed`), Redis L1 (port 6379) | Durable storage + cache deduplication                                                      |
 | Messaging     | ADK event bus → Lead Coordinator topics                                                                                          | Trigger fetches post Gate 1, publish readiness                                             |
@@ -44,12 +44,12 @@ Google ADK provides composable primitives (Tasks, Tools, Connectors, Memory Stor
 
 2. **Tool Registration**
 
-   - Register each repository "tool" as an ADK `ToolSpec`: `postgres_client`, `s3_client`, `redis_l1_client`, `edgar_client`, `simfin_client`, `finnhub_client`, `filing_parser`, `storage_pipeline`.
+   - Register each repository "tool" as an ADK `ToolSpec`: `postgres_client`, `s3_client`, `redis_l1_client`, `edgar_client`, `filing_parser`, `storage_pipeline`, `screening_calculator`.
    - Each tool exposes async functions tagged with metadata (rate limits, idempotency) so ADK can schedule them.
 
 3. **Task Graph**
 
-   - **ScreeningPrepTask**: scheduled nightly via ADK cron trigger; invokes SimFin backfill flow (`simfin_backfill_sp500`).
+   - **ScreeningPrepTask**: scheduled nightly via ADK cron trigger; invokes SEC screening backfill flow (`edgar_screening_backfill_sp500`).
    - **GateApprovalTask**: listens on `gate1.approved` topic; hydrates Deep Data pipeline for approved tickers.
    - **WatchlistTask**: optional ADK queue for user-provided ticker lists.
    - **ParseRecoveryTask**: ADK event triggered by QC Agent feedback to reprocess filings.
@@ -61,7 +61,7 @@ Google ADK provides composable primitives (Tasks, Tools, Connectors, Memory Stor
 
 5. **Security & Secrets**
 
-   - Store SEC user-agent string, MinIO credentials, PostgreSQL DSN, SimFin API key, Finnhub API key in ADK Secret Manager bindings; mount as env vars referenced by existing clients.
+   - Store SEC user-agent string, MinIO credentials, PostgreSQL DSN in ADK Secret Manager bindings; mount as env vars referenced by existing clients.
 
 6. **Deployment Targets**
    - Local dev: run ADK agent via `adk run agents/data_collector`.
@@ -97,7 +97,7 @@ Google ADK provides composable primitives (Tasks, Tools, Connectors, Memory Stor
         metrics
 ```
 
-**Screening Flow**: SimFin START tier backfill populates PostgreSQL with 10Y financial data for all S&P 500 tickers (5 req/sec, ~5 min total); results drive Screening Agent filters. Finnhub provides fallback if SimFin unavailable.
+**Screening Flow**: SEC EDGAR latest 10-K backfill populates PostgreSQL with screening metrics for all S&P 500 tickers (10 req/sec, ~30 min total); results drive Screening Agent filters.
 
 **Deep Analysis Flow**: Upon Gate 1 approval, SEC filings (10-K/10-Q + amendments) are fetched, parsed via multi-tier stack, persisted, and surfaced to analyst agents.
 
@@ -110,14 +110,14 @@ Google ADK provides composable primitives (Tasks, Tools, Connectors, Memory Stor
 1. ADK cron trigger (Sat 05:00 UTC) fires `ScreeningPrepTask`.
 2. Task enumerates S&P 500 tickers (local static list or upstream service).
 3. For each ticker:
-   - Check Redis `screening:simfin:{ticker}`; skip if TTL valid (24h per `plans/simfin-integration-plan.md`).
-   - Invoke `simfin_client.fetch_all_fundamentals(ticker, years=10)` (bulk download: income/balance/cashflow statements).
-   - Calculate screening metrics (revenue CAGR, margins, ROE/ROA/ROIC, debt ratios) via `metrics_calculator`.
-   - Upsert into PostgreSQL `financial_data.screening_metrics` with `data_source='simfin'`.
-   - Update Redis cache with computed metrics (TTL 24h).
-4. Performance: ~1,500 API calls (3 per company × 500 tickers) at 5 req/sec = ~300 seconds (~5 min).
-5. On SimFin failure (3 consecutive errors): Activate fallback to Finnhub via `fallback_manager`.
-6. After loop, ADK publishes `screening.ready` event with coverage stats; Lead Coordinator uses this to start Screening Agent.
+   - Check Redis `screening:edgar:{ticker}`; skip if TTL valid (30d).
+   - Invoke `edgar_client.get_latest_filing(ticker, '10-K')` to fetch most recent 10-K.
+   - Parse filing via multi-tier parser (edgartools + custom tiers).
+   - Calculate screening metrics (revenue CAGR, margins, ROE/ROA/ROIC, debt ratios) via `screening_calculator`.
+   - Upsert into PostgreSQL `financial_data.screening_metrics` with `data_source='sec_edgar'`.
+   - Update Redis cache with computed metrics (TTL 30d).
+4. Performance: ~500 API calls (1 per company) at 10 req/sec = ~50 seconds + parsing time (~30 min total).
+5. After loop, ADK publishes `screening.ready` event with coverage stats; Lead Coordinator uses this to start Screening Agent.
 
 ### 5.2 Deep Data Hydration (Phase 2 trigger, still MVP)
 

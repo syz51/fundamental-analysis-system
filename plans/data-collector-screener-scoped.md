@@ -88,7 +88,7 @@
 **Day 6 - Bulk Operations**:
 
 - ❌ `src/data_collector/bulk_operations.py` (BulkOperations class)
-- ❌ CLI commands: yahoo-backfill, yahoo-refresh, yahoo-fetch
+- ❌ CLI commands: screening-backfill, screening-refresh, screening-fetch
 
 **Day 7 - Agent Interface**:
 
@@ -109,7 +109,7 @@
 
 **Step 2: Day 1 Implementation** (Start Here)
 
-1. Add missing dependencies to `pyproject.toml`
+1. Add missing dependencies to `pyproject.toml` (edgartools, httpx, tenacity, etc.)
 2. Create new migration `XXXXXX_screening_metrics_schema.py` (separate from SEC schema)
 3. Run `alembic upgrade head` to apply
 4. Implement `src/storage/redis_client.py`
@@ -123,8 +123,8 @@
 
 **Step 4: Integration Testing**
 
-- Backfill 50 tickers (verify >95% success)
-- Performance test: 500 tickers <10 min
+- Backfill 50 tickers (verify >98% success with multi-tier parser)
+- Performance test: 500 tickers ~30 min (acceptable)
 - Screener query integration
 
 ### Estimated Time to Completion
@@ -141,10 +141,10 @@
 
 **Data Requirements**:
 
-- Yahoo Finance API data for S&P 500 (~500 companies)
+- SEC EDGAR data for S&P 500 (~500 companies)
 - 10Y historical financial metrics for quantitative filtering
 - Screening-specific calculated metrics (CAGR, averages, ratios)
-- 95% data quality acceptable (screening tolerant to minor errors)
+- 98.55% data quality (same multi-tier parser as deep analysis)
 
 **Key Metrics** (from Screener Agent design):
 

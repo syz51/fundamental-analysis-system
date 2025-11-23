@@ -33,7 +33,7 @@
 
 ### Primary Responsibility
 
-The Data Collector Agent serves as the **data acquisition and storage management layer** for the entire fundamental analysis system. It acts as the bridge between external data sources (SEC EDGAR, Yahoo Finance) and the internal analytical infrastructure, ensuring all specialist agents have access to high-quality, validated financial data.
+The Data Collector Agent serves as the **data acquisition and storage management layer** for the entire fundamental analysis system. It acts as the bridge between external data sources (SEC EDGAR) and the internal analytical infrastructure, ensuring all specialist agents have access to high-quality, validated financial data.
 
 **Core Function**: Fetch, parse, validate, and store financial data with 98.55% quality target through multi-tier parsing and intelligent fallback strategies.
 
@@ -41,8 +41,8 @@ The Data Collector Agent serves as the **data acquisition and storage management
 
 - **Layer**: Support Layer (5-layer v3.0 architecture)
 - **Timing**: Operates in two distinct modes:
-  - **Pre-screening batch** (Day 1): Yahoo Finance bulk fetch for S&P 500
-  - **On-demand deep fetch** (Days 3-7): SEC EDGAR parsing for Gate 1 approved companies
+  - **Pre-screening batch** (Day 1): SEC EDGAR latest 10-K fetch for S&P 500
+  - **On-demand deep fetch** (Days 3-7): SEC EDGAR full 10Y history for Gate 1 approved companies
 - **Consumers**: All specialist agents (Screener, Business Research, Financial Analyst, Strategy, Valuation)
 - **Infrastructure**: PostgreSQL (structured data) + MinIO (raw documents) + Redis (deduplication/rate limiting)
 
@@ -62,8 +62,8 @@ The Data Collector Agent serves as the **data acquisition and storage management
 
 1. **Data Acquisition**
 
-   - Yahoo Finance API integration (10Y metrics for screening)
-   - SEC EDGAR filing fetch (10-K, 10-Q, 8-K, proxies)
+   - SEC EDGAR filing fetch (10-K, 10-Q, 8-K, proxies) for all stages
+   - Screening: Latest 10-K only for fast quantitative metrics
    - Rate limit enforcement (SEC: 10 req/sec, Yahoo: 2 req/sec)
    - CIK lookup and ticker resolution
 
@@ -121,12 +121,11 @@ The Data Collector Agent serves as the **data acquisition and storage management
 ├───────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌──────────────────────┐         ┌──────────────────────┐        │
-│  │   Yahoo Finance      │         │    SEC EDGAR         │        │
-│  │   Client             │         │    Client            │        │
+│  │   SEC EDGAR Client   │         │                      │        │
 │  │                      │         │                      │        │
-│  │ - S&P 500 screening  │         │ - Filing fetch       │        │
-│  │ - 10Y metrics        │         │ - CIK lookup         │        │
-│  │ - Rate limit: 2/s    │         │ - Rate limit: 10/s   │        │
+│  │ - Screening (latest 10-K)     │ - Filing fetch       │        │
+│  │ - Deep analysis (10Y)│         │ - CIK lookup         │        │
+│  │ - Rate limit: 10/s   │         │ - Multi-tier parser  │        │
 │  └──────────┬───────────┘         └──────────┬───────────┘        │
 │             │                                 │                     │
 │             └────────────┬────────────────────┘                     │
@@ -1109,58 +1108,62 @@ async def track_active_task(task_id: str, metadata: dict):
 
 ---
 
-## Yahoo Finance Integration
+## SEC EDGAR Screening Integration
 
 ### Purpose
 
-Provide fast quantitative screening data for S&P 500 without deep SEC parsing overhead.
+Provide quantitative screening data for S&P 500 using the same SEC EDGAR parser as deep analysis.
 
-### Library Selection: yfinance
+### Implementation: edgartools-based multi-tier parser
 
 **Rationale**:
 
-- Free and open-source
-- 11K+ GitHub stars (well-maintained)
-- Simple API (3-line data fetch)
-- 10Y+ historical data available
-
-**Installation**:
-
-```bash
-uv add yfinance
-```
+- Single unified data source (no consistency issues)
+- $0 cost (free SEC EDGAR API)
+- Same 98.55% quality as deep analysis
+- Multi-tier parser handles edge cases
+- Already implemented for deep analysis (DD-031)
 
 ### Key Methods
 
 ```python
-# src/data_collector/yahoo_finance_client.py
-import yfinance as yf
+# src/data_collector/screening_fetcher.py
+from edgartools import Filing
 
-class YahooFinanceClient:
-    def __init__(self):
-        self.rate_limiter = RateLimiter(max_requests=2, window=1.0)
+class ScreeningFetcher:
+    def __init__(self, edgar_client, parser):
+        self.edgar_client = edgar_client
+        self.parser = parser  # Multi-tier parser from DD-031
 
-    async def get_financials(self, ticker: str) -> dict:
-        """Fetch annual financial statements."""
-        await self.rate_limiter.acquire()
-        stock = yf.Ticker(ticker)
+    async def get_screening_metrics(self, ticker: str) -> dict:
+        """Fetch latest 10-K and extract screening metrics."""
+        # Fetch latest 10-K filing
+        filing = await self.edgar_client.get_latest_filing(
+            ticker=ticker,
+            form_type='10-K'
+        )
+
+        # Parse using multi-tier parser
+        parsed_data = await self.parser.parse_filing(filing)
+
+        # Extract screening metrics
         return {
-            'income_statement': stock.financials,  # Annual
-            'balance_sheet': stock.balance_sheet,
-            'cash_flow': stock.cashflow,
-            'quarterly': stock.quarterly_financials
+            'revenue': parsed_data['income_statement']['revenue'],
+            'operating_margin': parsed_data['calculated']['operating_margin'],
+            'roe': parsed_data['calculated']['roe'],
+            'debt_metrics': parsed_data['calculated']['debt_ratios']
         }
 
-    async def get_sp500_financials(self) -> dict:
-        """Bulk fetch S&P 500 (500 companies, ~4-10 min)."""
+    async def get_sp500_screening_data(self) -> dict:
+        """Bulk fetch S&P 500 (500 companies, ~30 min)."""
         sp500_tickers = await self.load_sp500_list()
         results = {}
 
         for ticker in sp500_tickers:
             try:
-                results[ticker] = await self.get_financials(ticker)
+                results[ticker] = await self.get_screening_metrics(ticker)
             except Exception as e:
-                logger.error(f"Yahoo fetch failed: {ticker}, {e}")
+                logger.error(f"SEC fetch failed: {ticker}, {e}")
                 results[ticker] = {'error': str(e)}
 
         return results
@@ -1169,43 +1172,46 @@ class YahooFinanceClient:
 ### Screening Metrics Calculation
 
 ```python
-# src/data_collector/yahoo_metrics.py
-def calculate_screening_metrics(financials: dict) -> dict:
-    """Transform raw Yahoo data into screening metrics."""
-    income = financials['income_statement']
-    balance = financials['balance_sheet']
+# src/data_collector/screening_calculator.py
+def calculate_screening_metrics(parsed_financials: dict) -> dict:
+    """Transform parsed SEC data into screening metrics."""
+    income_statements = parsed_financials['income_statements']  # 10Y data
+    balance_sheets = parsed_financials['balance_sheets']
 
     # 10Y Revenue CAGR
-    revenue_10y_ago = income.loc['Total Revenue'].iloc[-1]  # Oldest
-    revenue_latest = income.loc['Total Revenue'].iloc[0]  # Most recent
+    revenue_10y_ago = income_statements[-1]['revenue']  # Oldest
+    revenue_latest = income_statements[0]['revenue']  # Most recent
     years = 10
     revenue_cagr_10y = (revenue_latest / revenue_10y_ago) ** (1 / years) - 1
 
     # Operating Margin (3Y avg)
-    operating_income = income.loc['Operating Income'][:3].mean()
-    revenue = income.loc['Total Revenue'][:3].mean()
-    operating_margin = operating_income / revenue
+    operating_margins = [
+        stmt['operating_income'] / stmt['revenue']
+        for stmt in income_statements[:3]
+    ]
+    operating_margin = sum(operating_margins) / 3
 
     # ROE (3Y avg)
-    net_income = income.loc['Net Income'][:3].mean()
-    equity = balance.loc['Total Stockholder Equity'][:3].mean()
-    roe = net_income / equity
+    roe_values = [
+        income_statements[i]['net_income'] / balance_sheets[i]['total_equity']
+        for i in range(3)
+    ]
+    roe = sum(roe_values) / 3
 
     # Debt/Equity (latest)
-    total_debt = balance.loc['Total Debt'].iloc[0]
-    equity_latest = balance.loc['Total Stockholder Equity'].iloc[0]
-    debt_to_equity = total_debt / equity_latest
+    latest_balance = balance_sheets[0]
+    debt_to_equity = latest_balance['total_debt'] / latest_balance['total_equity']
 
     return {
         'revenue_cagr_10y': revenue_cagr_10y,
-        'revenue_cagr_5y': calculate_cagr(income, years=5),
+        'revenue_cagr_5y': calculate_cagr(income_statements, years=5),
         'operating_margin_3y_avg': operating_margin,
-        'net_margin_3y_avg': calculate_margin(income, 'Net Income'),
+        'net_margin_3y_avg': calculate_margin(income_statements, years=3),
         'roe_3y_avg': roe,
-        'roa_3y_avg': calculate_roa(income, balance),
-        'roic_3y_avg': calculate_roic(income, balance),
+        'roa_3y_avg': calculate_roa(income_statements, balance_sheets),
+        'roic_3y_avg': calculate_roic(income_statements, balance_sheets),
         'debt_to_equity': debt_to_equity,
-        'current_ratio': calculate_current_ratio(balance)
+        'current_ratio': calculate_current_ratio(balance_sheets[0])
     }
 ```
 
@@ -1213,36 +1219,41 @@ def calculate_screening_metrics(financials: dict) -> dict:
 
 ```bash
 # S&P 500 bulk backfill (initial screening setup)
-python -m src.data_collector yahoo-backfill
+python -m src.data_collector screening-backfill
 
 # Fetch specific tickers (ad-hoc)
-python -m src.data_collector yahoo-fetch --tickers AAPL,MSFT,GOOGL
+python -m src.data_collector screening-fetch --tickers AAPL,MSFT,GOOGL
 
-# Refresh stale data (>7 days old)
-python -m src.data_collector yahoo-refresh
+# Refresh stale data (>30 days old)
+python -m src.data_collector screening-refresh
 ```
 
-### Fallback Strategy
+### Caching Strategy
 
-**Scenario: Yahoo API Failure**
+**Screening Data Cache**
 
 ```python
-async def fetch_with_fallback(ticker: str) -> dict:
-    # Tier 1: Yahoo Finance
-    try:
-        return await yahoo_client.get_financials(ticker)
-    except Exception as e:
-        logger.warning(f"Yahoo fetch failed: {ticker}, trying SEC fallback")
-
-    # Tier 2: Check Redis cache (7d TTL)
-    cached = await redis.get(f"yahoo_cache:{ticker}")
-    if cached and (now() - cached['timestamp']).days < 7:
-        logger.info(f"Using cached Yahoo data: {ticker}")
+async def fetch_with_cache(ticker: str) -> dict:
+    # Check Redis cache (30d TTL for screening data)
+    cache_key = f"screening:{ticker}"
+    cached = await redis.get(cache_key)
+    if cached and (now() - cached['timestamp']).days < 30:
+        logger.info(f"Using cached screening data: {ticker}")
         return cached['data']
 
-    # Tier 3: SEC EDGAR fallback (slower but reliable)
-    logger.info(f"Falling back to SEC EDGAR: {ticker}")
-    return await edgar_client.fetch_latest_10k(ticker)
+    # Fetch and parse latest 10-K
+    logger.info(f"Fetching fresh screening data from SEC: {ticker}")
+    filing = await edgar_client.get_latest_filing(ticker, '10-K')
+    parsed = await parser.parse_filing(filing)
+    metrics = calculate_screening_metrics(parsed)
+
+    # Cache for 30 days
+    await redis.set(cache_key, {
+        'data': metrics,
+        'timestamp': now()
+    }, ex=86400 * 30)
+
+    return metrics
 ```
 
 ---

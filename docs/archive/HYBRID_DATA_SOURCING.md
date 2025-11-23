@@ -41,16 +41,17 @@ Data Collector Agent requires financial data for two distinct use cases with dif
 
 ## Decision
 
-Use third-party financial data API for screening stage, SEC EDGAR parsing for deep analysis stage (hybrid approach)
+Use self-made SEC layer (with edgartools) for both screening and deep analysis stages
 
-**NOTE**: Specific API provider TBD - pending evaluation of options
+**NOTE**: Single unified data source approach - edgartools-based parser provides both quantitative metrics for screening and qualitative data for deep analysis
 
 **Architecture**:
 
 ```text
 Screening Stage (Days 1-2):
-  Financial Data API (TBD)
-    ↓ Fetch revenue, margins, ROE for all S&P 500
+  SEC EDGAR Data Layer (edgartools-based parser)
+    ↓ Fetch & parse latest 10-K for all S&P 500
+    ↓ Multi-tier parser extracts revenue, margins, ROE
   Screening Agent applies quantitative filters
     ↓ 10Y CAGR ≥ 15%, margins ≥ 8%, etc.
   Generate numerical summaries
@@ -67,7 +68,7 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
   Business/Financial/Strategy Agents analyze
 ```
 
-**Target**: 0 hours screening backfill, cost TBD based on API selection
+**Target**: <30 min screening backfill (500 companies × latest 10-K), $0 cost (free SEC EDGAR API)
 
 ---
 
@@ -121,25 +122,24 @@ Deep Analysis Stage (Days 3-7, after Gate 1):
 
 ---
 
-### Option 3: Hybrid Approach (Third-Party API + SEC EDGAR) - CHOSEN
+### Option 3: Unified SEC EDGAR Approach (edgartools-based) - CHOSEN
 
-**Description**: Use third-party financial data API for screening (Days 1-2), SEC EDGAR parsing for deep analysis (Days 3-7, on-demand after Gate 1)
+**Description**: Use self-made SEC layer with edgartools for both screening (Days 1-2) and deep analysis (Days 3-7)
 
 **Pros**:
 
-- **Faster MVP**: Screening starts immediately (no backfill wait)
-- **Lower cost**: Potentially lower than upfront parsing for all companies
-- **Right tool for job**: Speed for screening, quality for analysis (98.55%)
-- **Reduced upfront complexity**: Don't need full parser until Phase 2
-- **Smaller parsing volume**: Only ~10-20 companies/month pass Gate 1 (vs 500 companies upfront)
-- **Still get all critical data**: Qualitative sections, amendments, validation for approved companies
+- **Single authoritative source**: SEC EDGAR for all stages (no data consistency issues)
+- **No API costs**: $0 ongoing costs (free SEC EDGAR access)
+- **Unified parser**: Same multi-tier edgartools parser for screening + deep analysis
+- **98.55% quality**: Consistent high quality for both screening and deep analysis
+- **No third-party dependencies**: No vendor lock-in, rate limit risks, or API degradation
+- **Amendment tracking**: Built-in from start, not just deep analysis
 
 **Cons**:
 
-- **Two data sources**: Screening uses third-party API, analysis uses SEC (consistency risk)
-- **API dependency**: If API degrades, screening blocked
-- **Screening quality**: Quality varies by provider vs 98.55% if parsed SEC
-- **Still need SEC parser**: Can't eliminate DD-031 complexity, just defer volume
+- **Initial backfill time**: ~30 min for S&P 500 latest 10-Ks (vs instant API fetch)
+- **Parser complexity upfront**: Need multi-tier parser from day 1
+- **Rate limits**: SEC 10 req/sec shared across screening + deep analysis
 
 **Estimated Effort**:
 
