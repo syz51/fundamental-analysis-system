@@ -1,0 +1,214 @@
+[
+  {
+    "ticker": "AAPL",
+    "success": true,
+    "revenue_tag": "Contract Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2023-09-30",
+      "2024-09-28",
+      "2025-09-27"
+    ],
+    "revenue_values": {
+      "2023-09-30": 383285000000.0,
+      "2024-09-28": 391035000000.0,
+      "2025-09-27": 416161000000.0
+    },
+    "cagr_10y": 4.215218532463272,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "MSFT",
+    "success": true,
+    "revenue_tag": "Contract Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2023-06-30",
+      "2024-06-30",
+      "2025-06-30"
+    ],
+    "revenue_values": {
+      "2023-06-30": 211915000000.0,
+      "2024-06-30": 245122000000.0,
+      "2025-06-30": 281724000000.0
+    },
+    "cagr_10y": 15.289241422492061,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "GOOGL",
+    "success": true,
+    "revenue_tag": "Total Cost of Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2022-12-31",
+      "2023-12-31",
+      "2024-12-31"
+    ],
+    "revenue_values": {
+      "2022-12-31": 126203000000.0,
+      "2023-12-31": 133332000000.0,
+      "2024-12-31": 146306000000.0
+    },
+    "cagr_10y": 7.6649332357199285,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "JPM",
+    "success": true,
+    "revenue_tag": "Total net revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2022-12-31",
+      "2023-12-31",
+      "2024-12-31"
+    ],
+    "revenue_values": {
+      "2022-12-31": 128695000000.0,
+      "2023-12-31": 158104000000.0,
+      "2024-12-31": 177556000000.0
+    },
+    "cagr_10y": 17.446218214076616,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available",
+      "get_revenue() returned None"
+    ]
+  },
+  {
+    "ticker": "BAC",
+    "success": true,
+    "revenue_tag": "Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2022-12-31",
+      "2023-12-31",
+      "2024-12-31"
+    ],
+    "revenue_values": {
+      "2022-12-31": 94950000000.0,
+      "2023-12-31": 98581000000.0,
+      "2024-12-31": 101887000000.0
+    },
+    "cagr_10y": 3.5860874525772246,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "WMT",
+    "success": true,
+    "revenue_tag": "Total Cost of Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2023-01-31",
+      "2024-01-31",
+      "2025-01-31"
+    ],
+    "revenue_values": {
+      "2023-01-31": 463721000000.0,
+      "2024-01-31": 490142000000.0,
+      "2025-01-31": 511753000000.0
+    },
+    "cagr_10y": 5.047852382888496,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "PG",
+    "success": true,
+    "revenue_tag": "Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2023-06-30",
+      "2024-06-30",
+      "2025-06-30"
+    ],
+    "revenue_values": {
+      "2023-06-30": 82006000000.0,
+      "2024-06-30": 84039000000.0,
+      "2025-06-30": 84284000000.0
+    },
+    "cagr_10y": 1.3784589355470223,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "XOM",
+    "success": true,
+    "revenue_tag": "Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2022-12-31",
+      "2023-12-31",
+      "2024-12-31"
+    ],
+    "revenue_values": {
+      "2022-12-31": 413680000000.0,
+      "2023-12-31": 344582000000.0,
+      "2024-12-31": 349585000000.0
+    },
+    "cagr_10y": -8.067486022279358,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  },
+  {
+    "ticker": "JNJ",
+    "success": true,
+    "revenue_tag": "Revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2023-01-01",
+      "2023-12-31",
+      "2024-12-29"
+    ],
+    "revenue_values": {
+      "2023-01-01": 11036000000.0,
+      "2023-12-31": 11539000000.0,
+      "2024-12-29": 11355000000.0
+    },
+    "cagr_10y": 1.4399373756600164,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available",
+      "get_revenue() returned None"
+    ]
+  },
+  {
+    "ticker": "SNOW",
+    "success": true,
+    "revenue_tag": "Product revenue",
+    "years_available": 3,
+    "date_columns": [
+      "2023-01-31",
+      "2024-01-31",
+      "2025-01-31"
+    ],
+    "revenue_values": {
+      "2023-01-31": 1938783000.0,
+      "2024-01-31": 2666849000.0,
+      "2025-01-31": 3462422000.0
+    },
+    "cagr_10y": 33.61009275852669,
+    "method_used": "manual_df",
+    "errors": [
+      "analyze_trends() not available"
+    ]
+  }
+]

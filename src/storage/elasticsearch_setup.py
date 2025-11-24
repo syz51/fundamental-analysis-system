@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import Any
 
 from elasticsearch import AsyncElasticsearch
@@ -16,81 +17,98 @@ from elasticsearch.exceptions import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- Settings & Analyzer Configuration (DD-029 Section 4 & 5) ---
-INDEX_SETTINGS = {
-    "number_of_shards": 3,
-    "number_of_replicas": 2,
-    "refresh_interval": "30s",
-    "max_result_window": 10000,
-    "index.merge.policy.max_merged_segment": "5gb",
-    "index.merge.policy.segments_per_tier": 10,
-    "index.translog.durability": "async",
-    "index.translog.sync_interval": "5s",
-    "analysis": {
-        "char_filter": {
-            "financial_char_filter": {
-                "type": "mapping",
-                "mappings": [
-                    "M&A=>MA",
-                    "P/E=>PE",
-                    "P/B=>PB",
-                    "D/E=>DE",
-                    "SG&A=>SGA",
-                    "R&D=>RD",
-                ],
-            }
-        },
-        "analyzer": {
-            "financial_analyzer": {
-                "type": "custom",
-                "char_filter": ["financial_char_filter"],
-                "tokenizer": "standard",
-                "filter": [
-                    "lowercase",
-                    "asciifolding",
-                    "financial_synonyms",
-                    "financial_stop",
-                    "english_stemmer",
-                ],
-            }
-        },
-        "filter": {
-            "financial_stop": {
-                "type": "stop",
-                "stopwords": ["the", "a", "an", "and", "or", "but"],
+
+def get_index_settings(replica_count: int | None = None) -> dict[str, Any]:
+    """
+    Get Elasticsearch index settings with environment-aware replica count.
+
+    Args:
+        replica_count: Override replica count. If None, auto-detect based on environment:
+                      - 0 for testing (single-node containers)
+                      - 2 for production (multi-node clusters)
+
+    Returns:
+        Index settings dictionary
+    """
+    if replica_count is None:
+        # Auto-detect: 0 replicas in test env, 2 in production
+        is_test_env = os.environ.get("PYTEST_CURRENT_TEST") is not None or os.environ.get("CI") is not None
+        replica_count = 0 if is_test_env else 2
+
+    return {
+        "number_of_shards": 3,
+        "number_of_replicas": replica_count,
+        "refresh_interval": "30s",
+        "max_result_window": 10000,
+        "index.merge.policy.max_merged_segment": "5gb",
+        "index.merge.policy.segments_per_tier": 10,
+        "index.translog.durability": "async",
+        "index.translog.sync_interval": "5s",
+        "analysis": {
+            "char_filter": {
+                "financial_char_filter": {
+                    "type": "mapping",
+                    "mappings": [
+                        "M&A=>MA",
+                        "P/E=>PE",
+                        "P/B=>PB",
+                        "D/E=>DE",
+                        "SG&A=>SGA",
+                        "R&D=>RD",
+                    ],
+                }
             },
-            "financial_synonyms": {
-                "type": "synonym",
-                "synonyms": [
-                    (
-                        "EBITDA, Earnings Before Interest Taxes Depreciation Amortization, "
-                        "earnings before interest taxes depreciation amortization"
-                    ),
-                    "P/E, PE, price to earnings, price earnings ratio, PE ratio",
-                    "M&A, mergers and acquisitions, merger, acquisition, MA",
-                    "ROE, return on equity, equity return",
-                    "ROA, return on assets, asset return",
-                    "ROIC, return on invested capital, invested capital return",
-                    "FCF, free cash flow, cash flow",
-                    "CAGR, compound annual growth rate, growth rate",
-                    "AI, artificial intelligence",
-                    "EPS, earnings per share",
-                    "EV, enterprise value",
-                    "P/B, price to book, book value ratio",
-                    "D/E, debt to equity, debt equity ratio",
-                    "CAPEX, capital expenditure, capital spending",
-                    "OPEX, operating expenditure, operating expense",
-                    "SG&A, selling general and administrative, SGA",
-                    "R&D, research and development, RD",
-                    "YoY, year over year, year-over-year",
-                    "QoQ, quarter over quarter, quarter-over-quarter",
-                    "TTM, trailing twelve months, last twelve months, LTM",
-                ],
+            "analyzer": {
+                "financial_analyzer": {
+                    "type": "custom",
+                    "char_filter": ["financial_char_filter"],
+                    "tokenizer": "standard",
+                    "filter": [
+                        "lowercase",
+                        "asciifolding",
+                        "financial_synonyms",
+                        "financial_stop",
+                        "english_stemmer",
+                    ],
+                }
             },
-            "english_stemmer": {"type": "stemmer", "language": "english"},
+            "filter": {
+                "financial_stop": {
+                    "type": "stop",
+                    "stopwords": ["the", "a", "an", "and", "or", "but"],
+                },
+                "financial_synonyms": {
+                    "type": "synonym",
+                    "synonyms": [
+                        (
+                            "EBITDA, Earnings Before Interest Taxes Depreciation Amortization, "
+                            "earnings before interest taxes depreciation amortization"
+                        ),
+                        "P/E, PE, price to earnings, price earnings ratio, PE ratio",
+                        "M&A, mergers and acquisitions, merger, acquisition, MA",
+                        "ROE, return on equity, equity return",
+                        "ROA, return on assets, asset return",
+                        "ROIC, return on invested capital, invested capital return",
+                        "FCF, free cash flow, cash flow",
+                        "CAGR, compound annual growth rate, growth rate",
+                        "AI, artificial intelligence",
+                        "EPS, earnings per share",
+                        "EV, enterprise value",
+                        "P/B, price to book, book value ratio",
+                        "D/E, debt to equity, debt equity ratio",
+                        "CAPEX, capital expenditure, capital spending",
+                        "OPEX, operating expenditure, operating expense",
+                        "SG&A, selling general and administrative, SGA",
+                        "R&D, research and development, RD",
+                        "YoY, year over year, year-over-year",
+                        "QoQ, quarter over quarter, quarter-over-quarter",
+                        "TTM, trailing twelve months, last twelve months, LTM",
+                    ],
+                },
+                "english_stemmer": {"type": "stemmer", "language": "english"},
+            },
         },
-    },
-}
+    }
 
 
 # --- Core Schema (DD-029 Section 1) ---
@@ -186,13 +204,16 @@ def get_news_mapping() -> dict[str, Any]:
 # --- Initialization Logic ---
 
 
-async def initialize_indices(es_url: str = "http://localhost:9200", max_retries: int = 3) -> None:
+async def initialize_indices(
+    es_url: str = "http://localhost:9200", max_retries: int = 3, replica_count: int | None = None
+) -> None:
     """
     Initializes Elasticsearch indices with standardized mappings.
 
     Args:
         es_url: Elasticsearch connection URL
         max_retries: Maximum retry attempts for connection failures
+        replica_count: Override replica count (None = auto-detect based on env)
     """
     client = AsyncElasticsearch(hosts=[es_url])
 
@@ -201,6 +222,10 @@ async def initialize_indices(es_url: str = "http://localhost:9200", max_retries:
         "transcripts": get_transcripts_mapping(),
         "news": get_news_mapping(),
     }
+
+    # Get environment-aware settings
+    index_settings = get_index_settings(replica_count)
+    logger.info(f"Using {index_settings['number_of_replicas']} replicas for indices")
 
     # Retry logic for initial connection
     connected = False
@@ -229,7 +254,7 @@ async def initialize_indices(es_url: str = "http://localhost:9200", max_retries:
 
             if not exists:
                 logger.info(f"Creating index: {index_name}")
-                await client.indices.create(index=index_name, settings=INDEX_SETTINGS, mappings=mapping)
+                await client.indices.create(index=index_name, settings=index_settings, mappings=mapping)
                 logger.info(f"Successfully created index: {index_name}")
             else:
                 logger.info(f"Index {index_name} already exists. Skipping.")

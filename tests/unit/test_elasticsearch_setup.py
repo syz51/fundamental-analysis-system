@@ -13,8 +13,8 @@ from elasticsearch.exceptions import (
 )
 
 from storage.elasticsearch_setup import (
-    INDEX_SETTINGS,
     get_core_properties,
+    get_index_settings,
     get_news_mapping,
     get_sec_filings_mapping,
     get_transcripts_mapping,
@@ -24,7 +24,8 @@ from storage.elasticsearch_setup import (
 # Test constants
 EMBEDDING_DIMS = 1536
 NUM_SHARDS = 3
-NUM_REPLICAS = 2
+NUM_REPLICAS_PROD = 2  # Production replica count
+NUM_REPLICAS_TEST = 0  # Test/CI replica count
 MAX_RESULT_WINDOW = 10000
 NUM_INDICES = 3
 
@@ -167,28 +168,48 @@ class TestDomainMappings:
 
 
 class TestIndexSettings:
-    """Tests for INDEX_SETTINGS configuration."""
+    """Tests for get_index_settings() configuration function."""
 
-    def test_index_settings_structure(self) -> None:
-        """INDEX_SETTINGS has required configuration keys."""
-        assert "number_of_shards" in INDEX_SETTINGS
-        assert INDEX_SETTINGS["number_of_shards"] == NUM_SHARDS
-        assert "number_of_replicas" in INDEX_SETTINGS
-        assert INDEX_SETTINGS["number_of_replicas"] == NUM_REPLICAS
-        assert "refresh_interval" in INDEX_SETTINGS
-        assert "max_result_window" in INDEX_SETTINGS
-        assert INDEX_SETTINGS["max_result_window"] == MAX_RESULT_WINDOW
+    def test_index_settings_structure_production(self) -> None:
+        """Production settings have 2 replicas."""
+        settings = get_index_settings(replica_count=NUM_REPLICAS_PROD)
+        assert "number_of_shards" in settings
+        assert settings["number_of_shards"] == NUM_SHARDS
+        assert "number_of_replicas" in settings
+        assert settings["number_of_replicas"] == NUM_REPLICAS_PROD
+        assert "refresh_interval" in settings
+        assert "max_result_window" in settings
+        assert settings["max_result_window"] == MAX_RESULT_WINDOW
+
+    def test_index_settings_structure_test(self) -> None:
+        """Test settings have 0 replicas."""
+        settings = get_index_settings(replica_count=NUM_REPLICAS_TEST)
+        assert settings["number_of_replicas"] == NUM_REPLICAS_TEST
+
+    def test_index_settings_auto_detect_test_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Auto-detects test environment and uses 0 replicas."""
+        monkeypatch.setenv("PYTEST_CURRENT_TEST", "test_something")
+        settings = get_index_settings()
+        assert settings["number_of_replicas"] == NUM_REPLICAS_TEST
+
+    def test_index_settings_auto_detect_ci_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Auto-detects CI environment and uses 0 replicas."""
+        monkeypatch.setenv("CI", "true")
+        settings = get_index_settings()
+        assert settings["number_of_replicas"] == NUM_REPLICAS_TEST
 
     def test_index_settings_has_analysis(self) -> None:
-        """INDEX_SETTINGS includes analysis configuration."""
-        assert "analysis" in INDEX_SETTINGS
-        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        """Settings include analysis configuration."""
+        settings = get_index_settings()
+        assert "analysis" in settings
+        analysis = cast(dict[str, Any], settings["analysis"])
         assert "analyzer" in analysis
         assert "filter" in analysis
 
     def test_financial_analyzer_configuration(self) -> None:
         """Financial analyzer uses correct tokenizer and filters."""
-        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        settings = get_index_settings()
+        analysis = cast(dict[str, Any], settings["analysis"])
         analyzers = cast(dict[str, Any], analysis["analyzer"])
         analyzer = cast(dict[str, Any], analyzers["financial_analyzer"])
         assert analyzer["type"] == "custom"
@@ -201,7 +222,8 @@ class TestIndexSettings:
 
     def test_financial_synonyms_configuration(self) -> None:
         """Financial synonyms filter includes key financial terms."""
-        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        settings = get_index_settings()
+        analysis = cast(dict[str, Any], settings["analysis"])
         filters = cast(dict[str, Any], analysis["filter"])
         synonyms_filter = cast(dict[str, Any], filters["financial_synonyms"])
         assert synonyms_filter["type"] == "synonym"
@@ -214,7 +236,8 @@ class TestIndexSettings:
 
     def test_stopwords_configuration(self) -> None:
         """Financial stop filter has appropriate stopwords."""
-        analysis = cast(dict[str, Any], INDEX_SETTINGS["analysis"])
+        settings = get_index_settings()
+        analysis = cast(dict[str, Any], settings["analysis"])
         filters = cast(dict[str, Any], analysis["filter"])
         stop_filter = cast(dict[str, Any], filters["financial_stop"])
         assert stop_filter["type"] == "stop"
@@ -274,9 +297,9 @@ class TestInitializeIndices:
         assert mock_es.ping.call_count == NUM_INDICES
 
         # Verify exponential backoff (2^0=1s, 2^1=2s)
-        assert mock_sleep.call_count == NUM_REPLICAS
+        assert mock_sleep.call_count == NUM_REPLICAS_PROD
         mock_sleep.assert_any_call(1)
-        mock_sleep.assert_any_call(NUM_REPLICAS)
+        mock_sleep.assert_any_call(NUM_REPLICAS_PROD)
 
         # Verify indices created after successful connection
         assert mock_es.indices.create.call_count == NUM_INDICES
@@ -408,11 +431,14 @@ class TestInitializeIndices:
         mock_es.indices.create.return_value = {"acknowledged": True}
 
         with patch("storage.elasticsearch_setup.AsyncElasticsearch", return_value=mock_es):
-            await initialize_indices("http://localhost:9200")
+            await initialize_indices("http://localhost:9200", replica_count=NUM_REPLICAS_TEST)
 
         # Check first index call (sec_filings)
         first_call = mock_es.indices.create.call_args_list[0]
         assert first_call[1]["index"] == "sec_filings"
-        assert first_call[1]["settings"] == INDEX_SETTINGS
+        # Verify settings structure (get_index_settings with 0 replicas)
+        settings = first_call[1]["settings"]
+        assert settings["number_of_replicas"] == NUM_REPLICAS_TEST
+        assert settings["number_of_shards"] == NUM_SHARDS
         assert "properties" in first_call[1]["mappings"]
         assert "filing_type" in first_call[1]["mappings"]["properties"]
