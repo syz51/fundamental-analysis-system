@@ -185,17 +185,23 @@ def run_migrations(postgres_url: str) -> None:
 
 
 @pytest.fixture(scope="session")
-def initialize_es_indices(elasticsearch_url: str) -> None:
+def initialize_es_indices(tmp_path_factory: pytest.TempPathFactory, elasticsearch_url: str) -> None:
     """
     Initialize Elasticsearch indices once before all integration tests.
 
     Creates sec_filings, transcripts, and news indices with proper mappings.
+    Uses file lock to prevent parallel workers from racing to create indices.
     """
-    try:
-        asyncio.run(initialize_indices(elasticsearch_url))
-        print(f"\nInitialized Elasticsearch indices at {elasticsearch_url}")
-    except Exception as e:
-        pytest.fail(f"Failed to initialize Elasticsearch indices: {e}")
+    # Use file lock to ensure only one worker initializes indices
+    root_tmp_dir = Path(tmp_path_factory.getbasetemp()).parent.parent
+    lock_file = root_tmp_dir / "es_indices.lock"
+
+    with FileLock(str(lock_file)):
+        try:
+            asyncio.run(initialize_indices(elasticsearch_url))
+            print(f"\nInitialized Elasticsearch indices at {elasticsearch_url}")
+        except Exception as e:
+            pytest.fail(f"Failed to initialize Elasticsearch indices: {e}")
 
 
 @pytest.fixture
