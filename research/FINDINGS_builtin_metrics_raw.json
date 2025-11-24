@@ -1,0 +1,482 @@
+{
+  "AAPL": {
+    "name": "Apple Inc.",
+    "explore_methods": {
+      "financials": [
+        "balance_sheet",
+        "business",
+        "cash_flow_statement",
+        "chunked_document",
+        "company",
+        "directors_officers_and_governance",
+        "doc",
+        "filing_date",
+        "financials",
+        "form",
+        "get_item_with_part",
+        "get_structure",
+        "id_parse_document",
+        "income_statement",
+        "items",
+        "management_discussion",
+        "period_of_report",
+        "risk_factors",
+        "structure",
+        "view"
+      ],
+      "income_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "balance_sheet": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "cash_flow_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ]
+    },
+    "get_financial_metrics": {
+      "error": "'Company' object has no attribute 'financials'"
+    },
+    "calculate_ratios": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    },
+    "analyze_trends": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    }
+  },
+  "JPM": {
+    "name": "JPMorgan Chase & Co.",
+    "explore_methods": {
+      "financials": [
+        "balance_sheet",
+        "business",
+        "cash_flow_statement",
+        "chunked_document",
+        "company",
+        "directors_officers_and_governance",
+        "doc",
+        "filing_date",
+        "financials",
+        "form",
+        "get_item_with_part",
+        "get_structure",
+        "id_parse_document",
+        "income_statement",
+        "items",
+        "management_discussion",
+        "period_of_report",
+        "risk_factors",
+        "structure",
+        "view"
+      ],
+      "income_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "balance_sheet": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "cash_flow_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ]
+    },
+    "get_financial_metrics": {
+      "error": "'Company' object has no attribute 'financials'"
+    },
+    "calculate_ratios": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    },
+    "analyze_trends": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    }
+  },
+  "JNJ": {
+    "name": "Johnson & Johnson",
+    "explore_methods": {
+      "financials": [
+        "balance_sheet",
+        "business",
+        "cash_flow_statement",
+        "chunked_document",
+        "company",
+        "directors_officers_and_governance",
+        "doc",
+        "filing_date",
+        "financials",
+        "form",
+        "get_item_with_part",
+        "get_structure",
+        "id_parse_document",
+        "income_statement",
+        "items",
+        "management_discussion",
+        "period_of_report",
+        "risk_factors",
+        "structure",
+        "view"
+      ],
+      "income_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "balance_sheet": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "cash_flow_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ]
+    },
+    "get_financial_metrics": {
+      "error": "'Company' object has no attribute 'financials'"
+    },
+    "calculate_ratios": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    },
+    "analyze_trends": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    }
+  },
+  "XOM": {
+    "name": "Exxon Mobil Corporation",
+    "explore_methods": {
+      "financials": [
+        "balance_sheet",
+        "business",
+        "cash_flow_statement",
+        "chunked_document",
+        "company",
+        "directors_officers_and_governance",
+        "doc",
+        "filing_date",
+        "financials",
+        "form",
+        "get_item_with_part",
+        "get_structure",
+        "id_parse_document",
+        "income_statement",
+        "items",
+        "management_discussion",
+        "period_of_report",
+        "risk_factors",
+        "structure",
+        "view"
+      ],
+      "income_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "balance_sheet": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "cash_flow_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ]
+    },
+    "get_financial_metrics": {
+      "error": "'Company' object has no attribute 'financials'"
+    },
+    "calculate_ratios": {
+      "income_statement": {
+        "exists": true,
+        "data": "{'net_margin': 0.09634280647052934}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    },
+    "analyze_trends": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    }
+  },
+  "WMT": {
+    "name": "Walmart Inc.",
+    "explore_methods": {
+      "financials": [
+        "balance_sheet",
+        "business",
+        "cash_flow_statement",
+        "chunked_document",
+        "company",
+        "directors_officers_and_governance",
+        "doc",
+        "filing_date",
+        "financials",
+        "form",
+        "get_item_with_part",
+        "get_structure",
+        "id_parse_document",
+        "income_statement",
+        "items",
+        "management_discussion",
+        "period_of_report",
+        "risk_factors",
+        "structure",
+        "view"
+      ],
+      "income_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "balance_sheet": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ],
+      "cash_flow_statement": [
+        "REQUIRED_CONCEPTS",
+        "analyze_trends",
+        "calculate_ratios",
+        "canonical_type",
+        "docs",
+        "get_raw_data",
+        "is_segmented",
+        "primary_concept",
+        "render",
+        "role_or_type",
+        "to_dataframe",
+        "xbrl"
+      ]
+    },
+    "get_financial_metrics": {
+      "error": "'Company' object has no attribute 'financials'"
+    },
+    "calculate_ratios": {
+      "income_statement": {
+        "exists": true,
+        "data": "{'net_margin': 0.028541010448100913}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    },
+    "analyze_trends": {
+      "income_statement": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      },
+      "balance_sheet": {
+        "exists": true,
+        "data": "{}",
+        "type": "<class 'dict'>"
+      }
+    }
+  }
+}

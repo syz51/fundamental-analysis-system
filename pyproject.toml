@@ -8,8 +8,11 @@ dependencies = [
 	"aiohttp>=3.13.2",
 	"alembic>=1.17.2",
 	"asyncpg>=0.30.0",
+	"edgartools>=4.30.0",
 	"elasticsearch<9.0.0",
 	"greenlet>=3.2.4",
+	"pandas>=2.3.3",
+	"python-dotenv>=1.2.1",
 	"pyyaml>=6.0",
 	"redis>=7.1.0",
 	"sqlalchemy>=2.0.44",
@@ -98,6 +101,22 @@ ignore = [
 	"S104", # Possible hardcoded bind all interfaces (false positives)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"research/*" = [
+	"E501",   # Line too long (exploratory code)
+	"PLR0912", # Too many branches
+	"PLR0915", # Too many statements
+	"PLR2004", # Magic value comparisons
+	"PTH123",  # Use Path.open() (not critical for research)
+	"B007",    # Unused loop control variable
+	"E722",    # Bare except (acceptable for exploration)
+	"S110",    # try-except-pass (acceptable for exploration)
+	"PLC0415", # Import not at top (acceptable for exploration)
+	"RUF015",  # Prefer next(iter()) over slice (stylistic)
+	"RUF002",  # Ambiguous unicode characters (acceptable for research)
+	"SIM102",  # Use single if (acceptable for readability in research)
+]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -120,6 +139,7 @@ exclude = [
 	"**/node_modules",
 	"src/storage/migrations",
 	"docs/design-flaws",
+	"research",
 ]
 stubPath = ""
 venvPath = "."
@@ -130,7 +150,7 @@ executionEnvironments = [
 ]
 
 [tool.bandit]
-exclude_dirs = ["tests", ".venv", "build", "docs/design-flaws"]
+exclude_dirs = ["tests", ".venv", "build", "docs/design-flaws", "research"]
 skips = ["B101", "B601"]
 
 [tool.coverage.run]
